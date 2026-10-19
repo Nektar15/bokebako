@@ -1,0 +1,16 @@
+# 静的解析（CODING_RULES 5章）：レベル6でエラー0件にする
+# 実行：vendor/bin/phpstan analyse
+parameters:
+    level: 6
+    paths:
+        - app
+        - tests
+    excludePaths:
+        - app/Views/*
+        - app/Config/*
+    scanDirectories:
+        - system
+    bootstrapFiles:
+        - system/Test/bootstrap.php
+    ignoreErrors:
+        - '#Call to an undefined static method Config\\Services::#'

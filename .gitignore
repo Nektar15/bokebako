@@ -1,0 +1,17 @@
+.env
+/vendor/
+/writable/cache/*
+/writable/logs/*
+/writable/session/*
+/writable/uploads/*
+/writable/debugbar/*
+/writable/ogp/*
+!/writable/**/index.html
+/public/ogp/*
+!/public/ogp/.gitkeep
+/.phpunit.cache/
+/.php-cs-fixer.cache
+/build/
+/node_modules/
+.DS_Store
+Thumbs.db

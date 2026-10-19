@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>A-05 通報・モデレーション</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4EEE2;color:#1D1A16;font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif}summary::-webkit-details-marker{display:none}a{color:inherit}[role=cell] button,[role=cell] a{white-space:nowrap}
+</style>
+</helmet>
+<div style="width: 1280px; height: 900px; display: flex; background: #F4EEE2; overflow: hidden">
+<aside style="width: 232px; flex-shrink: 0; box-sizing: border-box; background: #1D1A16; color: #F4EEE2; display: flex; flex-direction: column; gap: 22px; padding: 20px 14px">
+<div style="display: flex; align-items: center; gap: 8px; padding: 0 6px"><svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><path d="M11 15 L12.5 3.5 L22 4.8 L20.5 15" fill="#F2C230" stroke="#1D1A16" stroke-width="2" stroke-linejoin="round"></path><rect x="3" y="12" width="26" height="17" rx="3" fill="#D6401E" stroke="#1D1A16" stroke-width="2"></rect><path d="M10 17 H22" stroke="#1D1A16" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<span style="font-family: 'Dela Gothic One', sans-serif; font-weight: 400; font-size: 19px; color: #FFFFFF">ぼけばこ</span>
+<span style="background: #F2C230; color: #1D1A16; border-radius: 4px; padding: 0 6px; font-size: 11px; font-weight: 900">管理</span></div>
+<nav aria-label="管理メニュー"><ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="9">
+<li><a href="{{n.href}}" style="display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 10px; border-radius: 10px; background: {{n.bg}}; color: {{n.fg}}; text-decoration: none; font-size: 13.5px; font-weight: 700; line-height: 1.3">
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: {{n.idc}}; width: 34px; flex-shrink: 0">{{n.id}}</span><span style="flex-grow: 1">{{n.label}}</span>
+<sc-if value="{{n.hasCount}}" hint-placeholder-val="{{ false }}"><span style="background: #D6401E; color: #FFFFFF; border-radius: 99px; min-width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 900">{{n.count}}</span></sc-if>
+</a></li>
+</sc-for>
+</ul></nav>
+<div style="margin-top: auto; border-top: 1.5px solid #4A433B; padding: 14px 6px 0; display: flex; flex-direction: column; gap: 8px">
+<span style="align-self: flex-start; border: 1.5px dashed #F2C230; color: #F2C230; border-radius: 6px; padding: 1px 8px; font-size: 11px; font-weight: 900">開発用の仮ログイン</span>
+<span style="font-size: 14px; font-weight: 700; color: #FFFFFF">{{me.name}}</span>
+<span style="font-size: 12px; color: #D9CFBE">{{me.role}}</span>
+<span style="font-size: 12px; color: #D9CFBE">ログアウトはA-01実装後に有効</span>
+</div>
+</aside>
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<header style="height: 72px; flex-shrink: 0; box-sizing: border-box; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 2px solid #1D1A16; background: #FFFDF8">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #4A433B">A-05</span><h1 style="margin: 0; font-size: 22px; font-weight: 900">通報・モデレーション</h1></div></div>
+<div style="display: flex; align-items: center; gap: 10px"></div>
+</header>
+<div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; gap: 6px; flex-wrap: wrap">
+<span style="height: 34px; padding: 0 14px; border: 2px solid #1D1A16; border-radius: 99px; background: #F2C230; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900">未処理すべて <span style="font-weight: 700; color: #4A433B">6</span></span><span style="height: 34px; padding: 0 14px; border: 2px solid #1D1A16; border-radius: 99px; background: #FFFDF8; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900">通報急増 <span style="font-weight: 700; color: #4A433B">1</span></span><span style="height: 34px; padding: 0 14px; border: 2px solid #1D1A16; border-radius: 99px; background: #FFFDF8; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900">NGワード検知 <span style="font-weight: 700; color: #4A433B">3</span></span><span style="height: 34px; padding: 0 14px; border: 2px solid #1D1A16; border-radius: 99px; background: #FFFDF8; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900">AI「要確認」以上 <span style="font-weight: 700; color: #4A433B">4</span></span><span style="height: 34px; padding: 0 14px; border: 2px solid #1D1A16; border-radius: 99px; background: #FFFDF8; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900">異常投稿 <span style="font-weight: 700; color: #4A433B">1</span></span><span style="height: 34px; padding: 0 14px; border: 2px solid #1D1A16; border-radius: 99px; background: #FFFDF8; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 900">処理済み <span style="font-weight: 700; color: #4A433B">128</span></span>
+<span style="margin-left: auto; font-size: 12.5px; color: #4A433B; align-self: center">優先度の高い順（通報急増 → 通報件数 → NG検知 → 異常投稿 → AI判定）</span>
+</div>
+<div style="display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 18px; align-items: start">
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{queue}}" as="q" hint-placeholder-count="6">
+<li><button type="button" onClick="{{q.pick}}" aria-pressed="{{q.pressed}}" style="box-sizing: border-box; width: 100%; text-align: left; background: {{q.bg}}; border: 2px solid {{q.bc}}; box-shadow: {{q.sh}}; border-radius: 14px; padding: 12px 14px; font-family: inherit; color: #1D1A16; cursor: pointer; display: flex; flex-direction: column; gap: 8px">
+<span style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center"><sc-for list="{{q.tags}}" as="t" hint-placeholder-count="2"><span style="background: {{t.bg}}; color: {{t.fg}}; border: 1.5px solid #1D1A16; border-radius: 99px; padding: 0 8px; font-size: 11px; font-weight: 900">{{t.label}}</span></sc-for><span style="margin-left: auto; font-size: 11.5px; color: #4A433B">{{q.time}}</span></span>
+<span style="font-size: 14px; font-weight: 700; line-height: 1.5">{{q.text}}</span>
+<span style="font-size: 12px; color: #4A433B">{{q.kind}} ・ 通報 {{q.rep}}件 ・ {{q.stateLabel}}</span>
+</button></li>
+</sc-for>
+</ul>
+
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 16px; box-shadow: 0 4px 0 #1D1A16; padding: 20px 22px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="background: #1D1A16; color: #FFFFFF; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-weight: 900">{{d.kind}}</span>
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 12.5px">{{d.id}}</span><span style="background: {{d.b.bg}}; color: {{d.b.fg}}; border: 1.5px {{d.b.bs}} {{d.b.bc}}; border-radius: 99px; padding: 2px 10px; font-size: 12px; font-weight: 900; white-space: nowrap">{{d.b.label}}</span>
+<a href="A03-OogiriDetail.dc.html" style="margin-left: auto; font-size: 12.5px; font-weight: 900">大喜利を開く</a>
+</div>
+<div style="background: #F4EEE2; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 12px; color: #4A433B">お題：{{d.odai}}</span>
+<p style="margin: 0; font-size: 19px; font-weight: 900; line-height: 1.55">{{d.text}}</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; font-weight: 900; color: #4A433B">通報</span><span style="font-size: 13.5px; font-weight: 700; line-height: 1.6">{{d.reports}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; font-weight: 900; color: #4A433B">NGワード検知</span><span style="font-size: 13.5px; font-weight: 700; line-height: 1.6">{{d.ng}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; font-weight: 900; color: #4A433B">異常投稿判定</span><span style="font-size: 13.5px; font-weight: 700; line-height: 1.6">{{d.abnormal}}</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; font-weight: 900; color: #4A433B">投稿日時</span><span style="font-size: 13.5px; font-weight: 700">{{d.time}}</span></div>
+</div>
+<div style="border: 2px solid #1D1A16; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; align-items: center; gap: 8px"><span style="font-size: 13px; font-weight: 900">AI補助判定</span>
+<span style="background: {{d.ai.bg}}; color: {{d.ai.fg}}; border: 1.5px solid #1D1A16; border-radius: 99px; padding: 0 10px; font-size: 12px; font-weight: 900">{{d.ai.label}}</span>
+<span style="margin-left: auto; font-size: 11.5px; color: #4A433B">GPT-5 nano ・ 参考情報です。最終判断は管理者が行います</span></div>
+<p style="margin: 0; font-size: 13.5px; line-height: 1.7">{{d.ai.reason}}</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; border-top: 2px dashed #D9CFBE; padding-top: 16px">
+<button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; background: #FFFDF8; color: #1D1A16; border: 2px solid #1D1A16; font-family: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; box-sizing: border-box; ">問題なし（通報を処理済みに）</button><button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; background: #1D1A16; color: #FFFFFF; border: 2px solid #1D1A16; font-family: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; box-sizing: border-box; ">非表示にする</button><button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; background: #FFFDF8; color: #A93115; border: 2px solid #A93115; font-family: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; box-sizing: border-box; "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7 H20 M9 7 V4 H15 V7 M6 7 L7 20 H17 L18 7"></path></svg>削除</button>
+<span style="margin-left: auto; display: flex; gap: 6px; align-items: center"><select aria-label="制限する期間" style="box-sizing: border-box; height: 40px; border: 2px solid #1D1A16; border-radius: 10px; background: #FFFFFF; padding: 0 12px; font-family: inherit; font-size: 14px; color: #1D1A16; padding-right: 8px; width: 100px"><option>1時間</option><option>24時間</option><option>7日間</option></select><button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; background: #FFFDF8; color: #1D1A16; border: 2px solid #1D1A16; font-family: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; box-sizing: border-box; ">投稿元を制限</button></span>
+</div>
+<div>
+<h3 style="margin: 0 0 4px; font-size: 13px; font-weight: 900">対応履歴</h3>
+<ul style="margin: 0; padding: 0; list-style: none"><sc-for list="{{d.history}}" as="h" hint-placeholder-count="2">
+<li style="display: flex; gap: 10px; padding: 8px 0; border-bottom: 1.5px solid #D9CFBE; font-size: 12.5px"><span style="color: #4A433B; width: 150px; flex-shrink: 0">{{h.time}}</span><span style="font-weight: 700">{{h.what}}</span></li>
+</sc-for></ul>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1280, "height": 900}}'>
+class Component extends DCLogic {
+  constructor(...args) { super(...args); this.state = { sel: 0 }; }
+
+  navItems(active) {
+    const N = [['A-02', 'ダッシュボード', 'A02-Dashboard.dc.html', 0], ['A-03', '大喜利', 'A03-Oogiri.dc.html', 0], ['A-04', '回答', 'A04-Answers.dc.html', 0],
+      ['A-05', '通報・モデレーション', 'A05-Moderation.dc.html', 6], ['A-06', 'NGワード', 'A06-NgWords.dc.html', 0], ['A-07', '広告', 'A07-Ads.dc.html', 0],
+      ['A-08', 'OGP', 'A08-Ogp.dc.html', 0], ['A-09', 'お問い合わせ', 'A09-Inquiries.dc.html', 2], ['A-10', '運用設定', 'A10-Settings.dc.html', 0]];
+    return N.map((n) => {
+      const on = n[0] === active;
+      return { id: n[0], label: n[1], href: n[2], count: String(n[3]), hasCount: n[3] > 0, bg: on ? '#F2C230' : 'transparent', fg: on ? '#1D1A16' : '#F4EEE2', idc: on ? '#1D1A16' : '#B8AD9C' };
+    });
+  }
+  me(role) { return { name: 'dev-admin', role: role || '上位管理者' }; }
+  badge(s) {
+    const M = {
+      open: ['募集中', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], awaiting: ['結果選択待ち', '#F2C230', '#1D1A16', '#1D1A16', 'solid'],
+      decided: ['結果確定', '#1D1A16', '#FFFFFF', '#1D1A16', 'solid'], no_result: ['結果未選出', '#E6DDCC', '#1D1A16', '#1D1A16', 'solid'],
+      hidden: ['一時非表示', '#FFFDF8', '#A93115', '#A93115', 'dashed'], deleted: ['削除済み', '#FFFDF8', '#4A433B', '#8A8071', 'dashed'],
+      visible: ['公開', '#FFFDF8', '#1D1A16', '#1D1A16', 'solid'],
+      reject: ['投稿拒否', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], review: ['要確認', '#F2C230', '#1D1A16', '#1D1A16', 'solid'],
+      live: ['掲載中', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], scheduled: ['予約', '#F2C230', '#1D1A16', '#1D1A16', 'solid'],
+      stopped: ['停止', '#FFFDF8', '#A93115', '#A93115', 'dashed'], ended: ['終了', '#E6DDCC', '#4A433B', '#8A8071', 'solid'],
+      todo: ['未対応', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], doing: ['対応中', '#F2C230', '#1D1A16', '#1D1A16', 'solid'], done: ['対応済み', '#E6DDCC', '#1D1A16', '#1D1A16', 'solid'],
+      ok: ['完了', '#E6DDCC', '#1D1A16', '#1D1A16', 'solid'], failed: ['失敗', '#FFFDF8', '#A93115', '#A93115', 'dashed']
+    };
+    const m = M[s];
+    return { label: m[0], bg: m[1], fg: m[2], bc: m[3], bs: m[4] };
+  }
+
+  renderVals() {
+    const base = { nav: this.navItems('A-05'), me: this.me(this.roleName) };
+    const s = this.state || {};
+    const tagc = { '通報急増': ['#D6401E', '#FFFFFF'], 'NG検知': ['#F2C230', '#1D1A16'], 'AI要確認': ['#FFFDF8', '#1D1A16'], 'AI非表示推奨': ['#1D1A16', '#FFFFFF'], '異常投稿': ['#E6DDCC', '#1D1A16'] };
+    const AI = { ok: ['問題なし', '#E6DDCC', '#1D1A16'], review: ['要確認', '#F2C230', '#1D1A16'], hide: ['非表示推奨', '#D6401E', '#FFFFFF'], none: ['未判定', '#FFFDF8', '#4A433B'] };
+    const Q = [
+      { id: 'A-90398', kind: '回答', text: '2組の〇〇がやりそうなこと全部', odai: 'うちの担任の嫌なところ選手権', tags: ['通報急増', 'NG検知', 'AI非表示推奨'], time: '18:02', rep: 5, state: 'hidden',
+        reports: '5件（異なる環境から。同一環境の重複2件を除外）／ 誹謗中傷 4・個人情報 1', ng: '「組」＋人名の可能性（部分一致・要確認）', abnormal: 'なし', ai: 'hide', aiReason: '実在の個人を特定し、からかう内容の可能性があります。学校でのいじめにつながるおそれがあります。',
+        history: [['10/09 18:20', '自動：通報が条件に達したため一時非表示'], ['10/09 18:21', '自動：管理者へメール通知']] },
+      { id: 'O-12471', kind: 'お題', text: 'うちの担任の嫌なところ選手権', odai: '—', tags: ['NG検知', 'AI要確認'], time: '17:40', rep: 3, state: 'hidden',
+        reports: '3件 ／ いじめ・嫌がらせ 3', ng: '「担任」（部分一致・要確認）', abnormal: 'なし', ai: 'review', aiReason: '特定の学校関係者を対象にしたお題の可能性があります。',
+        history: [['10/09 17:58', '自動：通報が条件に達したため一時非表示']] },
+      { id: 'A-90377', kind: '回答', text: 'LINEのIDはこちら→', odai: '100年後の運動会あるある', tags: ['NG検知', 'AI要確認'], time: '17:31', rep: 1, state: 'hidden',
+        reports: '1件 ／ スパム・宣伝 1', ng: '「LINE」（部分一致・要確認）', abnormal: 'なし', ai: 'review', aiReason: '連絡先の交換を促す内容です。',
+        history: [['10/09 17:31', '自動：NGワード「要確認」を検知']] },
+      { id: 'A-90301', kind: '回答', text: '（同じ文面が12件）', odai: 'ロボットが絶対に言わない一言', tags: ['異常投稿'], time: '12:48', rep: 0, state: 'visible',
+        reports: 'なし', ng: 'なし', abnormal: '同一環境から30秒間に12件', ai: 'none', aiReason: 'APIの応答がなかったため未判定です。次回のバッチで再判定します。',
+        history: [['10/09 12:48', '自動：連続投稿を検知し、投稿元を1時間制限']] },
+      { id: 'A-90341', kind: '回答', text: 'このお題、主催者のセンス0点', odai: '絶対に流行らない新しい挨拶', tags: ['AI要確認'], time: '15:40', rep: 2, state: 'visible',
+        reports: '2件 ／ 誹謗中傷 2', ng: 'なし', abnormal: 'なし', ai: 'ok', aiReason: 'お題への軽い批評で、攻撃性は低いと判断しました。',
+        history: [] },
+      { id: 'O-12455', kind: 'お題', text: '〇〇駅前のコンビニの店員の特徴', odai: '—', tags: ['NG検知'], time: '09:15', rep: 0, state: 'visible',
+        reports: 'なし', ng: '「駅前」＋「店員」（部分一致・要確認）', abnormal: 'なし', ai: 'review', aiReason: '実在の店舗の従業員を特定できる可能性があります。',
+        history: [] }
+    ];
+    const sel = s.sel ?? 0;
+    const d = Q[sel];
+    const a = AI[d.ai];
+    return Object.assign(base, {
+      queue: Q.map((q, i) => ({ text: q.text, time: q.time, rep: q.rep, kind: q.kind, stateLabel: q.state === 'hidden' ? '一時非表示中' : '公開中',
+        tags: q.tags.map((t) => ({ label: t, bg: tagc[t][0], fg: tagc[t][1] })),
+        pressed: i === sel ? 'true' : 'false', bg: i === sel ? '#FFFDF8' : 'transparent', bc: i === sel ? '#1D1A16' : '#D9CFBE', sh: i === sel ? '0 3px 0 #1D1A16' : 'none',
+        pick: () => this.setState({ sel: i }) })),
+      d: { id: d.id, kind: d.kind, text: d.text, odai: d.odai, b: this.badge(d.state), reports: d.reports, ng: d.ng, abnormal: d.abnormal, time: '10月9日 ' + d.time,
+        ai: { label: a[0], bg: a[1], fg: a[2], reason: d.aiReason },
+        history: d.history.length ? d.history.map((h) => ({ time: h[0], what: h[1] })) : [{ time: '—', what: 'まだ対応していません' }] }
+    });
+  }
+}
+</script>
+</body>
+</html>

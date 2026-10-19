@@ -1,0 +1,50 @@
+/*
+ * デザイントークン（docs/design/Style.dc.html と CODING_RULES 9-1 が正）
+ * 色・書体・角丸・影・余白は必ずこの変数を使う。値を直接書かない。
+ */
+:root {
+  /* 色 */
+  --paper: #F4EEE2;     /* 和紙：ページ背景 */
+  --card: #FFFDF8;      /* 生成り：カード・シート */
+  --ink: #1D1A16;       /* 墨：文字・線・影・Xボタン */
+  --ink-sub: #4A433B;   /* 薄墨：補足文字（4.5:1 を満たす最も薄い色） */
+  --ink-muted: #5A5248; /* 小さな注記。12px 以上で使う */
+  --shu: #D6401E;       /* 朱：主ボタン・1位・残り時間 */
+  --shu-deep: #A93115;  /* 深朱：hover・警告 */
+  --kin: #F2C230;       /* 山吹：タグ・選択中・自分の回答 */
+  --kin-pale: #FFF1C2;  /* 山吹の薄い版：選択中の行 */
+  --sand: #E6DDCC;      /* 砂：無効・終了状態 */
+  --line: #D9CFBE;      /* 区切り線・ハンドル */
+  --white: #FFFFFF;
+
+  /* 書体 */
+  --font-display: "Dela Gothic One", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-body: "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, monospace;
+
+  /* 形 */
+  --radius-input: 12px;
+  --radius-button: 14px;
+  --radius-card: 18px;
+  --radius-sheet: 24px;
+  --radius-pill: 99px;
+  --border: 2px solid var(--ink);
+  --border-dashed: 2px dashed var(--line);
+  --shadow-press: 0 4px 0 var(--ink);
+  --shadow-press-lg: 0 6px 0 var(--ink);
+
+  /* 余白 */
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 18px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --gutter: 20px;
+  --content-max: 560px;
+
+  /* 高さ */
+  --tap-min: 44px;
+  --button-h: 56px;
+  --input-h: 50px;
+  --header-h: 56px;
+}

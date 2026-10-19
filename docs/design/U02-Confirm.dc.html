@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>U-02 開催確認モーダル</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4EEE2;color:#1D1A16;font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif}
+a{color:#1D1A16}a:hover{color:#A93115}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; background: #F4EEE2; overflow: hidden">
+
+<div aria-hidden="true" style="position: absolute; top: 0; left: 0; right: 0; display: flex; flex-direction: column">
+<div style="height: 56px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #1D1A16">
+<svg width="30" height="30" viewBox="0 0 32 32"><path d="M11 15 L12.5 3.5 L22 4.8 L20.5 15" fill="#F2C230" stroke="#1D1A16" stroke-width="2.2" stroke-linejoin="round"></path><rect x="3" y="12" width="26" height="17" rx="3" fill="#D6401E" stroke="#1D1A16" stroke-width="2.2"></rect><path d="M10 17 H22" stroke="#1D1A16" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<span style="font-family: 'Dela Gothic One', sans-serif; font-size: 22px">ぼけばこ</span>
+</div>
+<div style="padding: 90px 20px 0; font-family: 'Dela Gothic One', sans-serif; font-size: 34px; line-height: 1.32">お題を出したら、<br>24時間だけ<br>大喜利スタート。</div>
+</div>
+
+<div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(29, 26, 22, 0.62)"></div>
+
+<div role="dialog" aria-modal="true" aria-labelledby="c-title" style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; background: #FFFDF8; border-top: 2px solid #1D1A16; border-radius: 24px 24px 0 0; padding: 10px 20px 28px; display: flex; flex-direction: column; gap: 18px">
+<div style="align-self: center; width: 44px; height: 5px; border-radius: 99px; background: #D9CFBE"></div>
+<h2 id="c-title" style="margin: 0; font-family: 'Dela Gothic One', sans-serif; font-weight: 400; font-size: 22px">この内容で開催しますか？</h2>
+
+<div style="position: relative; background: #F4EEE2; border: 2px solid #1D1A16; border-radius: 14px; padding: 22px 16px 16px">
+<span style="position: absolute; top: -12px; left: 14px; background: #F2C230; border: 2px solid #1D1A16; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-weight: 900">お題</span>
+<p style="margin: 0; font-size: 20px; font-weight: 900; line-height: 1.5">こんなコンビニ店員は嫌だ</p>
+</div>
+
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px">
+<li style="display: flex; gap: 10px; font-size: 14px; line-height: 1.6">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D6401E" stroke-width="2.2" style="flex-shrink: 0" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7 V12 L15.5 14"></path></svg>
+<span>このお題は公開から<b>24時間</b>、匿名回答を募集します。</span>
+</li>
+<li style="display: flex; gap: 10px; font-size: 14px; line-height: 1.6">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D6401E" stroke-width="2.2" style="flex-shrink: 0" aria-hidden="true"><path d="M8 4 H16 V9 A4 4 0 0 1 8 9 Z"></path><path d="M8 6 H5 A3 3 0 0 0 8 10.5 M16 6 H19 A3 3 0 0 1 16 10.5 M12 13 V17 M8 21 H16 M9.5 17 H14.5"></path></svg>
+<span>募集終了後、あなたが気に入った回答を<b>最大3件</b>選べます。</span>
+</li>
+</ul>
+
+<div style="background: #F4EEE2; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 900">みんなが楽しく遊ぶために</span>
+<ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.6; color: #3A342D">
+<li>特定の人への攻撃はしない</li>
+<li>名前や住所などの個人情報は書かない</li>
+<li>違法なもの・他人の権利を侵害するものは書かない</li>
+<li>問題のある投稿は非表示・削除することがあります</li>
+</ul>
+<div style="display: flex; gap: 16px; font-size: 12.5px; font-weight: 700">
+<a href="#">利用規約</a>
+<a href="#">投稿ガイドライン</a>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<a href="U03-Created.dc.html" style="display: flex; align-items: center; justify-content: center; height: 56px; border: 2px solid #1D1A16; border-radius: 14px; background: #D6401E; color: #FFFFFF; font-size: 16.5px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #1D1A16">同意して開催する</a>
+<a href="Main.dc.html" style="display: flex; align-items: center; justify-content: center; height: 50px; border-radius: 14px; font-size: 15px; font-weight: 700; text-decoration: none">戻って修正する</a>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

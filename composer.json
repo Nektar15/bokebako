@@ -1,0 +1,43 @@
+{
+    "name": "bokebako/app",
+    "description": "ぼけばこ — 登録不要・24時間限定の匿名大喜利Webサービス",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.2",
+        "ext-intl": "*",
+        "ext-mbstring": "*",
+        "ext-gd": "*",
+        "ext-curl": "*"
+    },
+    "require-dev": {
+        "codeigniter/coding-standard": "^1.7",
+        "friendsofphp/php-cs-fixer": "^3.47",
+        "nexusphp/cs-config": "^3.6",
+        "phpstan/phpstan": "^1.12",
+        "phpunit/phpunit": "^10.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Config\\": "app/Config/"
+        },
+        "exclude-from-classmap": ["**/Database/Migrations/**"]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Support\\": "tests/_support/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "php-cs-fixer fix --dry-run --diff",
+        "fix": "php-cs-fixer fix",
+        "analyse": "phpstan analyse",
+        "check": ["@lint", "@analyse", "@test"]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": false
+    }
+}

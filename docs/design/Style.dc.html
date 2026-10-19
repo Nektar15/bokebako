@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ぼけばこ スタイルガイド</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4EEE2;color:#1D1A16;font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif}
+a{color:#1D1A16}a:hover{color:#A93115}
+</style>
+</helmet>
+<div style="width: 880px; height: 1300px; box-sizing: border-box; background: #F4EEE2; padding: 56px; display: flex; flex-direction: column; gap: 44px">
+
+<div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1D1A16; padding-bottom: 20px">
+<div style="display: flex; align-items: center; gap: 14px">
+<svg width="56" height="56" viewBox="0 0 32 32" aria-hidden="true"><path d="M11 15 L12.5 3.5 L22 4.8 L20.5 15" fill="#F2C230" stroke="#1D1A16" stroke-width="2" stroke-linejoin="round"></path><rect x="3" y="12" width="26" height="17" rx="3" fill="#D6401E" stroke="#1D1A16" stroke-width="2"></rect><path d="M10 17 H22" stroke="#1D1A16" stroke-width="2.4" stroke-linecap="round"></path></svg>
+<div style="display: flex; flex-direction: column">
+<span style="font-family: 'Dela Gothic One', sans-serif; font-size: 40px; line-height: 1.1">ぼけばこ</span>
+<span style="font-size: 14px; font-weight: 700; color: #4A433B">スタイルガイド ／ 実装用トークン</span>
+</div>
+</div>
+<span style="font-size: 13px; font-weight: 700; color: #4A433B">寄席のめくり × ハガキ職人の投稿箱</span>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 900">カラー</h2>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px">
+<sc-for list="{{colors}}" as="c" hint-placeholder-count="8">
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column">
+<div style="height: 72px; background: {{c.hex}}; border-bottom: 2px solid #1D1A16"></div>
+<div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 900">{{c.name}}</span>
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px">{{c.token}}</span>
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #4A433B">{{c.hex}}</span>
+<span style="font-size: 11.5px; line-height: 1.5; color: #4A433B">{{c.use}}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 900">書体</h2>
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #4A433B">Display — Dela Gothic One（見出し・お題・数字）</span>
+<span style="font-family: 'Dela Gothic One', sans-serif; font-size: 34px; line-height: 1.3">お題 34px</span>
+<span style="font-family: 'Dela Gothic One', sans-serif; font-size: 22px">見出し 22–28px</span>
+</div>
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #4A433B">Body — Zen Kaku Gothic New 400/700/900</span>
+<span style="font-size: 20px; font-weight: 900">ボケ本文 16–22px / 900</span>
+<span style="font-size: 16px; font-weight: 700">ボタン・ラベル 15–17px / 700–900</span>
+<span style="font-size: 13px; color: #4A433B">補足 12–14px / 400（#4A433B以上の濃さ）</span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 900">形のルール</h2>
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 14px; padding: 18px; display: grid; grid-template-columns: 130px minmax(0, 1fr); row-gap: 10px; column-gap: 12px; font-size: 13.5px; line-height: 1.5">
+<span style="font-weight: 900">線</span><span>2px solid ink（区切りは 2px dashed #D9CFBE）</span>
+<span style="font-weight: 900">影</span><span>0 4px 0 ink（押せる物だけ。1位は 0 6px 0）</span>
+<span style="font-weight: 900">角丸</span><span>入力 12 ／ ボタン 14 ／ カード 18 ／ シート 24</span>
+<span style="font-weight: 900">タップ領域</span><span>最小 44×44px。主ボタン高さ 56–58px</span>
+<span style="font-weight: 900">余白</span><span>画面左右 20px、要素間 8 / 12 / 18 / 24</span>
+<span style="font-weight: 900">動き</span><span>判子（開催中・結果発表）と、箱に落ちる紙の2箇所だけ</span>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 900">部品</h2>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">主ボタン（1画面1つ）</span>
+<a href="#" style="display: flex; align-items: center; justify-content: center; height: 56px; border: 2px solid #1D1A16; border-radius: 14px; background: #D6401E; color: #FFFFFF; font-size: 16px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #1D1A16">開催する</a>
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">Xシェア</span>
+<a href="#" style="display: flex; align-items: center; justify-content: center; height: 56px; border: 2px solid #1D1A16; border-radius: 14px; background: #1D1A16; color: #FFFFFF; font-size: 16px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #D6401E">Xでシェアする</a>
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">副ボタン</span>
+<a href="#" style="display: flex; align-items: center; justify-content: center; height: 52px; border: 2px solid #1D1A16; border-radius: 14px; background: #FFFDF8; font-size: 15px; font-weight: 900; text-decoration: none; box-shadow: 0 4px 0 #1D1A16">開催者ページ</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">お題カード（付箋タブ）</span>
+<div style="position: relative; margin-top: 8px; background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 18px; box-shadow: 0 4px 0 #1D1A16; padding: 26px 16px 18px">
+<span style="position: absolute; top: -13px; left: 14px; background: #F2C230; border: 2px solid #1D1A16; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-weight: 900">お題</span>
+<span style="font-family: 'Dela Gothic One', sans-serif; font-size: 20px; line-height: 1.4">こんなコンビニ店員は嫌だ</span>
+</div>
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">残り時間（導火線バー）</span>
+<div style="height: 12px; border: 2px solid #1D1A16; border-radius: 99px; background: #FFFFFF; overflow: hidden"><div style="width: 62%; height: 100%; background: #D6401E"></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">順位バッジ</span>
+<div style="display: flex; gap: 10px">
+<span style="width: 52px; height: 52px; border-radius: 50%; background: #D6401E; border: 2px solid #1D1A16; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Dela Gothic One', sans-serif; font-size: 16px">1位</span>
+<span style="width: 52px; height: 52px; border-radius: 50%; background: #1D1A16; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Dela Gothic One', sans-serif; font-size: 16px">2位</span>
+<span style="width: 52px; height: 52px; border-radius: 50%; background: #1D1A16; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-family: 'Dela Gothic One', sans-serif; font-size: 16px">3位</span>
+</div>
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">タグ</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<span style="background: #F2C230; border: 2px solid #1D1A16; border-radius: 99px; padding: 3px 12px; font-size: 12px; font-weight: 900">24時間限定</span>
+<span style="background: #1D1A16; color: #FFFFFF; border-radius: 99px; padding: 5px 12px; font-size: 12px; font-weight: 900">回答募集中</span>
+</div>
+<span style="font-size: 12px; font-weight: 700; color: #4A433B">広告枠</span>
+<div style="height: 50px; box-sizing: border-box; border: 1.5px dashed #8A8071; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #5A5248">PR 320×50</div>
+</div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":880,"height":1300}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      colors: [
+        { name: '和紙', token: '--paper', hex: '#F4EEE2', use: 'ページ背景' },
+        { name: '生成り', token: '--card', hex: '#FFFDF8', use: 'カード・シート' },
+        { name: '墨', token: '--ink', hex: '#1D1A16', use: '文字・線・影・Xボタン' },
+        { name: '薄墨', token: '--ink-sub', hex: '#4A433B', use: '補足文字' },
+        { name: '朱', token: '--shu', hex: '#D6401E', use: '主ボタン・1位・残り時間' },
+        { name: '深朱', token: '--shu-deep', hex: '#A93115', use: 'hover・警告アイコン' },
+        { name: '山吹', token: '--kin', hex: '#F2C230', use: 'タグ・選択中・自分の回答' },
+        { name: '砂', token: '--line', hex: '#D9CFBE', use: '区切り線・ハンドル' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>A-06 NGワード管理</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&amp;family=Zen+Kaku+Gothic+New:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F4EEE2;color:#1D1A16;font-family:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif}summary::-webkit-details-marker{display:none}a{color:inherit}[role=cell] button,[role=cell] a{white-space:nowrap}
+</style>
+</helmet>
+<div style="width: 1280px; height: 1020px; display: flex; background: #F4EEE2; overflow: hidden">
+<aside style="width: 232px; flex-shrink: 0; box-sizing: border-box; background: #1D1A16; color: #F4EEE2; display: flex; flex-direction: column; gap: 22px; padding: 20px 14px">
+<div style="display: flex; align-items: center; gap: 8px; padding: 0 6px"><svg width="28" height="28" viewBox="0 0 32 32" aria-hidden="true"><path d="M11 15 L12.5 3.5 L22 4.8 L20.5 15" fill="#F2C230" stroke="#1D1A16" stroke-width="2" stroke-linejoin="round"></path><rect x="3" y="12" width="26" height="17" rx="3" fill="#D6401E" stroke="#1D1A16" stroke-width="2"></rect><path d="M10 17 H22" stroke="#1D1A16" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<span style="font-family: 'Dela Gothic One', sans-serif; font-weight: 400; font-size: 19px; color: #FFFFFF">ぼけばこ</span>
+<span style="background: #F2C230; color: #1D1A16; border-radius: 4px; padding: 0 6px; font-size: 11px; font-weight: 900">管理</span></div>
+<nav aria-label="管理メニュー"><ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 2px">
+<sc-for list="{{nav}}" as="n" hint-placeholder-count="9">
+<li><a href="{{n.href}}" style="display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 10px; border-radius: 10px; background: {{n.bg}}; color: {{n.fg}}; text-decoration: none; font-size: 13.5px; font-weight: 700; line-height: 1.3">
+<span style="font-family: ui-monospace, Menlo, monospace; font-size: 11px; color: {{n.idc}}; width: 34px; flex-shrink: 0">{{n.id}}</span><span style="flex-grow: 1">{{n.label}}</span>
+<sc-if value="{{n.hasCount}}" hint-placeholder-val="{{ false }}"><span style="background: #D6401E; color: #FFFFFF; border-radius: 99px; min-width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 900">{{n.count}}</span></sc-if>
+</a></li>
+</sc-for>
+</ul></nav>
+<div style="margin-top: auto; border-top: 1.5px solid #4A433B; padding: 14px 6px 0; display: flex; flex-direction: column; gap: 8px">
+<span style="align-self: flex-start; border: 1.5px dashed #F2C230; color: #F2C230; border-radius: 6px; padding: 1px 8px; font-size: 11px; font-weight: 900">開発用の仮ログイン</span>
+<span style="font-size: 14px; font-weight: 700; color: #FFFFFF">{{me.name}}</span>
+<span style="font-size: 12px; color: #D9CFBE">{{me.role}}</span>
+<span style="font-size: 12px; color: #D9CFBE">ログアウトはA-01実装後に有効</span>
+</div>
+</aside>
+<main style="flex-grow: 1; min-width: 0; display: flex; flex-direction: column">
+<header style="height: 72px; flex-shrink: 0; box-sizing: border-box; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 2px solid #1D1A16; background: #FFFDF8">
+<div style="display: flex; flex-direction: column; gap: 2px">
+<div style="display: flex; align-items: baseline; gap: 12px"><span style="font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: #4A433B">A-06</span><h1 style="margin: 0; font-size: 22px; font-weight: 900">NGワード管理</h1></div></div>
+<div style="display: flex; align-items: center; gap: 10px"><button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; background: #FFFDF8; color: #1D1A16; border: 2px solid #1D1A16; font-family: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; box-sizing: border-box; ">CSVエクスポート</button><button type="button" style="height: 40px; padding: 0 14px; border-radius: 10px; background: #FFFDF8; color: #1D1A16; border: 2px solid #1D1A16; font-family: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; box-sizing: border-box; ">CSVインポート</button></div>
+</header>
+<div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start">
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 16px; padding: 12px 14px; display: flex; gap: 10px; align-items: center"><input type="text" aria-label="キーワード" placeholder="ワードで検索" style="box-sizing: border-box; height: 40px; border: 2px solid #1D1A16; border-radius: 10px; background: #FFFFFF; padding: 0 12px; font-family: inherit; font-size: 14px; color: #1D1A16; width: 220px"><select aria-label="処理" style="box-sizing: border-box; height: 40px; border: 2px solid #1D1A16; border-radius: 10px; background: #FFFFFF; padding: 0 12px; font-family: inherit; font-size: 14px; color: #1D1A16; padding-right: 8px; width: 140px"><option>処理：すべて</option><option>投稿拒否</option><option>要確認</option></select><select aria-label="カテゴリー" style="box-sizing: border-box; height: 40px; border: 2px solid #1D1A16; border-radius: 10px; background: #FFFFFF; padding: 0 12px; font-family: inherit; font-size: 14px; color: #1D1A16; padding-right: 8px; width: 170px"><option>カテゴリー：すべて</option><option>誹謗中傷</option><option>個人情報</option><option>いじめ・学校</option><option>脅迫</option><option>性的</option><option>スパム</option><option>その他</option></select><span style="margin-left: auto; font-size: 12.5px; color: #4A433B">有効 7 ／ 全 8件</span></div>
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 16px; padding: 4px 8px 8px">
+<div role="table" style="display: flex; flex-direction: column">
+<div role="row" style="display: grid; grid-template-columns: minmax(0, 1fr) 86px 104px 92px 64px 70px 96px; align-items: end"><div role="columnheader" style="text-align: left; padding: 10px 10px; font-size: 12px; font-weight: 900; color: #4A433B; border-bottom: 2px solid #1D1A16; white-space: nowrap">ワード</div><div role="columnheader" style="text-align: left; padding: 10px 10px; font-size: 12px; font-weight: 900; color: #4A433B; border-bottom: 2px solid #1D1A16; white-space: nowrap">一致方式</div><div role="columnheader" style="text-align: left; padding: 10px 10px; font-size: 12px; font-weight: 900; color: #4A433B; border-bottom: 2px solid #1D1A16; white-space: nowrap">カテゴリー</div><div role="columnheader" style="text-align: left; padding: 10px 10px; font-size: 12px; font-weight: 900; color: #4A433B; border-bottom: 2px solid #1D1A16; white-space: nowrap">処理</div><div role="columnheader" style="text-align: left; padding: 10px 10px; font-size: 12px; font-weight: 900; color: #4A433B; border-bottom: 2px solid #1D1A16; white-space: nowrap">有効</div><div role="columnheader" style="text-align: left; padding: 10px 10px; font-size: 12px; font-weight: 900; color: #4A433B; border-bottom: 2px solid #1D1A16; white-space: nowrap">更新日</div><div role="columnheader" style="text-align: left; padding: 10px 10px; font-size: 12px; font-weight: 900; color: #4A433B; border-bottom: 2px solid #1D1A16; white-space: nowrap">操作</div></div>
+<sc-for list="{{words}}" as="w" hint-placeholder-count="8"><div role="row" style="display: grid; grid-template-columns: minmax(0, 1fr) 86px 104px 92px 64px 70px 96px; align-items: center; border-bottom: 1.5px solid #D9CFBE; opacity: {{w.op}}">
+<div role="cell" style="min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; vertical-align: middle; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; word-break: break-all">{{w.word}}</div>
+<div role="cell" style="min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; vertical-align: middle; font-size: 12.5px">{{w.match}}</div><div role="cell" style="min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; vertical-align: middle; font-size: 12.5px">{{w.cat}}</div>
+<div role="cell" style="min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; vertical-align: middle"><span style="background: {{w.b.bg}}; color: {{w.b.fg}}; border: 1.5px {{w.b.bs}} {{w.b.bc}}; border-radius: 99px; padding: 2px 10px; font-size: 12px; font-weight: 900; white-space: nowrap">{{w.b.label}}</span></div>
+<div role="cell" style="min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; vertical-align: middle"><button type="button" role="switch" aria-checked="{{w.on}}" aria-label="有効" onClick="{{w.toggle}}" style="width: 44px; height: 26px; border: 2px solid #1D1A16; border-radius: 99px; background: {{w.trk}}; padding: 0; position: relative; cursor: pointer"><span style="position: absolute; top: 2px; left: {{w.knob}}px; width: 18px; height: 18px; border-radius: 50%; background: #FFFFFF; border: 1.5px solid #1D1A16; box-sizing: border-box"></span></button></div>
+<div role="cell" style="min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; vertical-align: middle; font-size: 12px">{{w.date}}</div>
+<div role="cell" style="min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; vertical-align: middle"><div style="display: flex; gap: 4px; align-items: center"><button type="button" style="height: 30px; padding: 0 10px; border: 1.5px solid #1D1A16; border-radius: 8px; background: #FFFDF8; font-family: inherit; font-size: 12px; font-weight: 900; cursor: pointer">編集</button><button type="button" aria-label="削除" style="width: 30px; height: 30px; border: 0; background: transparent; color: #A93115; cursor: pointer; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7 H20 M9 7 V4 H15 V7 M6 7 L7 20 H17 L18 7"></path></svg></button></div></div>
+</div></sc-for></div>
+</div>
+<p style="margin: 0; font-size: 12px; line-height: 1.6; color: #4A433B">CSVの列：word, match_type（exact / partial / regex）, category, action（reject / review）, enabled（1 / 0）。インポートは同じワード・一致方式の行を上書きします。</p>
+</div>
+
+<div style="background: #FFFDF8; border: 2px solid #1D1A16; border-radius: 16px; box-shadow: 0 4px 0 #1D1A16; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+<h2 style="margin: 0; font-size: 16px; font-weight: 900">ワードを追加</h2>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 900">ワード</span><input type="text" aria-label="ワード" placeholder="例：住所" style="box-sizing: border-box; height: 40px; border: 2px solid #1D1A16; border-radius: 10px; background: #FFFFFF; padding: 0 12px; font-family: inherit; font-size: 14px; color: #1D1A16; width: 100%"></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 900">一致方式</span>
+<div role="group" aria-label="一致方式" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 2px solid #1D1A16; border-radius: 10px; overflow: hidden">
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="3"><button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="height: 38px; border: 0; border-right: 1.5px solid #1D1A16; background: {{m.bg}}; font-family: inherit; font-size: 13px; font-weight: 900; color: #1D1A16; cursor: pointer">{{m.label}}</button></sc-for>
+</div>
+<p style="margin: 0; font-size: 12px; line-height: 1.6; color: #4A433B">{{modeHelp}}</p></div>
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 900">カテゴリー</span><select aria-label="カテゴリー" style="box-sizing: border-box; height: 40px; border: 2px solid #1D1A16; border-radius: 10px; background: #FFFFFF; padding: 0 12px; font-family: inherit; font-size: 14px; color: #1D1A16; padding-right: 8px; width: 100%"><option>誹謗中傷</option><option>個人情報</option><option>いじめ・学校</option><option>脅迫</option><option>性的</option><option>スパム</option><option>その他</option></select></div>
+<div style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 13px; font-weight: 900">一致したときの処理</span>
+<sc-for list="{{actions}}" as="a" hint-placeholder-count="2">
+<button type="button" onClick="{{a.pick}}" aria-pressed="{{a.pressed}}" style="text-align: left; border: 2px solid #1D1A16; border-radius: 12px; background: {{a.bg}}; padding: 10px 12px; font-family: inherit; color: #1D1A16; cursor: pointer; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 13.5px; font-weight: 900">{{a.label}}</span><span style="font-size: 12px; color: #4A433B">{{a.desc}}</span></button>
+</sc-for></div>
+<div style="background: #F4EEE2; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 900">ためしに判定する</span>
+<input type="text" aria-label="判定テスト" placeholder="判定したい文章を入力" style="box-sizing: border-box; height: 40px; border: 2px solid #1D1A16; border-radius: 10px; background: #FFFFFF; padding: 0 12px; font-family: inherit; font-size: 14px; color: #1D1A16; width: 100%">
+<span style="font-size: 12px; color: #4A433B">保存前に、このワードで一致するかを確認できます。</span>
+</div>
+<button type="button" style="height: 46px; padding: 0 14px; border-radius: 10px; background: #D6401E; color: #FFFFFF; border: 2px solid #1D1A16; box-shadow: 0 3px 0 #1D1A16; font-family: inherit; font-size: 13.5px; font-weight: 900; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; text-decoration: none; box-sizing: border-box; ">追加する</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview": {"width": 1280, "height": 1020}}'>
+class Component extends DCLogic {
+
+  navItems(active) {
+    const N = [['A-02', 'ダッシュボード', 'A02-Dashboard.dc.html', 0], ['A-03', '大喜利', 'A03-Oogiri.dc.html', 0], ['A-04', '回答', 'A04-Answers.dc.html', 0],
+      ['A-05', '通報・モデレーション', 'A05-Moderation.dc.html', 6], ['A-06', 'NGワード', 'A06-NgWords.dc.html', 0], ['A-07', '広告', 'A07-Ads.dc.html', 0],
+      ['A-08', 'OGP', 'A08-Ogp.dc.html', 0], ['A-09', 'お問い合わせ', 'A09-Inquiries.dc.html', 2], ['A-10', '運用設定', 'A10-Settings.dc.html', 0]];
+    return N.map((n) => {
+      const on = n[0] === active;
+      return { id: n[0], label: n[1], href: n[2], count: String(n[3]), hasCount: n[3] > 0, bg: on ? '#F2C230' : 'transparent', fg: on ? '#1D1A16' : '#F4EEE2', idc: on ? '#1D1A16' : '#B8AD9C' };
+    });
+  }
+  me(role) { return { name: 'dev-admin', role: role || '上位管理者' }; }
+  badge(s) {
+    const M = {
+      open: ['募集中', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], awaiting: ['結果選択待ち', '#F2C230', '#1D1A16', '#1D1A16', 'solid'],
+      decided: ['結果確定', '#1D1A16', '#FFFFFF', '#1D1A16', 'solid'], no_result: ['結果未選出', '#E6DDCC', '#1D1A16', '#1D1A16', 'solid'],
+      hidden: ['一時非表示', '#FFFDF8', '#A93115', '#A93115', 'dashed'], deleted: ['削除済み', '#FFFDF8', '#4A433B', '#8A8071', 'dashed'],
+      visible: ['公開', '#FFFDF8', '#1D1A16', '#1D1A16', 'solid'],
+      reject: ['投稿拒否', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], review: ['要確認', '#F2C230', '#1D1A16', '#1D1A16', 'solid'],
+      live: ['掲載中', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], scheduled: ['予約', '#F2C230', '#1D1A16', '#1D1A16', 'solid'],
+      stopped: ['停止', '#FFFDF8', '#A93115', '#A93115', 'dashed'], ended: ['終了', '#E6DDCC', '#4A433B', '#8A8071', 'solid'],
+      todo: ['未対応', '#D6401E', '#FFFFFF', '#D6401E', 'solid'], doing: ['対応中', '#F2C230', '#1D1A16', '#1D1A16', 'solid'], done: ['対応済み', '#E6DDCC', '#1D1A16', '#1D1A16', 'solid'],
+      ok: ['完了', '#E6DDCC', '#1D1A16', '#1D1A16', 'solid'], failed: ['失敗', '#FFFDF8', '#A93115', '#A93115', 'dashed']
+    };
+    const m = M[s];
+    return { label: m[0], bg: m[1], fg: m[2], bc: m[3], bs: m[4] };
+  }
+
+  renderVals() {
+    const base = { nav: this.navItems('A-06'), me: this.me(this.roleName) };
+    const s = this.state || {};
+    const W = [
+      ['殺す', '部分一致', '脅迫', 'reject', '10/01'], ['0\\d{1,4}-?\\d{1,4}-?\\d{4}', '正規表現', '個人情報', 'reject', '09/28'],
+      ['[\\w.+-]+@[\\w-]+\\.[\\w.]+', '正規表現', '個人情報', 'reject', '09/28'], ['LINE', '部分一致', '個人情報', 'review', '09/30'],
+      ['担任', '部分一致', 'いじめ・学校', 'review', '10/05'], ['住所', '部分一致', '個人情報', 'review', '09/28'],
+      ['死ね', '完全一致', '誹謗中傷', 'review', '09/28'], ['http', '部分一致', 'スパム', 'review', '10/02']
+    ];
+    const off = s.off || { 7: true };
+    const mode = s.mode || '部分一致';
+    const act = s.act || 'review';
+    const help = { '完全一致': '投稿全体がこのワードと同じときだけ一致します。', '部分一致': '投稿の中にこのワードが含まれていれば一致します。', '正規表現': '前後の / は不要です。保存時に、正しい正規表現かどうかを確認します。' };
+    return Object.assign(base, {
+      words: W.map((w, i) => {
+        const on = !off[i];
+        return { word: w[0], match: w[1], cat: w[2], b: this.badge(w[3]), date: w[4], on: on ? 'true' : 'false', trk: on ? '#D6401E' : '#E6DDCC', knob: on ? 20 : 2, op: on ? '1' : '0.55',
+          toggle: () => { const o = Object.assign({}, off); o[i] = on; this.setState({ off: o }); } };
+      }),
+      modes: ['完全一致', '部分一致', '正規表現'].map((m) => ({ label: m, pressed: m === mode ? 'true' : 'false', bg: m === mode ? '#F2C230' : '#FFFFFF', pick: () => this.setState({ mode: m }) })),
+      modeHelp: help[mode],
+      actions: [['reject', '投稿拒否', '投稿時にエラーにして、投稿させません。'], ['review', '要確認', '投稿は通し、通報・モデレーションに表示します。']].map((a) => ({
+        label: a[1], desc: a[2], pressed: a[0] === act ? 'true' : 'false', bg: a[0] === act ? '#FFF1C2' : '#FFFFFF', pick: () => this.setState({ act: a[0] }) }))
+    });
+  }
+}
+</script>
+</body>
+</html>
