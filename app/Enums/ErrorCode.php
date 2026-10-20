@@ -31,7 +31,9 @@ enum ErrorCode: string
         };
     }
 
-    /** 利用者に見せる文言 */
+    /**
+     * 利用者に見せる文言
+     */
     public function message(): string
     {
         return match ($this) {

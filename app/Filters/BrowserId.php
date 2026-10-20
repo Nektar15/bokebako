@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filters;
 
 use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -21,14 +22,15 @@ class BrowserId implements FilterInterface
 
     public function before(RequestInterface $request, $arguments = null)
     {
-        if ($request->getCookie(self::COOKIE_NAME) !== null) {
+        // getCookie() は IncomingRequest にしかない（CLI など Cookie を持たないリクエストは対象外）
+        if (! $request instanceof IncomingRequest || $request->getCookie(self::COOKIE_NAME) !== null) {
             return null;
         }
 
         $id = bin2hex(random_bytes(16));
         service('response')->setCookie(self::COOKIE_NAME, $id, self::LIFETIME, '', '/', '', null, true, 'Lax');
-        // 同じリクエスト内でも読めるように、リクエスト側にも持たせる
-        $_COOKIE[self::COOKIE_NAME] = $id; // @phpstan-ignore-line Cookie の発行は Filter の責務なのでここだけ許可
+        // 同じリクエスト内でも読めるように、リクエスト側にも持たせる（Cookie の発行は Filter の責務なのでここだけ許可）
+        $_COOKIE[self::COOKIE_NAME] = $id;
 
         return null;
     }

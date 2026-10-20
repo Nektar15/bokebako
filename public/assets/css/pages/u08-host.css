@@ -1,0 +1,46 @@
+/* U-08 開催者専用（U-09 モーダル含む）・本人確認 */
+.p-host__bar { display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 8px var(--gutter) 0; font-size: 12px; font-weight: 900; }
+.p-host__banner { background: var(--ink); color: var(--white); padding: 16px var(--gutter); display: flex; flex-direction: column; gap: 4px; margin-top: var(--space-1); }
+.p-host__banner-title { font-family: var(--font-display); font-size: 19px; }
+.p-host__banner-sub { font-size: 12.5px; color: var(--line); }
+.p-host__banner-sub strong { color: var(--kin); }
+.p-host__odai { font-size: 20px; font-weight: 900; line-height: 1.45; }
+.p-host__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-1); margin: 0; }
+.p-host__stat { background: var(--card); border: var(--border); border-radius: var(--radius-input); padding: 10px 12px; display: flex; flex-direction: column; }
+.p-host__stat dt { font-size: 11px; font-weight: 700; color: var(--ink-sub); }
+.p-host__stat dd { margin: 0; font-family: var(--font-display); font-size: 22px; }
+.p-host__stat--small { font-size: 15px !important; }
+.p-host__url { display: flex; gap: var(--space-1); }
+.p-host__url-input { flex-grow: 1; min-width: 0; font-size: 13px; background: var(--card); }
+.p-host__copy { flex-shrink: 0; width: 104px; height: var(--input-h); font-size: 13.5px; box-shadow: none; }
+.p-host__h2 { font-size: 15px; font-weight: 900; }
+.p-host__title { display: flex; justify-content: space-between; align-items: baseline; }
+.p-host__slots { display: flex; flex-direction: column; gap: var(--space-1); }
+.p-host__slot { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 12px 6px 6px; border: 2px dashed var(--ink); border-radius: 14px; color: var(--ink-sub); }
+.p-host__slot.is-filled { border-style: solid; background: var(--card); color: var(--ink); }
+.p-host__slot--first.is-filled { background: var(--kin-pale); }
+.p-host__rank { width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: var(--sand); color: var(--ink-sub); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 14px; }
+.p-host__slot.is-filled .p-host__rank { background: var(--ink); color: var(--white); }
+.p-host__slot--first.is-filled .p-host__rank { background: var(--shu); }
+.p-host__slot-text { font-size: 14px; font-weight: 700; line-height: 1.45; overflow-wrap: anywhere; }
+.p-host__answers { padding-bottom: var(--space-4); }
+.p-host__empty { border: 2px dashed var(--ink); border-radius: 14px; padding: 14px 16px; font-size: 13.5px; line-height: 1.6; }
+.p-host__list { display: flex; flex-direction: column; gap: 10px; }
+.p-host__item { background: var(--card); border: var(--border); border-radius: 16px; }
+.p-host__body { display: block; font-size: 15.5px; font-weight: 700; line-height: 1.6; overflow-wrap: anywhere; }
+.p-host__item-meta { display: flex; justify-content: space-between; align-items: center; padding: 0 6px 6px 14px; }
+.p-host__item > .p-host__body { padding: 14px 14px 4px; }
+.p-host__fav { width: var(--tap-min); height: var(--tap-min); border: 0; background: transparent; font-size: 22px; color: var(--line); cursor: pointer; }
+.p-host__fav.is-on { color: var(--kin); text-shadow: 0 0 0 var(--ink); }
+.p-host__pick { display: flex; align-items: flex-start; gap: 12px; padding: 14px; cursor: pointer; border-radius: 16px; }
+.p-host__pick-badge { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; border: var(--border); background: var(--white); color: var(--white); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 12px; }
+.p-host__pick-body { display: flex; flex-direction: column; gap: 4px; }
+.p-host__item.is-picked { background: var(--kin-pale); box-shadow: var(--shadow-press); }
+.p-host__item.is-picked .p-host__pick-badge { background: var(--ink); }
+.p-host__item.is-first .p-host__pick-badge { background: var(--shu); }
+.p-host__sticky { position: sticky; bottom: 0; background: var(--paper); border-top: var(--border); padding: 12px var(--gutter) 22px; }
+.p-host__pill { background: var(--white); color: var(--ink); border-radius: var(--radius-pill); padding: 1px 9px; font-size: 12.5px; }
+.p-host__delete { color: var(--shu-deep); font-size: 13.5px; }
+.p-recover { align-items: stretch; gap: 14px; padding-top: 36px; }
+.p-recover__icon { width: 56px; height: 56px; border: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--card); }
+.p-recover__icon svg { width: 26px; height: 26px; }

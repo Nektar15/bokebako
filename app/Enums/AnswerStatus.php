@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Enums;
 
-/** 回答の状態（FEATURES.md 0-4） */
+/**
+ * 回答の状態（FEATURES.md 0-4）
+ */
 enum AnswerStatus: string
 {
     case Visible = 'visible';

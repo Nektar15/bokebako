@@ -1,0 +1,21 @@
+/* 判子（開催中・結果発表・選出なし）と、箱に落ちる紙のアニメーション */
+.c-stamp {
+  width: 76px; height: 76px; flex-shrink: 0; border-radius: 50%;
+  border: 3px solid var(--shu); color: var(--shu);
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-family: var(--font-display); font-size: 17px; line-height: 1.1; transform: rotate(-8deg);
+}
+.c-stamp--muted { border-color: var(--ink-sub); color: var(--ink-sub); transform: rotate(-10deg); }
+.c-stamp--pop { animation: c-stamp-pop .6s ease-out both; }
+@keyframes c-stamp-pop {
+  0% { transform: scale(.6) rotate(-14deg); opacity: 0; }
+  70% { transform: scale(1.08) rotate(-8deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-8deg); }
+}
+@keyframes c-stamp-drop {
+  0% { transform: translateY(-34px) rotate(-10deg); }
+  60% { transform: translateY(6px) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0); }
+}
+.c-stamp-drop { animation: c-stamp-drop .7s cubic-bezier(.3, 1.4, .5, 1) both; }
+@media (prefers-reduced-motion: reduce) { .c-stamp--pop, .c-stamp-drop { animation: none; } }

@@ -30,9 +30,9 @@ $ads ??= [];
 <body class="l-body">
 <?= $this->include('partials/header') ?>
 <main class="l-main">
-<?= $this->include('partials/ad_slot', ['ad' => $ads['top'] ?? null, 'position' => 'top']) ?>
+<?= part('partials/ad_slot', ['ad' => $ads['top'] ?? null, 'position' => 'top']) ?>
 <?= $this->renderSection('content') ?>
-<?= $this->include('partials/ad_slot', ['ad' => $ads['bottom'] ?? null, 'position' => 'bottom']) ?>
+<?= part('partials/ad_slot', ['ad' => $ads['bottom'] ?? null, 'position' => 'bottom']) ?>
 </main>
 <?= $this->include('partials/footer') ?>
 <?= $this->include('partials/toast') ?>

@@ -7,6 +7,7 @@ import { initCharCounter } from './components/char-counter.js';
 import { initCopyButton } from './components/copy-button.js';
 import { initConfirmDialog } from './components/confirm-dialog.js';
 import { initTracking } from './components/tracking.js';
+import { initReport } from './components/report.js';
 
 const root = document;
 
@@ -15,3 +16,4 @@ initCharCounter(root);
 initCopyButton(root);
 initConfirmDialog(root);
 initTracking(root);
+initReport(root);

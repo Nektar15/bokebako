@@ -1,0 +1,35 @@
+/* 下から出る確認シート（U-02 / U-05 / U-09 / 通報）。<dialog> で実装 */
+.c-sheet {
+  width: 100%; max-width: var(--content-max); margin: auto auto 0; padding: 0; border: 0;
+  background: transparent; color: var(--ink);
+}
+.c-sheet::backdrop { background: rgba(29, 26, 22, .62); }
+.c-sheet__form {
+  background: var(--card); border-top: var(--border); border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  padding: 10px var(--gutter) 28px; display: flex; flex-direction: column; gap: var(--space-3);
+}
+.c-sheet__handle { align-self: center; width: 44px; height: 5px; border-radius: var(--radius-pill); background: var(--line); }
+.c-sheet__title { font-family: var(--font-display); font-weight: 400; font-size: 22px; }
+.c-sheet__odai { background: var(--paper); box-shadow: none; }
+.c-sheet__points { display: flex; flex-direction: column; gap: 10px; }
+.c-sheet__points li { display: flex; gap: 10px; font-size: 14px; line-height: 1.6; }
+.c-sheet__points svg { flex-shrink: 0; }
+.c-sheet__note { background: var(--paper); border-radius: var(--radius-input); padding: 14px 16px; display: flex; flex-direction: column; gap: var(--space-1); }
+.c-sheet__note-title { font-size: 13px; font-weight: 900; }
+.c-sheet__rules { padding-left: 18px; list-style: disc; display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; line-height: 1.6; color: #3A342D; }
+.c-sheet__links { display: flex; gap: 16px; font-size: 12.5px; font-weight: 700; }
+.c-sheet__actions { display: flex; flex-direction: column; gap: var(--space-2); }
+.c-sheet__caution { display: flex; gap: 10px; align-items: flex-start; background: var(--paper); border-radius: var(--radius-input); padding: 12px 14px; font-size: 13px; line-height: 1.6; }
+.c-sheet__caution svg { flex-shrink: 0; margin-top: 1px; }
+.c-sheet__mybokeh {
+  position: relative; background: var(--kin); border: var(--border); border-radius: 14px; box-shadow: var(--shadow-press);
+  padding: 22px 16px 18px; transform: rotate(-1deg); font-size: 19px; font-weight: 900; line-height: 1.55;
+}
+.c-sheet__mybokeh .c-card__tab { background: var(--card); }
+.c-choice { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.c-choice__item { display: flex; align-items: center; gap: 10px; min-height: var(--tap-min); font-size: 14.5px; font-weight: 700; }
+.c-choice__item input { width: 20px; height: 20px; accent-color: var(--shu); }
+@media (min-width: 768px) {
+  .c-sheet { margin: auto; }
+  .c-sheet__form { border: var(--border); border-radius: var(--radius-sheet); }
+}

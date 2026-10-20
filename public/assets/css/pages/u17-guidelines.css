@@ -1,0 +1,18 @@
+/* U-17 投稿ガイドライン */
+.p-guide__hero { padding-top: 30px; gap: 12px; }
+.p-guide__hero .c-tag { align-self: flex-start; }
+.p-guide__lead { font-size: 14.5px; line-height: 1.8; color: #3A342D; }
+.p-guide__h2 { font-size: 17px; font-weight: 900; }
+.p-guide__h3 { font-size: 15px; font-weight: 900; }
+.p-guide__p { font-size: 13.5px; line-height: 1.75; }
+.p-guide__rules { display: flex; flex-direction: column; gap: 10px; }
+.p-guide__rule { background: var(--card); border: var(--border); border-radius: 16px; padding: 14px 16px; display: flex; gap: 12px; }
+.p-guide__rule h3 { font-size: 15.5px; font-weight: 900; margin-bottom: 4px; }
+.p-guide__rule p { font-size: 13px; line-height: 1.7; color: #3A342D; }
+.p-guide__x { width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; background: var(--shu); color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; }
+.p-guide__ask { background: var(--ink); color: var(--white); border-radius: 20px; padding: 22px 20px; display: flex; flex-direction: column; gap: 6px; }
+.p-guide__ask-label { font-size: 12px; font-weight: 900; letter-spacing: .1em; color: var(--kin); }
+.p-guide__ask-text { font-family: var(--font-display); font-size: 20px; line-height: 1.5; }
+.p-guide__report { flex-direction: row; gap: 12px; }
+.p-guide__report-icon { width: 36px; height: 36px; flex-shrink: 0; border: var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.p-guide__last { padding-bottom: var(--space-2); }

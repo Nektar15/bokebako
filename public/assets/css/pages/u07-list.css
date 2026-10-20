@@ -1,0 +1,9 @@
+/* U-07 回答一覧 */
+.p-list__head { background: var(--card); border-bottom: var(--border); padding: 14px var(--gutter) 16px; display: flex; flex-direction: column; gap: 10px; }
+.p-list__odai { font-family: var(--font-display); font-size: 19px; line-height: 1.4; }
+.p-list__meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; }
+.p-list__count { font-size: 13px; font-weight: 700; color: var(--ink-sub); padding-bottom: 14px; }
+.p-list__title { display: flex; justify-content: space-between; align-items: baseline; }
+.p-list__h1 { font-size: 18px; font-weight: 900; }
+.p-list__note { font-size: 12px; line-height: 1.6; }
+.p-list__cta-text { font-size: 15px; font-weight: 900; }
