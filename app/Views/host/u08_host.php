@@ -114,7 +114,7 @@
 
 <?php if (! $isOpen): ?>
 <div class="p-host__sticky">
-<button type="submit" class="c-button c-button--primary" data-js-open-dialog="result-confirm" data-js-decide-btn disabled>結果を発表する<span class="p-host__pill" data-js-pick-count>0件</span></button>
+<button type="submit" class="c-button c-button--primary" data-js-open-dialog="result-confirm" data-js-decide-btn>結果を発表する<span class="p-host__pill" data-js-pick-count>0件</span></button>
 </div>
 
 <dialog class="c-sheet" id="result-confirm" aria-labelledby="result-title">
