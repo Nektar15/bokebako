@@ -25,6 +25,11 @@ final class OgpImage
     private const KIN   = [0xF2, 0xC2, 0x30];
     private const CARD  = [0xFF, 0xFD, 0xF8];
 
+    /**
+     * 行頭に置かない文字（句読点・閉じかっこ・長音・小書きの仮名など）
+     */
+    private const NO_LINE_START = '、。，．,.）)」』】〕〉》！？!?ー〜…‥・ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮヵヶ';
+
     private string $font;
 
     public function __construct(?string $font = null)
@@ -48,7 +53,7 @@ final class OgpImage
     {
         $img = $this->canvas(OgpKind::Recruit);
         $this->brand($img);
-        $this->pill($img, 820, 56, '24時間限定 回答募集中');
+        $this->pill($img, self::WIDTH - 80, 56, '24時間限定 回答募集中');
         $this->paragraph($img, $odai, 80, 200, 1040, 330, 64, 36, self::INK);
         imagefilledrectangle($img, 0, self::HEIGHT - 18, self::WIDTH, self::HEIGHT, $this->color($img, self::SHU));
 
@@ -61,7 +66,7 @@ final class OgpImage
     public function answer(string $odai, string $answer): GdImage
     {
         $img = $this->canvas(OgpKind::Answer);
-        $this->text($img, 'お題：' . $this->clip($odai, 40), 80, 100, 30, self::SUB);
+        $this->text($img, $this->fit('お題：' . $odai, 30, self::WIDTH - 160), 80, 100, 30, self::SUB);
         // 山吹のカードに回答
         imagefilledrectangle($img, 80, 150, 1120, 480, $this->color($img, self::KIN));
         imagerectangle($img, 80, 150, 1120, 480, $this->color($img, self::INK));
@@ -78,8 +83,8 @@ final class OgpImage
     {
         $img = $this->canvas(OgpKind::Result);
         $this->brand($img);
-        $this->stamp($img, 1040, 70, '結果発表');
-        $this->text($img, 'お題：' . $this->clip($odai, 40), 80, 190, 30, self::SUB);
+        $this->stamp($img, self::WIDTH - 140, 80, '結果発表');
+        $this->text($img, $this->fit('お題：' . $odai, 30, self::WIDTH - 160), 80, 190, 30, self::SUB);
         $this->circle($img, 110, 300, 30, self::SHU, '1位', 22, self::CARD);
         $this->paragraph($img, $first, 170, 270, 950, 220, 60, 34, self::INK);
         $this->text($img, "全{$answerCount}回答", 80, 580, 28, self::INK);
@@ -162,18 +167,33 @@ final class OgpImage
         imagettftext($img, $size, 0, $x, $baseline, $this->color($img, $rgb), $this->font, $text);
     }
 
-    private function pill(GdImage $img, int $x, int $y, string $text): void
+    /**
+     * 文字幅に合わせた札。右端を $right にそろえる（文字が枠に触れないよう左右に余白をとる）
+     */
+    private function pill(GdImage $img, int $right, int $y, string $text): void
     {
-        imagefilledrectangle($img, $x, $y, $x + 300, $y + 48, $this->color($img, self::KIN));
-        imagerectangle($img, $x, $y, $x + 300, $y + 48, $this->color($img, self::INK));
-        $this->text($img, $text, $x + 20, $y + 34, 20, self::INK);
+        $size  = 20;
+        $width = $this->textWidth($text, $size) + 2 * 20;
+        $x     = $right - $width;
+        imagefilledrectangle($img, $x, $y, $right, $y + 48, $this->color($img, self::KIN));
+        imagerectangle($img, $x, $y, $right, $y + 48, $this->color($img, self::INK));
+        $this->text($img, $text, $x + 20, $y + 34, $size, self::INK);
     }
 
-    private function stamp(GdImage $img, int $x, int $y, string $text): void
+    /**
+     * 判子風の丸。文字は丸の内側に収まる大きさにして中央に置く
+     */
+    private function stamp(GdImage $img, int $cx, int $cy, string $text): void
     {
-        imageellipse($img, $x, $y, 90, 90, $this->color($img, self::SHU));
-        imageellipse($img, $x, $y, 86, 86, $this->color($img, self::SHU));
-        $this->text($img, $text, $x - 38, $y + 10, 18, self::SHU);
+        $diameter = 100;
+        imageellipse($img, $cx, $cy, $diameter, $diameter, $this->color($img, self::SHU));
+        imageellipse($img, $cx, $cy, $diameter - 4, $diameter - 4, $this->color($img, self::SHU));
+        $size = 18;
+
+        while ($size > 10 && $this->textWidth($text, $size) > $diameter - 20) {
+            $size--;
+        }
+        $this->centered($img, $text, $cx, $cy, $size, self::SHU);
     }
 
     /**
@@ -183,7 +203,32 @@ final class OgpImage
     private function circle(GdImage $img, int $cx, int $cy, int $r, array $fill, string $label, int $size, array $textColor): void
     {
         imagefilledellipse($img, $cx, $cy, $r * 2, $r * 2, $this->color($img, $fill));
-        $this->text($img, $label, $cx - 20, $cy + 9, $size, $textColor);
+        $this->centered($img, $label, $cx, $cy, $size, $textColor);
+    }
+
+    /**
+     * (cx, cy) を中心に1行の文字を置く
+     *
+     * @param array{int, int, int} $rgb
+     */
+    private function centered(GdImage $img, string $text, int $cx, int $cy, int $size, array $rgb): void
+    {
+        $box = imagettfbbox($size, 0, $this->font, $text);
+
+        if ($box === false) {
+            return;
+        }
+        // imagettfbbox は基準線からの座標を返す。上端 $box[7]・下端 $box[1] の真ん中を cy に合わせる
+        $x = (int) round($cx - ($box[2] - $box[0]) / 2 - $box[0]);
+        $y = (int) round($cy - ($box[1] + $box[7]) / 2);
+        $this->text($img, $text, $x, $y, $size, $rgb);
+    }
+
+    private function textWidth(string $text, int $size): int
+    {
+        $box = imagettfbbox($size, 0, $this->font, $text);
+
+        return $box === false ? 0 : $box[2] - $box[0];
     }
 
     /**
@@ -197,7 +242,7 @@ final class OgpImage
         $lines = [];
 
         for ($size = $maxSize; $size >= $minSize; $size -= 4) {
-            $lines      = $this->wrap($text, $size, $width);
+            $lines      = $this->wrap($text, $size, $width - $size); // 行末にぶら下げる句読点の分、1文字あけておく
             $lineHeight = (int) round($size * 1.5);
 
             if (count($lines) * $lineHeight <= $height) {
@@ -218,7 +263,7 @@ final class OgpImage
     }
 
     /**
-     * 幅に収まるように文字単位で折り返す（日本語なので単語境界は見ない）
+     * 幅に収まるように文字単位で折り返す（日本語なので単語境界は見ない。行頭禁則だけは守る）
      *
      * @return list<string>
      */
@@ -233,6 +278,13 @@ final class OgpImage
                 $box = imagettfbbox($size, 0, $this->font, $line . $char);
 
                 if ($line !== '' && $box !== false && ($box[2] - $box[0]) > $width) {
+                    // 句読点・閉じかっこなどは行頭に置かず、前の行の末尾にぶら下げる（禁則処理）
+                    if (mb_strpos(self::NO_LINE_START, $char) !== false) {
+                        $lines[] = $line . $char;
+                        $line    = '';
+
+                        continue;
+                    }
                     $lines[] = $line;
                     $line    = '';
                 }
@@ -242,6 +294,23 @@ final class OgpImage
         }
 
         return $lines;
+    }
+
+    /**
+     * 1行に収まらなければ、収まる長さで切って末尾を「…」にする
+     */
+    private function fit(string $text, int $size, int $width): string
+    {
+        if ($this->textWidth($text, $size) <= $width) {
+            return $text;
+        }
+        $chars = mb_str_split($text);
+
+        while ($chars !== [] && $this->textWidth(implode('', $chars) . '…', $size) > $width) {
+            array_pop($chars);
+        }
+
+        return implode('', $chars) . '…';
     }
 
     private function clip(string $text, int $length): string
