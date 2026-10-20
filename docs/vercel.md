@@ -37,7 +37,6 @@ Vercel の Import 画面は GitHub の既定ブランチを読み込む。main �
 | `database_default_database` | `/tmp/bokebako/bokebako.sqlite` |
 | `database_default_hostname` | 空 |
 | `devSeeder_adminPassword` | 管理画面のパスワード（**必ず設定する**。設定しないと DevSeeder の公開されたパスワードで誰でも入れる） |
-| `VERCEL_PHP_DOCROOT` | `public` |
 
 4. 「Deploy」を押す。数分で `https://<プロジェクト名>.vercel.app` が開く
 

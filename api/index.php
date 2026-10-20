@@ -30,11 +30,18 @@ foreach (getenv() as $name => $value) {
 
 $root     = dirname(__DIR__);
 
-// 静的ファイル（public/ の CSS・JS・画像）がこちらに来たら、内蔵サーバーにそのまま返させる（VERCEL_PHP_DOCROOT=public のとき）
+// 静的ファイル（public/ の CSS・JS・画像）は Vercel が public/ から直接返す（vercel.json の outputDirectory）。
+// 万一こちらに来たときのために、ここでも返す（環境変数 VERCEL_PHP_DOCROOT は Vercel の予約名で設定できないため）
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
+$file = is_string($path) ? realpath($root . '/public' . $path) : false;
 
-if (is_string($path) && $path !== '/' && ! str_ends_with($path, '.php') && is_file($root . '/public' . $path)) {
-    return false;
+if ($file !== false && is_file($file) && str_starts_with($file, $root . '/public/') && ! str_ends_with($file, '.php')) {
+    $types = ['css' => 'text/css', 'js' => 'text/javascript', 'png' => 'image/png', 'jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'svg' => 'image/svg+xml', 'ico' => 'image/x-icon', 'webp' => 'image/webp', 'woff2' => 'font/woff2', 'txt' => 'text/plain', 'json' => 'application/json', 'webmanifest' => 'application/manifest+json'];
+    header('Content-Type: ' . ($types[strtolower(pathinfo($file, PATHINFO_EXTENSION))] ?? 'application/octet-stream'));
+    header('Cache-Control: public, max-age=3600');
+    readfile($file);
+
+    return;
 }
 
 $writable = getenv('BOKEBAKO_WRITABLE') ?: '/tmp/bokebako';
