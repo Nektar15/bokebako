@@ -14,6 +14,8 @@
 7. **環境変数の名前は「.」を「_」にして登録し、入口で読み替える**（Vercel は名前に「.」を使えない）。`composer.json` は `.vercelignore` で上げない（ランタイムが `composer install` を走らせ、`ext-gd` がないので失敗する。フレームワークは `system/` にある）。
 8. **GitHub は `Nektar15/bokebako`、Vercel は lunaticbeat15@gmail.com のアカウント（チーム「Goma's projects」、Hobby）**（Masato さんの指示）。コミットの作者は Claude か lunaticbeat15@gmail.com に限る。Vercel の Import は Masato さんが行う（手順は `docs/vercel.md`）。
 
+9. **`/` と `/index.php` は、静的ファイルより先に PHP へ回す**（`vercel.json` の `routes`）。出力先を `public/` にしているので、そのままだと `public/index.php` が静的ファイルとして中身ごと返っていた（公開後に見つけて直した）。`public/.htaccess` も返さない。
+
 ## 確認したこと（ローカルで Vercel と同じ条件を再現）
 
 プロジェクトを読み取り専用の場所に置き、別のユーザーで `php -c api/php.ini -S … -t public api/index.php`（vercel-php と同じ起動のしかた）、`CI_ENVIRONMENT=production`、SQLite、環境変数は「_」の名前で起動した。
