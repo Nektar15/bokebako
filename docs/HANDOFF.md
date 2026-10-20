@@ -1,6 +1,6 @@
 # 引き継ぎメモ（新しいセッション・別の開発者向け）
 
-最終更新：2026-10-20　ブランチ：`develop`（工程0〜5まで取り込み済み）＋ `fix/review-stage5`（コードレビューの修正。develop へは未取り込み）
+最終更新：2026-10-20　ブランチ：`develop`（工程0〜5とレビュー修正を取り込み済み）＋ `feature/admin-login`（A-01 ログイン。develop へは未取り込み）
 
 ## 今どこまでできているか
 
@@ -11,15 +11,16 @@
 | 2 管理画面の外側（A-02〜A-10） | 完了・develop に取り込み済み | `feature/admin-views` |
 | 3 DB とモデル／4 中身 | 完了・develop に取り込み済み | `feature/database` |
 | 5 仕上げ | 完了・develop に取り込み済み（`composer check` 通過、165 テスト） | `feature/release-prep` |
-| レビュー修正（P1 5件・P2 2件） | 完了・`composer check` 通過（178 テスト）。**develop へは未取り込み** | `fix/review-stage5` |
-| A-01 ログイン・2FA | **未実装**（下の「残課題」） | |
+| レビュー修正（P1 5件・P2 2件） | 完了・develop に取り込み済み（178 テスト） | `fix/review-stage5` |
+| A-01 ログイン・管理者アカウント | 完了・`composer check` 通過（201 テスト）。**develop へは未取り込み**。仮認証は削除済み | `feature/admin-login` |
+| A-01 二段階認証（TOTP） | **未実装・最終工程**（下の「残課題」） | |
 
 ## 最初にやること（新しいセッションでそのまま貼る指示）
 
 ```
 docs/PROMPT.md と docs/HANDOFF.md を読んでから進めてください。
 まず develop で `cp .env.example .env && composer install && composer check` を通してください。
-次は「残課題」の A-01（管理者ログイン・二段階認証）を feature/admin-login で実装してください。
+feature/admin-login を develop に取り込んでから、残課題の A-01 二段階認証（TOTP）を最終工程として実装してください（ADR 0007-6）。
 ```
 
 ### 開発ツールの入れ方（packagist に接続できない環境向け）
@@ -36,16 +37,12 @@ GitHub Releases の phar（phpstan 1.12、php-cs-fixer 3.95）と、PHPUnit 10.5
 
 ## 残課題（本番公開前）
 
-### 1. A-01 管理者ログイン・二段階認証（未実装）
+### 1. A-01 二段階認証（TOTP。最終工程）
 
-- 画面：ログイン（ID・パスワード・TOTP）、ログアウト、管理者アカウント管理（未確定事項10：画面定義がない）
-- テーブル `admins` は作ってある（`login_id`・`password_hash`（bcrypt）・`role`・`totp_secret`・`failed_count`・`locked_until`）。使っているコードはまだない
-- **実装時に消す仮認証コード**（CODING_RULES 7-1）：
-  - `app/Filters/AdminAuth.php`：`DEV_ADMIN_*` 定数、development/testing で仮管理者を通す分岐、`?role=general`（ADR 0003-3）
-  - `app/Views/partials/admin_sidebar.php`：「開発用の仮ログイン」の表示、「ログアウトは A-01 実装後に有効」
-  - `tests/Unit/AdminAuthTest.php`・`tests/Feature/AdminRoleTest.php`：仮認証前提のテスト。本認証のログイン済みセッションに書き換える
-  - `docs/admin-manual.md` 冒頭の「ログインは未実装」の注記
-- `CurrentAdminService` は認証方法が変わっても使う（ここから先の権限判定は変えない）
+- ID・パスワードのログイン、試行回数制限、セッション、ログアウト、IP 制限、管理者アカウントは実装済み（ADR 0007）。仮認証のコードは削除した
+- 足す場所：`LoginController::login()` で `AdminAuthService::verifyPassword()` が通ったあと、`startSession()` の前に TOTP の入力画面を挟む。`admins.totp_secret` は未使用のまま残してある
+- 決めること：TOTP を必須にするか（全員／上位管理者だけ）、登録の流れ（QR コードの表示、確認コード）、端末をなくしたときの復旧（上位管理者が解除する／バックアップコード）、ライブラリを使うか自前で書くか（依存を増やすなら ADR）
+- **二段階認証を入れる前に本番で管理画面を開けるか**は発注者と決める（今はパスワードだけで入れる）
 
 ### 2. 仮決めの確認（発注者）
 
@@ -61,12 +58,15 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 | NGワードのカテゴリー | 固定7種 | 0003-6 |
 | 広告の掲載場所 | 1広告1か所 | 0003-7 |
 | 運用設定の追加3項目と上限・下限 | `SettingService::INT_RANGES` | 0003-8 |
+| 管理者ログインの数値（5回失敗で15分ロック、IP 20回／10分、無操作120分、最長12時間、パスワード12文字以上） | `AdminAuthService`・`AdminAccountService` の定数 | 0007-2 |
+| 管理者アカウントの画面（未確定事項10） | `/{admin}/accounts`（A-01 の一部） | 0007-4 |
 | 通報数の強調の下限 | A-03：5件、A-04：3件 | 0003-9 |
 | U-15・U-16 の本文 | ひな形（発注者支給の本文に差し替える。本番以外では「ひな形」の注記が出る） | — |
 | U-05・U-11〜U-13 の文言、お題テンプレート | コード内の固定（未確定事項9） | — |
 
 ### 3. 本番の準備（README「Xserver へ置く」のチェックリスト）
 
+- 最初の管理者を `php spark admin:create` で作る。`.env` に `cookie.secure = true`
 - `.env`（`app.hashSecret` は一度決めたら変えない）、php.ini（OPcache）、cron 3本、フォント（`writable/fonts/`）、Turnstile・OpenAI のキー、通知メールの宛先
 - ステージングで `tests/load/k6.js` を流し、`docs/load-test.md` に追記
 - Cloudflare（任意）。使う場合、非表示・削除で消した OGP 画像（`/ogp/*`）は CDN のキャッシュが切れるまで配信される。`/ogp/*` のキャッシュ時間を短くするか、消したときに CDN のパージを足す（ADR 0006-7）
@@ -124,11 +124,13 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 - `docs/adr/0004`：工程3・4（DB・Service）。直した不具合4件も「工程4」の節に
 - `docs/adr/0005`：工程5（仕上げ）
 - `docs/adr/0006`：工程5後のコードレビューの修正
+- `docs/adr/0007`：A-01 ログインと管理者アカウント（二段階認証の前まで）
 
 ## 環境のメモ
 
 - フレームワーク本体は `system/` にコミット済み（ADR 0001）。本番に Composer は不要
 - `.env` は `.env.example` から作る。開発では `app.hashSecret` が空でも動く（production では必須）
 - 開発用データ：`php spark migrate` → `php spark db:seed DevSeeder`。開催者ページは Cookie `bk_host_{slug}=dev-token-{slug}` か合言葉「ぼけばこ」
-- 管理画面の切替：絞り込みと選択はすべてクエリ（`?status=` `?filter=` `?item=` `?edit=` `?period=`）。`?role=general` で一般管理者（A-01 実装時に削除）
+- 管理画面の切替：絞り込みと選択はすべてクエリ（`?status=` `?filter=` `?item=` `?edit=` `?period=`）
+- 管理画面のログイン：DevSeeder の `dev-admin`（上位）／`dev-general`（一般）、パスワード `dev-password-bokebako`。テストでは `DatabaseTestCase::asAdmin()`
 - テスト DB は SQLite `:memory:`（`phpunit.xml.dist`）。MariaDB で流すときはそこを書き換える

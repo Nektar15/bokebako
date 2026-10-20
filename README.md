@@ -24,7 +24,7 @@ php spark serve                 # http://localhost:8080
 - OGP 画像（S-07）を作るには日本語フォントが要る。`writable/fonts/NotoSansJP-Bold.ttf` を置くか、`.env` の `ogp.font` にフォントのパスを書く（例：`/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc`）。なければ既定の画像で代用する。
 - CAPTCHA（Cloudflare Turnstile）・AI判定（OpenAI）・管理者への通知メールは、`.env` の `captcha.*`・`openai.apiKey`・`app.adminEmail` が空なら動かない（開発ではそのままでよい）。
 - 本番相当で動かすときは `.env` を `CI_ENVIRONMENT = production` にする（管理画面は 403 になる。`app.hashSecret` が空だと起動時にエラー）。
-- 管理画面は `http://localhost:8080/admin`（パスは `.env` の `app.adminPath`）。development では仮の管理者（上位管理者）でログイン済みとして開く（`docs/CODING_RULES.md` 7-1）。`?role=general` を付けると一般管理者の表示（A-04 の投稿元の列が消える）を確認できる。
+- 管理画面は `http://localhost:8080/admin`（パスは `.env` の `app.adminPath`）。開発用データ（DevSeeder）には上位管理者 `dev-admin` と一般管理者 `dev-general` が入っている。パスワードはどちらも `dev-password-bokebako`（`DevSeeder::ADMIN_PASSWORD`）。一般管理者でログインすると A-04 の投稿元の列が消える。
 
 ## コマンド
 
@@ -34,6 +34,7 @@ php spark serve                 # http://localhost:8080
 | `php spark routes` | ルート一覧 |
 | `php spark migrate` / `migrate:rollback` | マイグレーション |
 | `php spark db:seed DevSeeder` | 開発用データ（全テーブルを入れ直す） |
+| `php spark admin:create <ID> <表示名> [--role super\|general]` | 管理者を追加（A-01。最初の上位管理者の作成用） |
 | `php spark cron:minute` | 1分間隔の自動処理をまとめて実行（S-01・S-02・S-04・S-05） |
 | `php spark oogiri:close` / `oogiri:expire` / `reports:process` / `ai:judge` | 上の個別実行 |
 | `php spark stats:daily [YYYY-MM-DD]` | 日次集計（S-06。日付省略で前日） |
@@ -76,17 +77,20 @@ Xserver はドキュメントルートが `public_html` 固定なので、公開
 4. `.env` を作り、`CI_ENVIRONMENT = production`、`app.baseURL`、`app.adminPath`、`app.hashSecret`、DB 接続を設定する
 5. `writable/` に書き込み権限を付ける
 6. `php spark migrate` を実行する（Xserver の PHP はバージョン付きのパス。例：`/usr/bin/php8.2`）
+7. 最初の管理者（上位管理者）を作る：`php spark admin:create <ID> <表示名>`（パスワードは対話で入力。2人目からは管理画面の「管理者アカウント」でも追加できる）
 
-ステージングは `CI_ENVIRONMENT = staging` とし、`ADMIN_ALLOWED_IPS` に作業者の IP を入れる。
+ステージングは `CI_ENVIRONMENT = staging` とする。管理画面に IP 制限をかけるときは、どの環境でも `ADMIN_ALLOWED_IPS` に許可する IP を入れる（空なら制限しない）。
 
 ### 本番の `.env` で必ず設定するもの
 
 | キー | 内容 |
 |---|---|
-| `CI_ENVIRONMENT` | `production`（エラー画面を出さない。管理画面は A-01 実装まで 403） |
+| `CI_ENVIRONMENT` | `production`（エラー画面を出さない） |
 | `app.baseURL` | `https://<ドメイン>/` |
 | `app.forceGlobalSecureRequests` | `true`（HSTS を出す） |
 | `app.adminPath` | 推測困難な値 |
+| `cookie.secure` | `true`（ログインのセッション Cookie を https のときだけ送る） |
+| `ADMIN_ALLOWED_IPS` | 管理画面に入れる IP（任意。カンマ区切り。空なら制限しない） |
 | `app.hashSecret` | 32文字以上のランダム文字列。**一度決めたら変えない**（変えると開催者トークン・ブラウザIDの照合がすべて外れる） |
 | `app.adminEmail` | 通知メールの宛先 |
 | `app.assetVersion` | デプロイごとに変える（例：日付）。CSS/JS のブラウザキャッシュを確実に更新する |
@@ -114,7 +118,7 @@ DNS を Cloudflare に向け、「常に HTTPS」を ON。キャッシュルー�
 
 1. `composer check` が通る
 2. `.env` の上の表がすべて埋まっている。`.env` と `writable/` が `public_html/` の外にある
-3. `php spark migrate` 済み。**本番では `db:seed DevSeeder` を実行しない**（全テーブルを消す）
+3. `php spark migrate` 済み。**本番では `db:seed DevSeeder` を実行しない**（全テーブルを消し、パスワードが公開されている開発用の管理者を入れる）。`php spark admin:create` で管理者を作り、管理画面にログインできる
 4. cron が登録されている（下の表）
 5. `https://<ドメイン>/` が開き、`http://` が `https://` に転送される。レスポンスヘッダーに `Content-Security-Policy` と `Strict-Transport-Security` がある
 6. お題を1つ開催し、別端末で回答し、確定して結果ページが出る。X のカード検証（`https://cards-dev.twitter.com/validator` 相当）で OGP 画像が出る
@@ -144,4 +148,5 @@ DNS を Cloudflare に向け、「常に HTTPS」を ON。キャッシュルー�
 | 3 DB とモデル | `feature/database` | 完了 |
 | 4 中身 | `feature/database`（3と同じブランチ） | 完了 |
 | 5 仕上げ | `feature/release-prep` | 完了 |
-| （最終）A-01 ログイン | 別途 | |
+| A-01 ログイン・管理者アカウント | `feature/admin-login` | 完了（二段階認証は最終工程） |
+| （最終）A-01 二段階認証（TOTP） | 別途 | |
