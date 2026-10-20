@@ -37,6 +37,7 @@ final class OgpController extends AdminController
                 'status' => $job->succeeded ? 'ok' : 'failed',
                 'label'  => $job->succeeded ? '完了' : '失敗',
             ], service('ogp')->recentJobs()),
+            'bulk' => $this->bulkLabel(),
         ]);
     }
 
@@ -54,6 +55,28 @@ final class OgpController extends AdminController
         }
 
         return $this->backWithNotice($kind->label() . 'のOGP画像を再生成しました');
+    }
+
+    /**
+     * A-08 公開中の画像をすべて今のテンプレートで作り直す（予約。cron の ogp:generate が少しずつ進める）
+     */
+    public function regenerateAll(): RedirectResponse
+    {
+        service('ogp')->requestRegenerateAll();
+
+        return $this->backWithNotice('作り直しを予約しました。10分ごとに少しずつ進みます');
+    }
+
+    /**
+     * 一括の作り直しの進み具合（表示用）。予約がなければ null
+     *
+     * @return array{requestedAt: string, remaining: string}|null
+     */
+    private function bulkLabel(): ?array
+    {
+        $bulk = service('ogp')->bulkStatus();
+
+        return $bulk === null ? null : ['requestedAt' => service('display')->short($bulk['requestedAt']), 'remaining' => service('display')->number($bulk['remaining'])];
     }
 
     /**

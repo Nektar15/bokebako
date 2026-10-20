@@ -38,6 +38,16 @@ final class OgpService
     ];
 
     /**
+     * OGP 画像を持つ（公開されている）大喜利の状態
+     */
+    public const PUBLIC_STATUSES = [OogiriStatus::Open->value, OogiriStatus::AwaitingSelection->value, OogiriStatus::Decided->value, OogiriStatus::NoResult->value];
+
+    /**
+     * 一括の作り直しで、ogp:generate の1回に進める大喜利の件数
+     */
+    public const BULK_BATCH = 30;
+
+    /**
      * removeOogiri() で一度に取る回答の件数
      */
     private const REMOVE_CHUNK = 500;
@@ -115,6 +125,14 @@ final class OgpService
     {
         $this->remove(OgpKind::Recruit, $oogiri->slug);
         $this->remove(OgpKind::Result, $oogiri->slug);
+        $this->removeAnswerImages($oogiri);
+    }
+
+    /**
+     * その大喜利の回答シェア用画像を消す（次のアクセスで今のテンプレートで作り直される）
+     */
+    private function removeAnswerImages(Oogiri $oogiri): void
+    {
         $lastId = 0;
 
         // 回答は数が多いことがあるので、ID 順に区切って取る（CODING_RULES 6章：上限なしで全件を取らない）
@@ -159,6 +177,105 @@ final class OgpService
         if (is_file($path)) {
             unlink($path);
         }
+    }
+
+    /**
+     * 公開中の画像をすべて今のテンプレートで作り直す予約をする（A-08。背景・ロゴを差し替えたあと）
+     *
+     * 件数が多いと画面の操作中に終わらないので、予約だけして cron の ogp:generate が BULK_BATCH 件ずつ進める。
+     * 進み具合は writable/ogp-templates/regenerate-all.json（今の大喜利ID より小さいものが残り）
+     */
+    public function requestRegenerateAll(): void
+    {
+        $maxId = (int) ($this->oogiris->selectMax('id')->first()?->id ?? 0);
+        $this->writeBulk(['cursor' => $maxId + 1, 'requested_at' => Time::now()->toDateTimeString()]);
+        service('adminLog')->record('ogp', null, '公開中の画像をすべて作り直す予約');
+    }
+
+    /**
+     * 一括の作り直しの進み具合。予約がなければ null
+     *
+     * @return array{requestedAt: Time, remaining: int}|null
+     */
+    public function bulkStatus(): ?array
+    {
+        $bulk = $this->readBulk();
+
+        if ($bulk === null) {
+            return null;
+        }
+
+        return [
+            'requestedAt' => Time::parse($bulk['requested_at']),
+            'remaining'   => $this->oogiris->whereIn('status', self::PUBLIC_STATUSES)->where('id <', $bulk['cursor'])->countAllResults(),
+        ];
+    }
+
+    /**
+     * 予約された一括の作り直しを $limit 件ぶん進める（ogp:generate から）。終わったら予約を消す
+     *
+     * @return int 作り直した大喜利の件数
+     */
+    public function regenerateNextBatch(int $limit = self::BULK_BATCH): int
+    {
+        $bulk = $this->readBulk();
+
+        if ($bulk === null) {
+            return 0;
+        }
+        $rows = $this->oogiris->whereIn('status', self::PUBLIC_STATUSES)->where('id <', $bulk['cursor'])->orderBy('id', 'DESC')->findAll($limit);
+
+        foreach ($rows as $oogiri) {
+            $this->restoreOogiri($oogiri);
+            $this->removeAnswerImages($oogiri);
+            $bulk['cursor'] = $oogiri->id;
+        }
+        if (count($rows) < $limit) {
+            $this->clearBulk();
+            service('adminLog')->record('ogp', null, '公開中の画像の作り直しが終わりました', AdminLogService::ACTOR_AUTO);
+        } else {
+            $this->writeBulk($bulk);
+        }
+
+        return count($rows);
+    }
+
+    /**
+     * @return array{cursor: int, requested_at: string}|null
+     */
+    private function readBulk(): ?array
+    {
+        $path = self::bulkPath();
+
+        if (! is_file($path)) {
+            return null;
+        }
+        $data = json_decode((string) file_get_contents($path), true);
+
+        return is_array($data) && isset($data['cursor'], $data['requested_at']) ? ['cursor' => (int) $data['cursor'], 'requested_at' => (string) $data['requested_at']] : null;
+    }
+
+    /**
+     * @param array{cursor: int, requested_at: string} $bulk
+     */
+    private function writeBulk(array $bulk): void
+    {
+        if (! is_dir(dirname(self::bulkPath()))) {
+            mkdir(dirname(self::bulkPath()), 0775, true);
+        }
+        file_put_contents(self::bulkPath(), json_encode($bulk));
+    }
+
+    private function clearBulk(): void
+    {
+        if (is_file(self::bulkPath())) {
+            unlink(self::bulkPath());
+        }
+    }
+
+    private static function bulkPath(): string
+    {
+        return WRITEPATH . 'ogp-templates/regenerate-all.json';
     }
 
     /**

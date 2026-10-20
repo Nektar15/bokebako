@@ -69,6 +69,6 @@ final class ContactService
             'body'   => $body,
             'status' => InquiryStatus::Todo->value,
         ]);
-        service('mail')->notifyAdmin('お問い合わせ（' . $type?->label() . '）', "お問い合わせ #{$id} を受け付けました。\n管理画面の「お問い合わせ管理」で確認してください。");
+        service('mail')->notifyAdmin('contact', ['id' => $id, 'type' => (string) $type?->label(), 'url' => admin_url('inquiries?item=' . $id)]);
     }
 }

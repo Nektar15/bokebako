@@ -117,6 +117,7 @@ $routes->group($adminPath, ['namespace' => 'App\Controllers\Admin', 'filter' => 
 
     $routes->get('ogp', 'OgpController::index');                         // A-08
     $routes->post('ogp/regenerate', 'OgpController::regenerate');
+    $routes->post('ogp/regenerate-all', 'OgpController::regenerateAll');   // 公開中の画像をすべて作り直す予約
     $routes->post('ogp/template', 'OgpController::updateTemplate');
 
     $routes->get('inquiries', 'InquiryController::index');               // A-09

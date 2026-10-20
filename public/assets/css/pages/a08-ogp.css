@@ -27,3 +27,4 @@
 .p-ogp__regen { padding: 18px; gap: 14px; }
 .p-ogp__jobs-title { padding: 12px 8px 4px; }
 .p-ogp__jobs { --table-cols: 96px 100px minmax(0, 1fr) 84px 72px 84px; }
+.p-ogp__bulk { align-items: flex-start; }

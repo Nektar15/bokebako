@@ -8,6 +8,7 @@
  * @var array<string, string>    $assets 差し替えられる画像（値 => 表示名：背景・ロゴ）
  * @var array{kind: string, target: string} $form 「個別に再生成する」の初期値
  * @var list<array{job: \App\Entities\OgpJob, time: string, status: string, label: string}> $jobs 最近の生成（新しい順。status は ok / failed）
+ * @var array{requestedAt: string, remaining: string}|null $bulk 一括の作り直しの予約（予約日時・残りの大喜利の件数）。なければ null
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -56,6 +57,16 @@
 <?php endforeach; ?>
 </div>
 <p class="c-panel__note">画像は1200×630px。文字数に合わせて自動で折り返し、文字の大きさを調整します。フォントはサーバーに置いたものを使います。</p>
+
+<section class="c-panel p-ogp__bulk">
+<h2 class="c-panel__title">公開中の画像をまとめて作り直す</h2>
+<?php if ($bulk !== null): ?>
+<p><?= esc($bulk['requestedAt']) ?> に予約。残り <?= esc($bulk['remaining']) ?> 件の大喜利（10分ごとに少しずつ進みます）</p>
+<?php else: ?>
+<p class="c-panel__note">背景・ロゴを差し替えたあとに使います。差し替えただけでは、作成済みの画像は変わりません。件数が多いので予約して、自動処理で少しずつ作り直します。</p>
+<?= part('partials/admin_action_form', ['action' => admin_url('ogp/regenerate-all'), 'label' => '作り直しを予約する', 'variant' => 'dark', 'iconOnly' => false, 'confirm' => '公開中のOGP画像をすべて作り直しますか？', 'id' => 'ogp-bulk-dialog', 'hidden' => []]) ?>
+<?php endif; ?>
+</section>
 
 <div class="p-ogp">
 <form class="c-panel c-panel--raised p-ogp__regen" method="post" action="<?= admin_url('ogp/regenerate') ?>" data-js-once data-js-ogp-form>
