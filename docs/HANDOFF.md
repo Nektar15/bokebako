@@ -32,8 +32,8 @@ develop で `cp .env.example .env && composer install && composer check` を通�
 
 ### 1. Vercel に上げて触り心地を確かめる（Masato さんの作業）
 
-- 設定と手順はできている：`docs/vercel.md`（GitHub に push → Vercel で Import → 環境変数 → Deploy）
-- GitHub と Vercel は **001d3d@gmail.com のアカウント**を使う（発注者の指示）。作業したセッションにはこのアカウントがつながっていなかったので、Mac から上げる
+- 設定と手順はできている：`docs/vercel.md`（Vercel で Import → 環境変数 → Deploy）
+- GitHub は `https://github.com/Nektar15/bokebako`（全ブランチ push 済み。コミットの作者は Claude と lunaticbeat15@gmail.com だけにする決まり）。Vercel は **001d3d@gmail.com のアカウント**で、このリポジトリの `develop` を読み込む
 - 環境変数の `devSeeder_adminPassword`（管理画面のパスワード）と `app_hashSecret` は**必ず設定する**
 - 上げたあとに確かめること：Vercel 上で `docs/vercel.md` の「3. 確かめること」が通るか。ローカルでは Vercel と同じ条件を再現して確認済み（ADR 0008）だが、実際の Vercel では未確認
 - 制限：データは数分〜数時間で最初の状態に戻る。OGP 画像は既定の画像。cron はアクセスのついでに動く（ADR 0008）

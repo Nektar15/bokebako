@@ -11,25 +11,13 @@
 | PHP | 8.2（`vercel-php@0.6.2`） | 本番と同じ版 |
 | メール・CAPTCHA・AI 判定 | 設定しなければ動かない | — |
 
-## 1. GitHub に上げる（Mac のターミナル）
+## 1. GitHub
 
-GitHub（001d3d@gmail.com のアカウント）で、空のリポジトリを作る（README などは付けない。非公開を推奨）。リポジトリ名は例として `bokebako`。
-
-```
-cd bokebako                       # zip を展開したフォルダ
-git config user.name  "001d3d"
-git config user.email "001d3d@gmail.com"
-git checkout develop
-git remote add origin https://github.com/<GitHubのユーザー名>/bokebako.git
-git push -u origin develop main
-git push origin --all             # 作業ブランチも残すなら
-```
-
-`git push` で認証を聞かれたら、GitHub の「Personal access token」をパスワードの代わりに入れる（GitHub の Settings → Developer settings → Personal access tokens で作る。権限は repo）。
+リポジトリは `https://github.com/Nektar15/bokebako`（2026-10-20 に全ブランチを push 済み。コミットの作者は Claude と lunaticbeat15@gmail.com だけ）。Vercel は `develop` ブランチを使う。
 
 ## 2. Vercel で読み込む（ブラウザ）
 
-1. 001d3d@gmail.com で Vercel にログインし、「Add New… → Project」で、上のリポジトリを Import する
+1. 001d3d@gmail.com で Vercel にログインし、「Add New… → Project」で `Nektar15/bokebako` を Import する（一覧に出なければ「Adjust GitHub App Permissions」で Nektar15 のリポジトリへのアクセスを許可する）
 2. 設定画面で次のとおりにする
    - Framework Preset：**Other**
    - Root Directory：そのまま（`./`）
