@@ -7,6 +7,7 @@ namespace App\Filters;
 use App\Entities\AdminUser;
 use App\Enums\AdminRole;
 use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -31,7 +32,13 @@ class AdminAuth implements FilterInterface
             return service('response')->setStatusCode(403)->setBody(view('errors/html/error_403'));
         }
 
-        service('currentAdmin')->set(new AdminUser(self::DEV_ADMIN_ID, self::DEV_ADMIN_NAME, AdminRole::Super));
+        // 仮管理者は上位管理者。権限による出し分け（A-04）を確認するため、development では ?role=general で一般管理者に落とせる
+        $role = AdminRole::Super;
+        if ($request instanceof IncomingRequest && ENVIRONMENT !== 'production' && $request->getGet('role') === AdminRole::General->value) {
+            $role = AdminRole::General;
+        }
+
+        service('currentAdmin')->set(new AdminUser(self::DEV_ADMIN_ID, self::DEV_ADMIN_NAME, $role));
 
         return null;
     }

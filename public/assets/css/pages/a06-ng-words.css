@@ -1,0 +1,11 @@
+/* A-06 NGワード管理 */
+.p-ng { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+.p-ng__main { display: flex; flex-direction: column; gap: 14px; }
+.p-ng__q { width: 220px; }
+.p-ng__action { width: 140px; }
+.p-ng__category { width: 170px; }
+.p-ng__table { --table-cols: minmax(0, 1fr) 86px 104px 92px 64px 70px 96px; }
+.p-ng__form { padding: 18px; gap: 16px; }
+.p-ng__try { background: var(--paper); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.p-ng__import { position: relative; cursor: pointer; }
+.p-ng__import:has(:focus-visible) { outline: 3px solid var(--shu); outline-offset: 2px; }

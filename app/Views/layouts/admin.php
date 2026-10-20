@@ -6,9 +6,13 @@
  *
  * @var string $screenId   画面ID（例：A-02）。ヘッダーとメニューの選択状態に使う
  * @var string $title      画面名
- * @var array{todo:int, inquiries:int} $badges 左メニューに出す未処理件数（Controller が渡す。なければ 0）
+ * @var array{todo:int, inquiries:int} $badges 左メニューに出す未処理件数（AdminController::render() が渡す。なければ 0）
+ * @var string|null           $notice 操作後の通知（同上）
+ * @var array<string, string> $errors 入力エラー（同上）
  */
 $badges ??= ['todo' => 0, 'inquiries' => 0];
+$notice ??= null;
+$errors ??= [];
 $admin = service('currentAdmin');
 ?>
 <!doctype html>
@@ -23,6 +27,14 @@ $admin = service('currentAdmin');
 <link rel="stylesheet" href="<?= asset_url('css/tokens.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('css/base.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('css/admin.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-button.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-panel.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-status.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-table.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-tabs.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-pager.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-form.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/components/admin-history.css') ?>">
 <?= $this->renderSection('styles') ?>
 </head>
 <body class="l-admin">
@@ -36,6 +48,7 @@ $admin = service('currentAdmin');
 <div class="l-admin__actions"><?= $this->renderSection('actions') ?></div>
 </header>
 <div class="l-admin__body">
+<?= part('partials/admin_notice', ['notice' => $notice, 'errors' => $errors]) ?>
 <?= $this->renderSection('content') ?>
 </div>
 </main>

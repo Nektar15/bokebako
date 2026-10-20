@@ -1,0 +1,15 @@
+/* 操作履歴・対応履歴・変更履歴（partials/admin_history） */
+.c-history { display: flex; flex-direction: column; }
+.c-history__item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1.5px solid var(--line); }
+.c-history__dot { width: 8px; height: 8px; margin-top: 6px; flex-shrink: 0; border-radius: 50%; background: var(--ink); }
+.c-history__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.c-history__when { font-size: 12px; color: var(--ink-sub); }
+.c-history__what { font-size: 13px; font-weight: 700; line-height: 1.5; }
+.c-history__empty { padding: 8px 0; font-size: 13px; color: var(--ink-sub); }
+
+/* 横並びの短い履歴（A-05・A-09 の詳細） */
+.c-history--inline .c-history__item { padding: 8px 0; font-size: 12.5px; }
+.c-history--inline .c-history__dot { display: none; }
+.c-history--inline .c-history__body { flex-direction: row; gap: 10px; }
+.c-history--inline .c-history__when { width: 150px; flex-shrink: 0; font-size: 12.5px; }
+.c-history--inline .c-history__what { font-size: 12.5px; }

@@ -8,6 +8,7 @@ import { initCopyButton } from './components/copy-button.js';
 import { initConfirmDialog } from './components/confirm-dialog.js';
 import { initTracking } from './components/tracking.js';
 import { initReport } from './components/report.js';
+import { initAutosubmit } from './components/autosubmit.js';
 
 const root = document;
 
@@ -17,3 +18,4 @@ initCopyButton(root);
 initConfirmDialog(root);
 initTracking(root);
 initReport(root);
+initAutosubmit(root);

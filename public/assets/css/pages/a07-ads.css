@@ -1,0 +1,10 @@
+/* A-07 広告管理 */
+.p-ads__slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.p-ads__slot { display: grid; grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end; }
+.p-ads__slot-name { font-size: 15px; font-weight: 900; }
+.p-ads { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+.p-ads__table { --table-cols: minmax(0, 1fr) 56px 110px 74px 70px 56px 52px 60px; }
+.p-ads__name { font-weight: 900; }
+.p-ads__side { display: flex; flex-direction: column; gap: 14px; }
+.p-ads__form { padding: 18px; gap: 14px; }
+.p-ads__delete { display: flex; justify-content: flex-end; }

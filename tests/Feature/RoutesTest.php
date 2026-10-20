@@ -31,7 +31,7 @@ final class RoutesTest extends CIUnitTestCase
     public static function provideAdminRouteRespondsInTesting(): iterable
     {
         return [
-            ['admin'], ['admin/oogiri'], ['admin/oogiri/1'], ['admin/answers'], ['admin/moderation'],
+            ['admin'], ['admin/oogiri'], ['admin/oogiri/12452'], ['admin/answers'], ['admin/moderation'],
             ['admin/ng-words'], ['admin/ads'], ['admin/ogp'], ['admin/inquiries'], ['admin/settings'],
         ];
     }

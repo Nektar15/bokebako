@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\InquiryType;
 use App\Exceptions\ValidationException;
 
 /**
@@ -11,19 +12,6 @@ use App\Exceptions\ValidationException;
  */
 final class ContactService
 {
-    public const TYPES = [
-        'general' => '一般問い合わせ',
-        'delete'  => '投稿削除依頼',
-        'rights'  => '権利侵害',
-        'ad'      => '広告掲載について',
-        'other'   => 'その他',
-    ];
-
-    /**
-     * 対象URLが必須になる種別
-     */
-    public const URL_REQUIRED_TYPES = ['delete', 'rights'];
-
     /**
      * @param array{type?: string, email?: string, url?: string, body?: string} $input
      *
@@ -32,18 +20,18 @@ final class ContactService
     public function send(array $input): void
     {
         $errors = [];
-        $type   = (string) ($input['type'] ?? '');
+        $type   = InquiryType::tryFrom((string) ($input['type'] ?? ''));
         $email  = trim((string) ($input['email'] ?? ''));
         $url    = trim((string) ($input['url'] ?? ''));
         $body   = trim((string) ($input['body'] ?? ''));
 
-        if (! isset(self::TYPES[$type])) {
+        if ($type === null) {
             $errors['type'] = 'お問い合わせの種類を選んでください';
         }
         if ($email === '' || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
             $errors['email'] = 'メールアドレスを正しく入力してください';
         }
-        if (in_array($type, self::URL_REQUIRED_TYPES, true) && $url === '') {
+        if ($type !== null && $type->requiresUrl() && $url === '') {
             $errors['url'] = '対象のURLを入力してください';
         }
         if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false) {

@@ -80,11 +80,12 @@ $routes->group($adminPath, ['namespace' => 'App\Controllers\Admin', 'filter' => 
     $routes->post('answers/(:num)/publish', 'AnswerController::publish/$1');
     $routes->post('answers/(:num)/delete', 'AnswerController::delete/$1');
 
-    $routes->get('moderation', 'ModerationController::index');           // A-05
-    $routes->post('moderation/(:num)/resolve', 'ModerationController::resolve/$1');
-    $routes->post('moderation/(:num)/hide', 'ModerationController::hide/$1');
-    $routes->post('moderation/(:num)/delete', 'ModerationController::delete/$1');
-    $routes->post('moderation/(:num)/restrict', 'ModerationController::restrict/$1');
+    $routes->get('moderation', 'ModerationController::index');           // A-05（?filter= ?item= で絞り込みと選択）
+    // 対象は「お題」か「回答」なので、ID だけでは足りない。キーは {oogiri|answer}-{id}（ADR 0003）
+    $routes->post('moderation/(:segment)/resolve', 'ModerationController::resolve/$1');
+    $routes->post('moderation/(:segment)/hide', 'ModerationController::hide/$1');
+    $routes->post('moderation/(:segment)/delete', 'ModerationController::delete/$1');
+    $routes->post('moderation/(:segment)/restrict', 'ModerationController::restrict/$1');
 
     $routes->get('ng-words', 'NgWordController::index');                 // A-06
     $routes->post('ng-words', 'NgWordController::create');

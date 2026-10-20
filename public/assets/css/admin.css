@@ -8,6 +8,8 @@
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
   border-bottom: var(--border); background: var(--card);
 }
+.l-admin__crumb { display: block; font-size: 12px; font-weight: 700; color: var(--ink-sub); text-decoration: none; }
+.l-admin__crumb:hover { color: var(--shu-deep); }
 .l-admin__title { display: flex; align-items: baseline; gap: 12px; }
 .l-admin__title h1 { font-size: 22px; font-weight: 900; }
 .l-admin__title .u-mono { font-size: 12px; color: var(--ink-sub); }
