@@ -21,7 +21,7 @@ php spark serve                 # http://localhost:8080
 
 - DB を使う工程（工程3以降）では、MariaDB を用意して `.env` の `database.default.*` を設定し、`php spark migrate` を実行する。
 - ダミーデータの状態は `?fixture=` で切り替える（development 限定）。使える名前は `app/Services/Fixtures/OogiriFixture.php` の先頭に書いてある。例：`/o/k7Qm2xPz?fixture=decided`、`/host/k7Qm2xPz?fixture=awaiting`、入力エラーは `/oogiri?fixture=error_ngword` への POST。広告枠の見本は `?ads=1`。
-- 管理画面は `http://localhost:8080/admin`（パスは `.env` の `app.adminPath`）。development では仮の管理者でログイン済みとして開く（`docs/CODING_RULES.md` 7-1）。
+- 管理画面は `http://localhost:8080/admin`（パスは `.env` の `app.adminPath`）。development では仮の管理者（上位管理者）でログイン済みとして開く（`docs/CODING_RULES.md` 7-1）。`?role=general` を付けると一般管理者の表示（A-04 の投稿元の列が消える）を確認できる。
 
 ## コマンド
 

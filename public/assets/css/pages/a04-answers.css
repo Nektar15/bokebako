@@ -1,0 +1,10 @@
+/* A-04 回答管理 */
+.p-answers__q { width: 220px; }
+.p-answers__oogiri { width: 180px; }
+.p-answers__status { width: 140px; }
+.p-answers__select { width: 130px; }
+.p-answers__table { --table-cols: 76px minmax(0, 1fr) 160px 96px 44px 98px 110px; }
+.p-answers__table--source { --table-cols: 76px minmax(0, 1fr) 160px 96px 44px 98px 118px 110px; }
+.p-answers__source-head { display: inline-flex; align-items: center; gap: 4px; }
+.p-answers__odai { text-decoration: none; color: var(--ink-sub); }
+.p-answers__odai:hover { text-decoration: underline; }

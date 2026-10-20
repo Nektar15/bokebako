@@ -47,14 +47,4 @@ abstract class BaseController extends Controller
             throw PageNotFoundException::forPageNotFound();
         }
     }
-
-    /**
-     * 工程0〜2 の仮画面。工程1・2で各画面の View に置き換える。
-     *
-     * TODO(inner): 全画面の View ができたら削除する
-     */
-    protected function placeholder(string $screenId, string $title): string
-    {
-        return view('placeholder', ['screenId' => $screenId, 'title' => $title]);
-    }
 }

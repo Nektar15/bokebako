@@ -1,16 +1,16 @@
 # 引き継ぎメモ（新しいセッション・別の開発者向け）
 
-最終更新：2026-10-20　ブランチ：`feature/front-views`（工程1まで完了、develop 未マージ）
+最終更新：2026-10-20　ブランチ：`feature/admin-views`（工程2まで完了、develop 未マージ）
 
 ## 今どこまでできているか
 
 | 工程 | 状態 | ブランチ |
 |---|---|---|
 | 0 土台 | 完了・develop に取り込み済み | `feature/setup` |
-| 1 ユーザー向け画面の外側（U-01〜U-18） | 実装完了。**自動テスト未実行** | `feature/front-views` |
-| 2 管理画面の外側（A-02〜A-10） | 未着手。Controller は仮画面（`placeholder`）を返す | `feature/admin-views`（これから） |
-| 3 DB とモデル | 未着手 | |
-| 4 中身（Service 本実装） | 未着手。`// TODO(inner):` が 49 箇所 | |
+| 1 ユーザー向け画面の外側（U-01〜U-18） | 完了・develop に取り込み済み（`composer check` 通過） | `feature/front-views` |
+| 2 管理画面の外側（A-02〜A-10） | 実装完了・`composer check` 通過。**develop 未マージ** | `feature/admin-views` |
+| 3 DB とモデル | 未着手 | `feature/database`（これから） |
+| 4 中身（Service 本実装） | 未着手。`// TODO(inner):` が 81 箇所 | |
 | 5 仕上げ | 未着手 | |
 | A-01 ログイン | 最終工程で実装。それまでは仮認証（CODING_RULES 7-1） | |
 
@@ -18,42 +18,54 @@
 
 ```
 docs/PROMPT.md と docs/HANDOFF.md を読んでから進めてください。
-まず feature/front-views で `cp .env.example .env && composer install && composer check` を実行し、
-整形・PHPStan（レベル6）・PHPUnit を通してください。落ちたものは直してコミットします。
-通ったら develop にマージし、工程2（管理画面の外側）を feature/admin-views で始めてください。
+まず feature/admin-views で `cp .env.example .env && composer install && composer check` を通し、
+通ったら develop にマージして、工程3（DB とモデル）を feature/database で始めてください。
 ```
 
-工程1の作業環境では packagist.org に接続できず、開発ツールを入れられなかった。次の点は実行して確認が必要。
+### 開発ツールの入れ方（packagist に接続できない環境向け）
 
-- `tests/Feature/FrontFormsTest.php` の `assertSessionHas('errors', …)`：フラッシュデータの取り方が FeatureTestTrait で期待どおりか
-- `tests/Feature/FrontRoutesTest.php` の `assertSee('大喜利を<br>開催しました')`：assertSee はタグを除いて比較するので、`<br>` を含む期待値は落ちる可能性が高い。落ちたら `'開催しました'` に直す
-- PHPStan：`app/Config/Services.php` の `static::settings()` 系と、Entity のマジックプロパティ（`$oogiri->slug` など）で指摘が出たら、`@property` の追記か `phpstan.neon.dist` の `ignoreErrors` で対応する
+工程1・2の作業環境では packagist.org に接続できなかった。`composer install` が通らないときは、
+GitHub Releases の phar（phpstan 1.12、php-cs-fixer 3.95）と、PHPUnit 10.5 とその依存を GitHub から clone して
+`vendor/bin/{phpstan,php-cs-fixer,phpunit}` に置く薄いラッパーで `composer check` を通した。
+普通の環境では `composer install` だけでよい（`composer.lock` はまだない。初回の `composer install` で作ってコミットすること：CODING_RULES 1章）。
 
-## 手で確認済みのこと（工程1）
+## 工程2で作ったもの
 
-- 全30パターンの URL（`?fixture=` の状態込み）を起動して表示。意図したリダイレクト・404 以外はすべて 200
-- 送信系15パターン（開催・回答・問い合わせ・合言葉・結果確定・削除・通報 API）の遷移先とエラー文言
-- ブラウザ（Playwright）で JS の動作：テンプレート選択、確認シート、通報、タップ順での順位付け、URL 必須の切替、localStorage 保存。JS エラーなし
-- スマホ幅（390px）と PC 幅（1280px）の表示
+- View：`app/Views/admin/a02_dashboard.php` 〜 `a10_settings.php`（1画面1ファイル、先頭に View 契約）
+- 共通部品：`partials/admin_badge`（状態バッジ）、`admin_tabs`（絞り込みタブ）、`admin_pager`、`admin_history`（操作履歴）、`admin_action_form`（1ボタン＝1フォームの操作、確認ダイアログつき）、`admin_notice`（操作後の通知・入力エラー）、`admin_setting`（A-10 の1行）
+- CSS：`css/components/admin-*.css`（button / panel / status / table / tabs / pager / form / history）、`css/pages/a02〜a10-*.css`
+- JS：`components/autosubmit.js`（セレクトやファイル選択で即送信、JS なしの送信ボタンを隠す）、`pages/ng-words.js`、`pages/ogp.js`、`pages/settings.js`
+- Controller：`app/Controllers/Admin/AdminController.php`（共通の親：バッジ・通知・絞り込み値・404）と各画面の Controller。`BaseController::placeholder()` と `Views/placeholder.php` は削除した
+- Service（Fixture を返す仮実装）：`StatsService`、`OogiriAdminService`、`AnswerAdminService`、`ModerationService`、`NgWordService`、`AdService`（管理側を追加）、`OgpService`、`InquiryService`、`SettingService`（全設定の読み出し・検証を追加）、`DisplayService`（管理画面用の整形を追加）
+- Entity：`NgWord`、`Ad`、`Inquiry`、`ModerationItem`、`AdminLog`、`OgpJob`。`Oogiri`・`Answer` に管理画面用の集計プロパティを追加
+- Enum：`NgWordMatchType`、`NgWordAction`、`AdStatus`、`AdSlot`、`InquiryStatus`、`InquiryType`（U-18 もこれを使うように変更）、`AiVerdict`、`ModerationFlag`、`ReportTarget`、`OgpKind`、`StatsPeriod`
+- Fixture：`app/Services/Fixtures/Admin*Fixture.php`、`ModerationFixture`、`NgWordFixture`、`AdFixture`、`InquiryFixture`、`OgpFixture`、`StatsFixture`、`SettingFixture`
+- テスト：`tests/Feature/AdminRoutesTest.php`（全画面の GET）、`AdminFormsTest.php`（全操作の POST と入力エラー）、`AdminRoleTest.php`（A-04 の権限による列の出し分け）
+
+## 手で確認済みのこと（工程2）
+
+- 14 パターンの URL（絞り込み・編集・選択・`?role=general` 込み）を Playwright（1280px）で描画。JS エラーなし、横スクロールなし
+- JS の動作：A-06 一致方式の説明切替と「ためしに判定」、A-10 の未保存表示とスイッチの文言、A-03 の削除確認ダイアログ
+- Google Fonts は作業環境の都合で読めなかったため、書体の見た目は未確認
 
 ## 仮置きした判断（発注者の確認待ち）
 
-`docs/adr/` と `docs/FEATURES.md` 6章「未確定事項」が正。工程1で追加した仮置きは次の3つ。
+`docs/adr/0003-admin-views-decisions.md` と `docs/FEATURES.md` 6章「未確定事項」11〜13 が正。要点：
 
-1. 回答シェア用 URL `/o/{slug}/a/{id}`：募集中は U-04 に「シェアされたボケ」を添えて表示。終了後は募集 URL へ（未確定事項5）
-2. U-13「内容を修正して再募集する」：`/?from={slug}&fix=1` でトップへ送り、新しい大喜利として開催（未確定事項7）
-3. 規約・プライバシーポリシー：冒頭数条のひな形だけ置き、残りは `[発注者様支給の文面]`。本番以外では「ひな形」の注記を表示
+1. A-05 の操作ルートのキーを `{oogiri|answer}-{id}` に変更（対象が2種類あるため）
+2. 仮認証に `?role=general`（一般管理者で表示確認。A-01 実装時に削除）
+3. NGワードのカテゴリーは固定、広告の掲載場所は1つ、運用設定に仕様書にない3項目（制限方法・停止時間・急増の通知）を追加
 
-## 工程2を始める人へ
+## 工程3を始める人へ
 
-- 管理画面の View は `docs/design/A02〜A10-*.dc.html` を書き起こす。レイアウトは `app/Views/layouts/admin.php`、左メニューは `partials/admin_sidebar.php`、CSS は `public/assets/css/admin.css` がすでにある
-- 一覧・検索・ページング・状態バッジは共通部品にする（`partials/admin_*.php`、`css/components/admin-*.css`）
-- Controller（`app/Controllers/Admin/*`）は雛形のみ。`placeholder()` を本来の View に置き換え、全画面が終わったら `BaseController::placeholder()` と `Views/placeholder.php` を削除する
-- Service はユーザー向けと同じく Fixture を返す仮実装（`app/Services/Fixtures/`）。管理画面用の Fixture（通報、NGワード、広告、問い合わせ、設定、集計）を足す
-- A-04 の投稿元の列は `service('currentAdmin')->get()->role->canViewSource()` で出し分ける。仮管理者は上位管理者なので表示される側で確認できる
+- `SPEC.md` 3.3 の8テーブルに加えて、工程2で形を決めた `admin_logs`（操作履歴：`Entities/AdminLog`）、`ogp_jobs`（`Entities/OgpJob`）、集計テーブル（S-06。`StatsFixture::summary()` の項目）が必要
+- Entity の `@property` と Fixture の配列キーがそのままカラム名の候補。Fixture は Seeder に移す（`TODO(inner)` を検索）
+- `ModerationItem` はテーブルの行ではない（ADR 0003）。`reports`・NG検知・AI判定（`ai_verdict` / `ai_reason`）をどのテーブルに持つかはここで決める
+- 部品（`partials/admin_*`）は値を省略できない（呼び出し間で値が残る）。View 契約のとおり毎回すべて渡す
 
 ## 環境のメモ
 
 - フレームワーク本体は `system/` にコミット済み（ADR 0001）。本番に Composer は不要
 - `.env` は `.env.example` から作る。`app.hashSecret` と DB 接続を入れる
-- ダミー状態の切替：`?fixture=open|open_empty|awaiting|decided|decided_one|no_result|hidden|hidden_fixable|deleted|recover|not_answered`、入力エラーは `?fixture=error_ngword|error_ratelimit|error_passphrase`、広告の見本は `?ads=1`（development 限定）
+- ダミー状態の切替（ユーザー向け）：`?fixture=open|open_empty|awaiting|decided|decided_one|no_result|hidden|hidden_fixable|deleted|recover|not_answered`、入力エラーは `?fixture=error_ngword|error_ratelimit|error_passphrase`、広告の見本は `?ads=1`（development 限定）
+- 管理画面の切替：絞り込みと選択はすべてクエリ（`?status=` `?filter=` `?item=` `?edit=` `?period=`）。`?role=general` で一般管理者

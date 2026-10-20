@@ -12,14 +12,18 @@ use CodeIgniter\I18n\Time;
  * 大喜利（oogiris テーブルの1行。SPEC 3.3）
  *
  * @property int       $answer_count
+ * @property Time      $created_at
  * @property Time|null $decided_at
+ * @property int       $derived_count      派生開催数（管理画面用。Service が付ける）
  * @property Time      $ends_at
  * @property bool      $fixable            非表示のとき、修正して再募集できるか（U-13）
  * @property int       $id
  * @property string    $odai
  * @property int|null  $parent_oogiri_id   派生元
  * @property int       $pv
+ * @property int       $report_count       通報数（管理画面用。Service が付ける）
  * @property Time|null $selection_deadline 結果選出の期限（ends_at + 72時間）
+ * @property int       $share_count        シェア数（管理画面用。Service が付ける）
  * @property string    $slug               公開URL用（推測困難）
  * @property Time      $starts_at
  * @property string    $status             OogiriStatus の値
@@ -27,7 +31,16 @@ use CodeIgniter\I18n\Time;
 final class Oogiri extends Entity
 {
     protected $dates = ['starts_at', 'ends_at', 'selection_deadline', 'decided_at', 'created_at', 'updated_at'];
-    protected $casts = ['id' => 'int', 'pv' => 'int', 'answer_count' => 'int', 'parent_oogiri_id' => '?int', 'fixable' => 'bool'];
+    protected $casts = [
+        'id'               => 'int',
+        'pv'               => 'int',
+        'answer_count'     => 'int',
+        'parent_oogiri_id' => '?int',
+        'fixable'          => 'bool',
+        'share_count'      => 'int',
+        'derived_count'    => 'int',
+        'report_count'     => 'int',
+    ];
 
     public function status(): OogiriStatus
     {

@@ -1,0 +1,34 @@
+/* A-02 管理ダッシュボード */
+.p-dash__periods { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.p-dash__period-nav .c-segment__label { height: 40px; }
+.p-dash__range { font-size: 12.5px; color: var(--ink-sub); }
+
+.p-dash__kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.p-dash__kpi { padding: 20px 22px; gap: 6px; }
+.p-dash__kpi-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 900; }
+.p-dash__kpi-title .c-tag { padding: 1px 9px; font-size: 11.5px; border-width: 1.5px; }
+.p-dash__kpi-value { font-family: var(--font-display); font-weight: 400; font-size: 52px; line-height: 1.1; color: var(--shu); }
+.p-dash__kpi-sub { font-size: 13px; font-weight: 700; }
+
+.p-dash__tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.p-dash__tile { padding: 14px 16px; gap: 4px; }
+.p-dash__tile-value { font-family: var(--font-display); font-weight: 400; font-size: 26px; font-variant-numeric: tabular-nums; }
+
+.p-dash__bottom { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 16px; flex-grow: 1; }
+.p-dash__chart { padding: 18px 20px; }
+.p-dash__chart-latest { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.p-dash__chart-area { position: relative; height: 300px; padding-left: 34px; border-bottom: var(--border); }
+.p-dash__chart-axis { position: absolute; left: 0; top: 0; bottom: 0; width: 30px; font-size: 11px; color: var(--ink-sub); }
+.p-dash__chart-max { position: absolute; top: -2px; left: 0; }
+.p-dash__chart-mid { position: absolute; bottom: calc(50% - 8px); left: 0; }
+.p-dash__chart-zero { position: absolute; bottom: 0; left: 8px; }
+.p-dash__chart-svg { display: block; width: 100%; height: 100%; }
+.p-dash__chart-grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
+.p-dash__chart-bar { fill: var(--shu); }
+.p-dash__chart-bar:hover { fill: var(--shu-deep); }
+.p-dash__chart-days { display: flex; padding-left: 34px; }
+.p-dash__chart-day { flex: 1 1 0; text-align: center; font-size: 10.5px; color: var(--ink-sub); }
+
+.p-dash__todos { padding: 18px 20px; gap: 6px; }
+.p-dash__todo { display: flex; align-items: center; justify-content: space-between; min-height: 48px; border-bottom: 1.5px solid var(--line); text-decoration: none; font-size: 13.5px; font-weight: 700; }
+.p-dash__todo-count { font-family: var(--font-display); font-weight: 400; font-size: 20px; color: var(--shu); }

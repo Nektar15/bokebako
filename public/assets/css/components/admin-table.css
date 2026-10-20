@@ -1,0 +1,22 @@
+/*
+ * 管理画面の一覧（グリッドで組む表）
+ * 列幅は画面側（p-）が --table-cols に書く。例：.p-oogiri__table { --table-cols: 62px minmax(0, 1fr) 96px; }
+ */
+.c-table { display: flex; flex-direction: column; }
+.c-table__row { display: grid; grid-template-columns: var(--table-cols); align-items: center; border-bottom: 1.5px solid var(--line); }
+.c-table__row--head { align-items: end; border-bottom: 0; }
+.c-table__row--muted { opacity: .55; }
+.c-table__head { padding: 10px; font-size: 12px; font-weight: 900; color: var(--ink-sub); border-bottom: var(--border); white-space: nowrap; }
+.c-table__cell { min-width: 0; padding: 11px 10px; font-size: 13px; line-height: 1.5; }
+.c-table__cell--id { font-family: var(--font-mono); font-size: 12px; }
+.c-table__cell--strong { font-weight: 700; }
+.c-table__cell--clip { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.c-table__cell--sub { font-size: 12px; color: var(--ink-sub); }
+.c-table__cell--time { font-size: 12px; white-space: nowrap; }
+.c-table__cell--num, .c-table__head--num { text-align: right; font-variant-numeric: tabular-nums; }
+.c-table__cell--alert { font-weight: 900; color: var(--shu-deep); }
+.c-table__cell--mono { font-family: var(--font-mono); font-size: 11px; line-height: 1.6; color: var(--ink-sub); }
+.c-table__cell--break { font-family: var(--font-mono); font-size: 12.5px; word-break: break-all; }
+.c-table__actions { display: flex; gap: 4px; align-items: center; }
+.c-table__stack { display: flex; flex-direction: column; gap: 2px; }
+.c-table__empty { padding: 28px 10px; text-align: center; font-size: 13px; color: var(--ink-sub); }

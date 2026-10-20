@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Controllers\Front;
 
 use App\Controllers\BaseController;
+use App\Enums\InquiryType;
 use App\Exceptions\ValidationException;
-use App\Services\ContactService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -17,8 +17,8 @@ final class ContactController extends BaseController
     public function index(): string
     {
         return view('front/u18_contact', [
-            'types'            => ContactService::TYPES,
-            'urlRequiredTypes' => ContactService::URL_REQUIRED_TYPES,
+            'types'            => InquiryType::options(),
+            'urlRequiredTypes' => InquiryType::urlRequiredValues(),
             'errors'           => session()->getFlashdata('errors') ?? [],
             'old'              => [
                 'type'  => (string) (old('type') ?? 'general'),

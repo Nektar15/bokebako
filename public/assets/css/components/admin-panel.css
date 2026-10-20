@@ -1,0 +1,40 @@
+/* 管理画面のパネル（白い枠）、絞り込みバー、数値の表示、通知 */
+.c-panel { background: var(--card); border: var(--border); border-radius: 16px; padding: 18px 22px; display: flex; flex-direction: column; gap: 12px; }
+.c-panel--raised { box-shadow: var(--shadow-press); }
+.c-panel--table { padding: 4px 8px 8px; gap: 0; }
+.c-panel--tight { padding: 16px 18px; }
+.c-panel__head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.c-panel__head--table { padding: 10px 6px 4px; }
+.c-panel__title { font-size: 15px; font-weight: 900; }
+.c-panel__title--lg { font-size: 16px; }
+.c-panel__sub { font-size: 12px; color: var(--ink-sub); }
+.c-panel__link { font-size: 12.5px; font-weight: 900; }
+.c-panel__divider { border-top: var(--border-dashed); }
+.c-panel__note { font-size: 12px; line-height: 1.6; color: var(--ink-sub); }
+.c-panel__empty { font-size: 13px; color: var(--ink-sub); }
+.c-panel__actions { display: flex; justify-content: flex-end; gap: 8px; }
+.c-panel__actions--between { justify-content: space-between; align-items: center; }
+
+/* 絞り込みバー（検索欄・セレクト・検索ボタンを横に並べる） */
+.c-filterbar { background: var(--card); border: var(--border); border-radius: 16px; padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.c-filterbar--slim { padding: 12px 14px; }
+.c-filterbar__count { margin-left: auto; font-size: 12.5px; color: var(--ink-sub); }
+
+/* 数値（見出し＋値＋補足） */
+.c-stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.c-stat__label { font-size: 12px; font-weight: 700; color: var(--ink-sub); }
+.c-stat__value { font-family: var(--font-display); font-weight: 400; font-size: 20px; font-variant-numeric: tabular-nums; }
+.c-stat__value--text { font-family: var(--font-body); font-size: 13.5px; font-weight: 700; }
+.c-stat__sub { font-size: 12px; color: var(--ink-sub); }
+
+/* 行内のメモ（薄い山吹の注記） */
+.c-callout { background: var(--kin-pale); border: 1.5px solid var(--ink); border-radius: 10px; padding: 10px 12px; font-size: 12.5px; line-height: 1.6; }
+
+/* 操作後の通知・入力エラー（partials/admin_notice） */
+.c-notice { background: var(--ink); color: var(--white); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; font-weight: 700; }
+.c-notice--error { background: var(--card); color: var(--shu-deep); border: 2px solid var(--shu-deep); }
+.c-notice__list { display: flex; flex-direction: column; gap: 2px; }
+
+/* 鍵のついた注記（A-04 の投稿元） */
+.c-lock-note { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-sub); }
+.c-lock-note svg { flex-shrink: 0; }

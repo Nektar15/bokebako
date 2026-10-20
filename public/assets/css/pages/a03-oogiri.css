@@ -1,0 +1,26 @@
+/* A-03 大喜利管理（一覧・詳細） */
+.p-oogiri__q { width: 260px; }
+.p-oogiri__select { width: 150px; }
+.p-oogiri__table { --table-cols: 62px minmax(0, 1fr) 96px 96px 112px 56px 48px 48px 44px 44px 166px; }
+.p-oogiri__odai { text-decoration: none; }
+.p-oogiri__odai:hover { text-decoration: underline; }
+
+/* 詳細 */
+.p-oogiri-detail { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+.p-oogiri-detail__main, .p-oogiri-detail__side { display: flex; flex-direction: column; gap: 18px; }
+.p-oogiri-detail__summary { padding: 20px 22px; gap: 14px; }
+.p-oogiri-detail__status { display: flex; align-items: center; gap: 10px; }
+.p-oogiri-detail__slug { font-family: var(--font-mono); font-size: 12px; color: var(--ink-sub); }
+.p-oogiri-detail__odai { font-family: var(--font-display); font-weight: 400; font-size: 24px; line-height: 1.4; }
+.p-oogiri-detail__dates { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.p-oogiri-detail__stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.p-oogiri-detail__ranks { display: flex; flex-direction: column; gap: 8px; }
+.p-oogiri-detail__rank { display: flex; align-items: center; gap: 12px; padding: 6px 10px 6px 6px; border: 1.5px solid var(--ink); border-radius: 12px; }
+.p-oogiri-detail__rank-no { width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%; background: var(--ink); color: var(--white); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 400; font-size: 13px; }
+.p-oogiri-detail__rank-no--first { background: var(--shu); }
+.p-oogiri-detail__rank-text { font-size: 14px; font-weight: 700; }
+.p-oogiri-detail__rank-text--none { color: var(--ink-sub); }
+.p-oogiri-detail__rank-select { flex-grow: 1; }
+.p-oogiri-detail__answers { --table-cols: 80px minmax(0, 1fr) 92px 44px 92px 70px; }
+.p-oogiri-detail__derived { font-size: 13px; line-height: 1.7; }
+.p-oogiri-detail__derived-count { font-family: var(--font-display); font-weight: 400; font-size: 18px; color: var(--shu); }

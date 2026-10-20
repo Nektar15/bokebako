@@ -1,0 +1,80 @@
+/* 管理画面のフォーム部品（入力欄 40px、セレクト、切り替え、スイッチ、設定の行） */
+.c-ainput, .c-aselect, .c-atextarea {
+  height: 40px; border: var(--border); border-radius: 10px; background: var(--white);
+  padding: 0 12px; font-size: 14px; color: var(--ink); min-width: 0;
+}
+.c-aselect { padding-right: 8px; }
+.c-atextarea { height: auto; padding: 8px 10px; font-size: 13.5px; line-height: 1.6; resize: vertical; }
+.c-ainput--num { text-align: right; font-variant-numeric: tabular-nums; }
+.c-ainput--full, .c-aselect--full, .c-atextarea--full { width: 100%; }
+.c-ainput.is-invalid, .c-aselect.is-invalid, .c-atextarea.is-invalid { border-color: var(--shu-deep); }
+
+/* 見出し＋入力欄 */
+.c-afield { display: flex; flex-direction: column; gap: 6px; }
+.c-afield__label { font-size: 13px; font-weight: 900; }
+.c-afield__help { font-size: 12px; line-height: 1.6; color: var(--ink-sub); }
+.c-afield__error { font-size: 12.5px; font-weight: 700; color: var(--shu-deep); }
+.c-afield__inline { display: flex; align-items: center; gap: 10px; }
+.c-afield__unit { font-size: 13.5px; font-weight: 700; white-space: nowrap; }
+.c-afield__default { margin-left: auto; font-size: 12px; color: var(--ink-sub); white-space: nowrap; }
+.c-afield__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+/* 横に並んだ選択肢（ラジオをボタンの見た目に。JS なしで動く） */
+.c-segment { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); border: var(--border); border-radius: 10px; overflow: hidden; background: var(--white); }
+.c-segment--fit { display: inline-grid; width: max-content; grid-auto-columns: auto; }
+.c-segment--fit .c-segment__label { min-width: 110px; }
+.c-segment__item { display: contents; }
+.c-segment__label {
+  height: 38px; display: flex; align-items: center; justify-content: center; padding: 0 16px;
+  border-right: 1.5px solid var(--ink); font-size: 13px; font-weight: 900; cursor: pointer; white-space: nowrap;
+  color: var(--ink); text-decoration: none;
+}
+.c-segment__item:last-child .c-segment__label { border-right: 0; }
+.c-segment__input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.c-segment__input:checked + .c-segment__label, .c-segment__label.is-active { background: var(--kin); }
+.c-segment__input:focus-visible + .c-segment__label { outline: 3px solid var(--shu); outline-offset: -3px; }
+
+/* 縦に並んだ選択カード（A-06 の処理） */
+.c-choicecard { display: flex; flex-direction: column; gap: 8px; }
+.c-choicecard__item { position: relative; display: flex; flex-direction: column; gap: 2px; border: var(--border); border-radius: 12px; background: var(--white); padding: 10px 12px; cursor: pointer; }
+.c-choicecard__input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.c-choicecard__item:has(.c-choicecard__input:checked) { background: var(--kin-pale); }
+.c-choicecard__item:has(.c-choicecard__input:focus-visible) { outline: 3px solid var(--shu); outline-offset: 2px; }
+.c-choicecard__title { font-size: 13.5px; font-weight: 900; }
+.c-choicecard__desc { font-size: 12px; color: var(--ink-sub); }
+
+/* スイッチ（チェックボックスの見た目。submit ボタン版は c-switch--button） */
+.c-switch { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+.c-switch__input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.c-switch__track { position: relative; width: 52px; height: 30px; flex-shrink: 0; border: var(--border); border-radius: var(--radius-pill); background: var(--sand); transition: background .15s; }
+.c-switch__track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--white); border: 1.5px solid var(--ink); transition: left .15s; }
+.c-switch__input:checked + .c-switch__track { background: var(--shu); }
+.c-switch__input:checked + .c-switch__track::after { left: 24px; }
+.c-switch__input:focus-visible + .c-switch__track { outline: 3px solid var(--shu); outline-offset: 2px; }
+.c-switch__label { font-size: 13.5px; font-weight: 900; }
+.c-switch--small .c-switch__track { width: 44px; height: 26px; }
+.c-switch--small .c-switch__track::after { top: 2px; left: 2px; width: 18px; height: 18px; }
+.c-switch--small .c-switch__input:checked + .c-switch__track::after { left: 20px; }
+/* 行の中で押したらすぐ送る版（<button role="switch">） */
+.c-switch--button { padding: 0; border: 0; background: transparent; font: inherit; }
+.c-switch--button[aria-checked="true"] .c-switch__track { background: var(--shu); }
+.c-switch--button[aria-checked="true"] .c-switch__track::after { left: 20px; }
+
+/* チェックボックスの並び */
+.c-checks { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13.5px; font-weight: 700; }
+.c-checks__item { display: flex; align-items: center; gap: 6px; min-height: 36px; cursor: pointer; }
+.c-checks__item input { width: 18px; height: 18px; accent-color: var(--shu); }
+
+/* 画像のアップロード（ファイル入力をボタンの見た目に） */
+.c-upload { display: flex; align-items: center; justify-content: center; height: 76px; border: 2px dashed var(--ink); border-radius: 10px; background: var(--paper); font-size: 13px; font-weight: 700; cursor: pointer; }
+.c-upload:has(:focus-visible) { outline: 3px solid var(--shu); outline-offset: 2px; }
+.c-upload__input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* 設定の行（A-10）：左に項目名と説明、右に入力欄 */
+.c-setting { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; padding: 14px 0; border-top: 1.5px solid var(--line); align-items: center; }
+.c-setting__name { font-size: 14px; font-weight: 900; }
+.c-setting__desc { font-size: 12px; line-height: 1.5; color: var(--ink-sub); }
+.c-setting__head { display: flex; flex-direction: column; gap: 2px; }
+.c-setting__group { display: flex; flex-direction: column; }
+.c-setting__group.is-disabled { opacity: .4; }
+.c-code { font-family: var(--font-mono); background: var(--paper); border-radius: 4px; padding: 1px 6px; color: var(--ink); }

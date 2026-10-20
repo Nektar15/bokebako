@@ -1,0 +1,30 @@
+/* A-09 お問い合わせ管理 */
+.p-inq__filters { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.p-inq__selects { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.p-inq__type { width: 170px; }
+.p-inq__period { width: 130px; }
+
+.p-inq { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 18px; align-items: start; }
+.p-inq__list { display: flex; flex-direction: column; gap: 10px; }
+.p-inq__card {
+  display: flex; flex-direction: column; gap: 6px; width: 100%;
+  border: 2px solid var(--line); border-radius: 14px; padding: 12px 14px;
+  text-decoration: none; color: var(--ink); background: transparent;
+}
+.p-inq__card:hover { color: var(--ink); border-color: var(--ink-sub); }
+.p-inq__card.is-active { background: var(--card); border-color: var(--ink); box-shadow: 0 3px 0 var(--ink); }
+.p-inq__card-head { display: flex; align-items: center; gap: 6px; }
+.p-inq__card-type { font-size: 12px; font-weight: 900; }
+.p-inq__card-time { margin-left: auto; font-size: 11.5px; color: var(--ink-sub); }
+.p-inq__card-body { font-size: 13.5px; font-weight: 700; line-height: 1.5; }
+.p-inq__card-mail { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-sub); }
+
+.p-inq__detail { padding: 20px 22px; gap: 16px; }
+.p-inq__meta { display: grid; grid-template-columns: 110px minmax(0, 1fr); row-gap: 10px; font-size: 13.5px; margin: 0; }
+.p-inq__meta dt { font-weight: 900; color: var(--ink-sub); }
+.p-inq__meta dd { margin: 0; min-width: 0; }
+.p-inq__meta-strong { font-weight: 700; }
+.p-inq__meta-mail { display: flex; gap: 12px; align-items: center; }
+.p-inq__meta-url { font-size: 12.5px; word-break: break-all; }
+.p-inq__body { background: var(--paper); border-radius: 12px; padding: 14px 16px; font-size: 14px; line-height: 1.8; }
+.p-inq__form { display: flex; flex-direction: column; gap: 14px; }
