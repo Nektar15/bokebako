@@ -41,8 +41,8 @@ final class OogiriService
      *
      * @param array{odai?: string, passphrase?: string, from?: string} $input
      *
-     * @throws ValidationException 文字数・NGワード
      * @throws AppException        レート制限
+     * @throws ValidationException 文字数・NGワード
      */
     public function create(array $input): Oogiri
     {

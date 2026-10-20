@@ -21,10 +21,14 @@ use Psr\Log\LoggerInterface;
  */
 abstract class BaseController extends Controller
 {
-    /** @var CLIRequest|IncomingRequest */
+    /**
+     * @var CLIRequest|IncomingRequest
+     */
     protected $request;
 
-    /** @var list<string> */
+    /**
+     * @var list<string>
+     */
     protected $helpers = ['url', 'form', 'view'];
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
@@ -32,7 +36,9 @@ abstract class BaseController extends Controller
         parent::initController($request, $response, $logger);
     }
 
-    /** 募集URLのスラッグから大喜利を取得する。なければ 404 */
+    /**
+     * 募集URLのスラッグから大喜利を取得する。なければ 404
+     */
     protected function findOogiriOrFail(string $slug): Oogiri
     {
         try {

@@ -12,7 +12,9 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 final class EventController extends BaseController
 {
-    /** POST /api/v1/events — TODO(inner): 工程4で本実装 */
+    /**
+     * POST /api/v1/events — TODO(inner): 工程4で本実装
+     */
     public function create(): ResponseInterface
     {
         return $this->response->setJSON(['ok' => true, 'data' => null]);

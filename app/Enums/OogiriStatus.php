@@ -31,19 +31,23 @@ enum OogiriStatus: string
         };
     }
 
-    /** 募集URL（/o/{slug}）で表示する画面ID */
+    /**
+     * 募集URL（/o/{slug}）で表示する画面ID
+     */
     public function screen(): string
     {
         return match ($this) {
-            self::Open              => 'U-04',
-            self::AwaitingSelection => 'U-11',
-            self::Decided           => 'U-10',
-            self::NoResult          => 'U-12',
+            self::Open                  => 'U-04',
+            self::AwaitingSelection     => 'U-11',
+            self::Decided               => 'U-10',
+            self::NoResult              => 'U-12',
             self::Hidden, self::Deleted => 'U-13',
         };
     }
 
-    /** 回答を受け付けるか（締切判定は必ずサーバー側で行う：S-01） */
+    /**
+     * 回答を受け付けるか（締切判定は必ずサーバー側で行う：S-01）
+     */
     public function acceptsAnswers(): bool
     {
         return $this === self::Open;

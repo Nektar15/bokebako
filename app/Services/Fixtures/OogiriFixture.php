@@ -20,7 +20,9 @@ final class OogiriFixture
 {
     public const DEFAULT = 'open';
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public static function names(): array
     {
         return ['open', 'open_empty', 'awaiting', 'decided', 'decided_one', 'no_result', 'hidden', 'hidden_fixable', 'deleted'];
@@ -30,18 +32,18 @@ final class OogiriFixture
     {
         $now  = Time::now();
         $base = [
-            'id'               => 12480,
-            'slug'             => $slug,
-            'odai'             => 'こんなコンビニ店員は嫌だ',
-            'status'           => 'open',
-            'starts_at'        => $now->subHours(5)->subMinutes(28),
-            'ends_at'          => $now->addHours(18)->addMinutes(32),
+            'id'                 => 12480,
+            'slug'               => $slug,
+            'odai'               => 'こんなコンビニ店員は嫌だ',
+            'status'             => 'open',
+            'starts_at'          => $now->subHours(5)->subMinutes(28),
+            'ends_at'            => $now->addHours(18)->addMinutes(32),
             'selection_deadline' => null,
-            'decided_at'       => null,
-            'pv'               => 1284,
-            'answer_count'     => 47,
-            'parent_oogiri_id' => 12301,
-            'fixable'          => false,
+            'decided_at'         => null,
+            'pv'                 => 1284,
+            'answer_count'       => 47,
+            'parent_oogiri_id'   => 12301,
+            'fixable'            => false,
         ];
 
         $patch = match ($name) {
@@ -59,7 +61,9 @@ final class OogiriFixture
         return new Oogiri(array_merge($base, $patch));
     }
 
-    /** @return list<Answer> */
+    /**
+     * @return list<Answer>
+     */
     public static function answers(string $name, int $oogiriId = 12480): array
     {
         if ($name === 'open_empty') {

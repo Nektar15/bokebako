@@ -21,16 +21,18 @@ final class OogiriController extends BaseController
         $oogiri = $this->findOogiriOrFail($slug);
 
         return match ($oogiri->status()) {
-            OogiriStatus::Open              => $this->renderAnswerPage($oogiri),
-            OogiriStatus::AwaitingSelection => $this->closedPage($oogiri),
-            OogiriStatus::Decided           => $this->resultPage($oogiri),
-            OogiriStatus::NoResult          => $this->noResultPage($oogiri),
+            OogiriStatus::Open                          => $this->renderAnswerPage($oogiri),
+            OogiriStatus::AwaitingSelection             => $this->closedPage($oogiri),
+            OogiriStatus::Decided                       => $this->resultPage($oogiri),
+            OogiriStatus::NoResult                      => $this->noResultPage($oogiri),
             OogiriStatus::Hidden, OogiriStatus::Deleted => $this->hiddenPage($oogiri),
         };
     }
 
-    /** U-03 開催完了（開催者トークンを持つブラウザだけ。なければ募集URLへ） */
-    public function created(string $slug): string|RedirectResponse
+    /**
+     * U-03 開催完了（開催者トークンを持つブラウザだけ。なければ募集URLへ）
+     */
+    public function created(string $slug): RedirectResponse|string
     {
         $oogiri = $this->findOogiriOrFail($slug);
 
@@ -49,13 +51,17 @@ final class OogiriController extends BaseController
         ]);
     }
 
-    /** U-11 募集終了（結果選択待ち） */
+    /**
+     * U-11 募集終了（結果選択待ち）
+     */
     private function closedPage(Oogiri $oogiri): string
     {
         return view('front/u11_closed', ['oogiri' => $oogiri]);
     }
 
-    /** U-10 結果発表 */
+    /**
+     * U-10 結果発表
+     */
     private function resultPage(Oogiri $oogiri): string
     {
         $page   = max(1, (int) $this->request->getGet('page'));
@@ -74,7 +80,9 @@ final class OogiriController extends BaseController
         ]);
     }
 
-    /** U-12 結果未選出 */
+    /**
+     * U-12 結果未選出
+     */
     private function noResultPage(Oogiri $oogiri): string
     {
         $page  = max(1, (int) $this->request->getGet('page'));
@@ -89,7 +97,9 @@ final class OogiriController extends BaseController
         ]);
     }
 
-    /** U-13 非表示 */
+    /**
+     * U-13 非表示
+     */
     private function hiddenPage(Oogiri $oogiri): string
     {
         return view('front/u13_hidden', [

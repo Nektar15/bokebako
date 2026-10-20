@@ -22,7 +22,9 @@ final class FixtureContext
         return $name === '' ? $default : $name;
     }
 
-    /** ?fixture=error_xxx の xxx を返す。なければ null */
+    /**
+     * ?fixture=error_xxx の xxx を返す。なければ null
+     */
     public static function error(): ?string
     {
         $name = self::name('');

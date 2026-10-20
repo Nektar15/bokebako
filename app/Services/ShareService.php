@@ -17,7 +17,9 @@ final class ShareService
     {
     }
 
-    /** 募集URL（Xでシェアする公開URL） */
+    /**
+     * 募集URL（Xでシェアする公開URL）
+     */
     public function url(Oogiri $oogiri): string
     {
         return site_url('o/' . $oogiri->slug);
@@ -43,7 +45,9 @@ final class ShareService
         return $this->intent($this->settings->string('tpl_result'), ['{odai}' => $oogiri->odai, '{first}' => $first?->body ?? '（選出なし）', '{url}' => $this->url($oogiri)]);
     }
 
-    /** @param array<string, string> $vars */
+    /**
+     * @param array<string, string> $vars
+     */
     private function intent(string $template, array $vars): string
     {
         $text = strtr($template, $vars) . "\n#" . $this->settings->string('hashtag');

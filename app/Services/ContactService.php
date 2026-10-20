@@ -12,14 +12,16 @@ use App\Exceptions\ValidationException;
 final class ContactService
 {
     public const TYPES = [
-        'general'   => '一般問い合わせ',
-        'delete'    => '投稿削除依頼',
-        'rights'    => '権利侵害',
-        'ad'        => '広告掲載について',
-        'other'     => 'その他',
+        'general' => '一般問い合わせ',
+        'delete'  => '投稿削除依頼',
+        'rights'  => '権利侵害',
+        'ad'      => '広告掲載について',
+        'other'   => 'その他',
     ];
 
-    /** 対象URLが必須になる種別 */
+    /**
+     * 対象URLが必須になる種別
+     */
     public const URL_REQUIRED_TYPES = ['delete', 'rights'];
 
     /**

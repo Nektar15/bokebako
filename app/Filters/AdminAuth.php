@@ -51,8 +51,8 @@ class AdminAuth implements FilterInterface
 
         return match ($environment) {
             'development', 'testing' => true,
-            'staging' => in_array($ip, array_filter(array_map('trim', explode(',', $allowedIps))), true),
-            default => false,
+            'staging'                => in_array($ip, array_filter(array_map('trim', explode(',', $allowedIps))), true),
+            default                  => false,
         };
     }
 }

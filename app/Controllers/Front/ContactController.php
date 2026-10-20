@@ -9,7 +9,9 @@ use App\Exceptions\ValidationException;
 use App\Services\ContactService;
 use CodeIgniter\HTTP\RedirectResponse;
 
-/** U-18 お問い合わせ */
+/**
+ * U-18 お問い合わせ
+ */
 final class ContactController extends BaseController
 {
     public function index(): string

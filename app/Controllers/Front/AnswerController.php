@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers\Front;
 
 use App\Controllers\BaseController;
-use App\Entities\Oogiri;
 use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
@@ -18,7 +17,9 @@ final class AnswerController extends BaseController
 {
     use RendersAnswerPage;
 
-    /** U-05「同意して回答する」→ 登録して U-06 へ */
+    /**
+     * U-05「同意して回答する」→ 登録して U-06 へ
+     */
     public function create(string $slug): RedirectResponse
     {
         $oogiri = $this->findOogiriOrFail($slug);
@@ -34,8 +35,10 @@ final class AnswerController extends BaseController
         return redirect()->to('/o/' . $slug . '/done');
     }
 
-    /** U-06 回答完了（直前の回答がなければ募集URLへ） */
-    public function done(string $slug): string|RedirectResponse
+    /**
+     * U-06 回答完了（直前の回答がなければ募集URLへ）
+     */
+    public function done(string $slug): RedirectResponse|string
     {
         $oogiri = $this->findOogiriOrFail($slug);
         $answer = service('answer')->lastPosted($oogiri);
@@ -54,8 +57,10 @@ final class AnswerController extends BaseController
         ]);
     }
 
-    /** U-07 回答一覧（回答済みのブラウザだけ） */
-    public function index(string $slug): string|RedirectResponse
+    /**
+     * U-07 回答一覧（回答済みのブラウザだけ）
+     */
+    public function index(string $slug): RedirectResponse|string
     {
         $oogiri = $this->findOogiriOrFail($slug);
 
@@ -79,8 +84,10 @@ final class AnswerController extends BaseController
         ]);
     }
 
-    /** 回答シェア用URL（未確定事項5：募集中は U-04 に回答を1件添えて表示。終了後は募集URLへ） */
-    public function share(string $slug, int $answerId): string|RedirectResponse
+    /**
+     * 回答シェア用URL（未確定事項5：募集中は U-04 に回答を1件添えて表示。終了後は募集URLへ）
+     */
+    public function share(string $slug, int $answerId): RedirectResponse|string
     {
         $oogiri = $this->findOogiriOrFail($slug);
 

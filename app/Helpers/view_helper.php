@@ -7,7 +7,6 @@ declare(strict_types=1);
  *
  * ここに定義したもの以外の PHP を View で呼ばない。
  */
-
 if (! function_exists('asset_url')) {
     /**
      * 静的資産のURL（バージョン付き。長期ブラウザキャッシュ用：SPEC 4.1）
@@ -44,7 +43,9 @@ if (! function_exists('part')) {
 }
 
 if (! function_exists('admin_url')) {
-    /** 管理画面のURL。パスの先頭は .env の app.adminPath */
+    /**
+     * 管理画面のURL。パスの先頭は .env の app.adminPath
+     */
     function admin_url(string $path = ''): string
     {
         $base = trim((string) env('app.adminPath', 'admin'), '/');
@@ -54,7 +55,9 @@ if (! function_exists('admin_url')) {
 }
 
 if (! function_exists('nl2br_esc')) {
-    /** 改行を保ったまま安全に出力する（回答本文など） */
+    /**
+     * 改行を保ったまま安全に出力する（回答本文など）
+     */
     function nl2br_esc(string $text): string
     {
         return nl2br(esc($text));

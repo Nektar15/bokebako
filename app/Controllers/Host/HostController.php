@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers\Host;
 
 use App\Controllers\BaseController;
-use App\Entities\Oogiri;
 use App\Enums\OogiriStatus;
 use App\Exceptions\AppException;
 use App\Exceptions\ValidationException;
@@ -16,8 +15,10 @@ use CodeIgniter\HTTP\RedirectResponse;
  */
 final class HostController extends BaseController
 {
-    /** U-08。トークンがなければ合言葉の入力画面、確定済みなら結果ページへ */
-    public function show(string $slug): string|RedirectResponse
+    /**
+     * U-08。トークンがなければ合言葉の入力画面、確定済みなら結果ページへ
+     */
+    public function show(string $slug): RedirectResponse|string
     {
         $oogiri = $this->findOogiriOrFail($slug);
 
@@ -36,21 +37,23 @@ final class HostController extends BaseController
         $share  = service('share');
 
         return view('host/u08_host', [
-            'oogiri'            => $oogiri,
-            'isOpen'            => $oogiri->isOpen(),
-            'startsAt'          => $format->datetime($oogiri->starts_at),
-            'endsAt'            => $format->datetime($oogiri->ends_at),
-            'remaining'         => $format->remaining($oogiri->ends_at),
+            'oogiri'             => $oogiri,
+            'isOpen'             => $oogiri->isOpen(),
+            'startsAt'           => $format->datetime($oogiri->starts_at),
+            'endsAt'             => $format->datetime($oogiri->ends_at),
+            'remaining'          => $format->remaining($oogiri->ends_at),
             'selectionRemaining' => $oogiri->selection_deadline !== null ? $format->remaining($oogiri->selection_deadline) : '',
-            'pv'                => $format->number($oogiri->pv),
-            'answers'           => service('answer')->listVisible($oogiri, 1)['items'],
-            'shareUrl'          => $share->url($oogiri),
-            'intentUrl'         => $share->recruitIntent($oogiri),
-            'errors'            => session()->getFlashdata('errors') ?? [],
+            'pv'                 => $format->number($oogiri->pv),
+            'answers'            => service('answer')->listVisible($oogiri, 1)['items'],
+            'shareUrl'           => $share->url($oogiri),
+            'intentUrl'          => $share->recruitIntent($oogiri),
+            'errors'             => session()->getFlashdata('errors') ?? [],
         ]);
     }
 
-    /** 合言葉で本人確認 */
+    /**
+     * 合言葉で本人確認
+     */
     public function recover(string $slug): RedirectResponse
     {
         $oogiri = $this->findOogiriOrFail($slug);
@@ -73,7 +76,9 @@ final class HostController extends BaseController
         return redirect()->to('/host/' . $slug);
     }
 
-    /** U-09「この内容で結果を発表する」→ 確定して結果ページへ */
+    /**
+     * U-09「この内容で結果を発表する」→ 確定して結果ページへ
+     */
     public function decide(string $slug): RedirectResponse
     {
         $oogiri = $this->findOogiriOrFail($slug);

@@ -15,7 +15,9 @@ use CodeIgniter\HTTP\ResponseInterface;
  */
 final class TopController extends BaseController
 {
-    /** U-01 */
+    /**
+     * U-01
+     */
     public function index(): string
     {
         return view('front/u01_top', [
@@ -28,7 +30,9 @@ final class TopController extends BaseController
         ]);
     }
 
-    /** U-02「同意して開催する」→ 作成して U-03 へ */
+    /**
+     * U-02「同意して開催する」→ 作成して U-03 へ
+     */
     public function create(): ResponseInterface
     {
         $input = [

@@ -11,18 +11,18 @@ use CodeIgniter\I18n\Time;
 /**
  * 大喜利（oogiris テーブルの1行。SPEC 3.3）
  *
- * @property int         $id
- * @property string      $slug               公開URL用（推測困難）
- * @property string      $odai
- * @property string      $status             OogiriStatus の値
- * @property Time        $starts_at
- * @property Time        $ends_at
- * @property Time|null   $selection_deadline 結果選出の期限（ends_at + 72時間）
- * @property Time|null   $decided_at
- * @property int         $pv
- * @property int         $answer_count
- * @property int|null    $parent_oogiri_id   派生元
- * @property bool        $fixable            非表示のとき、修正して再募集できるか（U-13）
+ * @property int       $answer_count
+ * @property Time|null $decided_at
+ * @property Time      $ends_at
+ * @property bool      $fixable            非表示のとき、修正して再募集できるか（U-13）
+ * @property int       $id
+ * @property string    $odai
+ * @property int|null  $parent_oogiri_id   派生元
+ * @property int       $pv
+ * @property Time|null $selection_deadline 結果選出の期限（ends_at + 72時間）
+ * @property string    $slug               公開URL用（推測困難）
+ * @property Time      $starts_at
+ * @property string    $status             OogiriStatus の値
  */
 final class Oogiri extends Entity
 {

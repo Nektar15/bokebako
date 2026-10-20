@@ -16,7 +16,9 @@ final class PageController extends BaseController
         return view('front/u14_about');
     }
 
-    /** 規約の本文は発注者支給。届くまでは一般的なひな形を置き、本番以外では「ひな形」の注記を出す */
+    /**
+     * 規約の本文は発注者支給。届くまでは一般的なひな形を置き、本番以外では「ひな形」の注記を出す
+     */
     public function terms(): string
     {
         return view('front/u15_terms', ['showDraftNote' => ENVIRONMENT !== 'production']);

@@ -11,19 +11,25 @@ use CodeIgniter\I18n\Time;
  */
 final class DisplayService
 {
-    /** 例：「9月17日 22:15」 */
+    /**
+     * 例：「9月17日 22:15」
+     */
     public function datetime(Time $time): string
     {
         return $time->format('n月j日 H:i');
     }
 
-    /** 例：「9月16日 22:15〜9月17日 22:15」 */
+    /**
+     * 例：「9月16日 22:15〜9月17日 22:15」
+     */
     public function period(Time $from, Time $to): string
     {
         return $this->datetime($from) . '〜' . $this->datetime($to);
     }
 
-    /** 残り時間。例：「18時間32分」「12分」。過ぎていれば「0分」 */
+    /**
+     * 残り時間。例：「18時間32分」「12分」。過ぎていれば「0分」
+     */
     public function remaining(Time $until, ?Time $now = null): string
     {
         $seconds = $until->getTimestamp() - ($now ?? Time::now())->getTimestamp();
@@ -36,7 +42,9 @@ final class DisplayService
         return ($hours > 0 ? $hours . '時間' : '') . $minutes . '分';
     }
 
-    /** 残り時間バーの幅（0〜100）。残りが多いほど大きい */
+    /**
+     * 残り時間バーの幅（0〜100）。残りが多いほど大きい
+     */
     public function progressPercent(Time $from, Time $to, ?Time $now = null): int
     {
         $total = max(1, $to->getTimestamp() - $from->getTimestamp());
@@ -45,7 +53,9 @@ final class DisplayService
         return (int) max(0, min(100, round($left / $total * 100)));
     }
 
-    /** 相対表示。例：「たった今」「5分前」「3時間前」「2日前」 */
+    /**
+     * 相対表示。例：「たった今」「5分前」「3時間前」「2日前」
+     */
     public function ago(Time $time, ?Time $now = null): string
     {
         $seconds = ($now ?? Time::now())->getTimestamp() - $time->getTimestamp();

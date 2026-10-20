@@ -13,7 +13,9 @@ namespace App\Services;
  */
 final class AdService
 {
-    /** @return array{top: Ad|null, bottom: Ad|null} */
+    /**
+     * @return array{top: Ad|null, bottom: Ad|null}
+     */
     public function slots(): array
     {
         // 外側フェーズ：?ads=1 のときだけ見本の広告を出す

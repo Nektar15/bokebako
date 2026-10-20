@@ -7,7 +7,11 @@ namespace Tests\Unit;
 use App\Enums\OogiriStatus;
 use CodeIgniter\Test\CIUnitTestCase;
 
-/** 募集URLの出し分け（FEATURES 0-4）と回答受付の判定 */
+/**
+ * 募集URLの出し分け（FEATURES 0-4）と回答受付の判定
+ *
+ * @internal
+ */
 final class OogiriStatusTest extends CIUnitTestCase
 {
     public function testScreenBySatus(): void

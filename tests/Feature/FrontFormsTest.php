@@ -10,6 +10,8 @@ use CodeIgniter\Test\FeatureTestTrait;
 /**
  * 送信系：開催・回答・問い合わせ・開催者操作が、正しく遷移し、入力エラーを返すこと
  * FeatureTestTrait は CSRF を通さないので、トークンなしで POST できる。
+ *
+ * @internal
  */
 final class FrontFormsTest extends CIUnitTestCase
 {

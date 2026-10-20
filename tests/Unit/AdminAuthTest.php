@@ -12,6 +12,8 @@ use CodeIgniter\Test\CIUnitTestCase;
  *
  * production では常に拒否されること、判定に迷う場合も拒否されることを保証する。
  * A-01 実装後、この仮認証を削除するときにこのテストも置き換える。
+ *
+ * @internal
  */
 final class AdminAuthTest extends CIUnitTestCase
 {

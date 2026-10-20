@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
@@ -85,7 +87,7 @@ class Cookie extends BaseConfig
      * (empty string) means default SameSite attribute set by browsers (`Lax`)
      * will be set on cookies. If set to `None`, `$secure` must also be set.
      *
-     * @phpstan-var 'None'|'Lax'|'Strict'|''
+     * @phpstan-var ''|'Lax'|'None'|'Strict'
      */
     public string $samesite = 'Lax';
 

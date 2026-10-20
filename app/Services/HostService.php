@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Entities\Oogiri;
 use App\Enums\ErrorCode;
+use App\Enums\OogiriStatus;
 use App\Exceptions\AppException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\ValidationException;
@@ -16,7 +17,9 @@ use App\Services\Fixtures\FixtureContext;
  */
 final class HostService
 {
-    /** 開催者トークンを持つブラウザか（同一ブラウザは原則自動認証） */
+    /**
+     * 開催者トークンを持つブラウザか（同一ブラウザは原則自動認証）
+     */
     public function isAuthorized(Oogiri $oogiri): bool
     {
         // TODO(inner): Cookie/localStorage のトークンをハッシュ化して oogiris.host_token_hash と照合する
@@ -26,8 +29,8 @@ final class HostService
     /**
      * 合言葉で本人確認する（別端末からの復旧）
      *
-     * @throws ValidationException 合言葉が違う
      * @throws AppException        試行回数の上限
+     * @throws ValidationException 合言葉が違う
      */
     public function recover(Oogiri $oogiri, string $passphrase): void
     {
@@ -60,7 +63,7 @@ final class HostService
     {
         $this->assertAuthorized($oogiri);
 
-        if ($oogiri->status() === \App\Enums\OogiriStatus::Decided) {
+        if ($oogiri->status() === OogiriStatus::Decided) {
             throw new AppException(ErrorCode::AlreadyDecided);
         }
         $answerIds = array_values(array_unique(array_filter(array_map('intval', $answerIds))));

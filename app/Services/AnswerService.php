@@ -44,7 +44,9 @@ final class AnswerService
         return ['items' => $items, 'hasMore' => $oogiri->answer_count > $page * self::PER_PAGE, 'page' => $page];
     }
 
-    /** ベスト回答（rank 順）。未選出なら空 */
+    /**
+     * ベスト回答（rank 順）。未選出なら空
+     */
     public function ranked(Oogiri $oogiri): array
     {
         $ranked = array_filter(OogiriFixture::answers(FixtureContext::name(), $oogiri->id), static fn (Answer $a) => $a->rank !== null);
@@ -53,7 +55,9 @@ final class AnswerService
         return array_values($ranked);
     }
 
-    /** @throws NotFoundException */
+    /**
+     * @throws NotFoundException
+     */
     public function find(Oogiri $oogiri, int $answerId): Answer
     {
         foreach (OogiriFixture::answers(FixtureContext::name(), $oogiri->id) as $answer) {
@@ -65,14 +69,18 @@ final class AnswerService
         throw new NotFoundException();
     }
 
-    /** このブラウザがこの大喜利に回答済みか（ブラウザ保存情報＋サーバー側の投稿記録：U-07） */
+    /**
+     * このブラウザがこの大喜利に回答済みか（ブラウザ保存情報＋サーバー側の投稿記録：U-07）
+     */
     public function hasAnswered(Oogiri $oogiri): bool
     {
         // TODO(inner): ブラウザIDのハッシュで answers を検索する
         return FixtureContext::name() !== 'not_answered';
     }
 
-    /** 直前に投稿した回答（U-06）。なければ null */
+    /**
+     * 直前に投稿した回答（U-06）。なければ null
+     */
     public function lastPosted(Oogiri $oogiri): ?Answer
     {
         // TODO(inner): セッション（フラッシュ）から取得する

@@ -8,7 +8,11 @@ use App\Services\DisplayService;
 use CodeIgniter\I18n\Time;
 use CodeIgniter\Test\CIUnitTestCase;
 
-/** 画面表示用の整形 */
+/**
+ * 画面表示用の整形
+ *
+ * @internal
+ */
 final class DisplayServiceTest extends CIUnitTestCase
 {
     public function testRemaining(): void
@@ -22,7 +26,7 @@ final class DisplayServiceTest extends CIUnitTestCase
 
     public function testProgressPercent(): void
     {
-        $d = new DisplayService();
+        $d    = new DisplayService();
         $from = Time::parse('2026-09-16 22:15:00');
         $to   = Time::parse('2026-09-17 22:15:00');
         $this->assertSame(100, $d->progressPercent($from, $to, $from));
