@@ -142,12 +142,16 @@ final class AnswerAdminService
         service('adminLog')->record('answer', $id, '削除');
     }
 
+    /**
+     * 公開状態が変わった回答の表示を作り直す：ページキャッシュを捨て、OGP 画像を消す・作り直す（レビュー指摘 7）
+     */
     private function purge(Answer $answer): void
     {
         $oogiri = $this->oogiris->find($answer->oogiri_id);
 
         if ($oogiri !== null) {
             service('pageCache')->purgeOogiri($oogiri->slug);
+            service('ogp')->refreshForAnswer($answer, $oogiri);
         }
     }
 }

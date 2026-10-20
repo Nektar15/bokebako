@@ -58,7 +58,7 @@ final class OogiriController extends BaseController
      */
     private function closedPage(Oogiri $oogiri): string
     {
-        $this->cachePage(PageCacheService::TTL_RESULT);
+        $this->cacheFirstPage();
 
         return view('front/u11_closed', ['oogiri' => $oogiri]);
     }
@@ -72,17 +72,14 @@ final class OogiriController extends BaseController
         $ranked = service('answer')->ranked($oogiri);
         $format = service('display');
         $share  = service('share');
-
-        if ($page === 1) {
-            $this->cachePage(PageCacheService::TTL_RESULT); // 結果ページはキャッシュ配信（SPEC 4.1）。確定・非表示で捨てる
-        }
+        $this->cacheFirstPage(); // 結果ページはキャッシュ配信（SPEC 4.1）。確定・非表示で捨てる
 
         return view('front/u10_result', [
             'oogiri'          => $oogiri,
             'period'          => $format->period($oogiri->starts_at, $oogiri->ends_at),
             'ogpUrl'          => service('ogp')->url(OgpKind::Result, $oogiri->slug),
             'ranked'          => $ranked,
-            'answers'         => service('answer')->listVisible($oogiri, $page),
+            'answers'         => service('answer')->listVisible($oogiri, $page, false), // 共有キャッシュに個人の情報を載せない
             'resultIntentUrl' => $share->resultIntent($oogiri, $ranked[0] ?? null),
             'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
             'ads'             => service('ads')->slots(),
@@ -96,18 +93,28 @@ final class OogiriController extends BaseController
     {
         $page  = max(1, (int) $this->request->getGet('page'));
         $share = service('share');
-
-        if ($page === 1) {
-            $this->cachePage(PageCacheService::TTL_RESULT);
-        }
+        $this->cacheFirstPage();
 
         return view('front/u12_no_result', [
             'oogiri'          => $oogiri,
             'period'          => service('display')->period($oogiri->starts_at, $oogiri->ends_at),
-            'answers'         => service('answer')->listVisible($oogiri, $page),
+            'answers'         => service('answer')->listVisible($oogiri, $page, false), // 共有キャッシュに個人の情報を載せない
             'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
             'ads'             => service('ads')->slots(),
         ]);
+    }
+
+    /**
+     * 結果・結果未選出・募集終了の1ページ目（?page= なし）だけキャッシュする
+     *
+     * キャッシュのキーは page クエリを含む（Config\Cache::$cacheQueryString）。?page=2 以降や ?page=1 を保存すると、
+     * PageCacheService::purgeOogiri() が捨てられないキャッシュが残るため、保存しない（レビュー指摘 5）
+     */
+    private function cacheFirstPage(): void
+    {
+        if ($this->request->getGet('page') === null) {
+            $this->cachePage(PageCacheService::TTL_RESULT);
+        }
     }
 
     /**

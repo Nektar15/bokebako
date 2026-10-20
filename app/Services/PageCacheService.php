@@ -11,6 +11,7 @@ use CodeIgniter\HTTP\URI;
  *
  * 結果発表（U-10）・募集終了（U-11）・結果未選出（U-12）・紹介・規約類は Controller が cachePage() で静的 HTML にする。
  * 状態が変わったときにここで捨てる。キーは CodeIgniter の ResponseCache と同じ計算（GET:＋クエリなしの URL の md5）。
+ * ResponseCache は page クエリだけをキーに含めるが（Config\Cache）、?page= 付きは保存しないので、捨てるのはクエリなしの1件でよい。
  */
 final class PageCacheService
 {

@@ -43,18 +43,21 @@ final class AnswerService
     }
 
     /**
-     * 公開中の回答を新着順で返す（ページング）。is_mine はブラウザIDで判定
+     * 公開中の回答を新着順で返す（ページング）
+     *
+     * is_mine（「あなたの回答」）は $markMine のときだけブラウザIDで判定する。
+     * 全員で共有するページキャッシュ（U-10・U-12）に載せると、最初に開いた人の判定が他の人にも出るため（レビュー指摘 2）
      *
      * @return array{items: list<Answer>, hasMore: bool, page: int}
      */
-    public function listVisible(Oogiri $oogiri, int $page = 1): array
+    public function listVisible(Oogiri $oogiri, int $page, bool $markMine): array
     {
         $items = $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)
             ->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')
             ->findAll(self::PER_PAGE + 1, ($page - 1) * self::PER_PAGE);
         $hasMore = count($items) > self::PER_PAGE;
         $items   = array_slice($items, 0, self::PER_PAGE);
-        $mine    = $this->identity->browserIdHash();
+        $mine    = $markMine ? $this->identity->browserIdHash() : '';
 
         foreach ($items as $answer) {
             $answer->is_mine      = $mine !== '' && $answer->browser_id_hash === $mine;

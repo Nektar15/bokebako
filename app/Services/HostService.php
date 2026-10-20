@@ -16,12 +16,18 @@ use App\Exceptions\ValidationException;
 use App\Models\AnswerModel;
 use App\Models\OogiriModel;
 use CodeIgniter\I18n\Time;
+use Throwable;
 
 /**
  * 開催者の認証と操作（U-08・U-09）
  */
 final class HostService
 {
+    /**
+     * 開催者が結果を確定できる状態（募集中の早期確定を含む）
+     */
+    public const DECIDABLE_BY_HOST = [OogiriStatus::Open, OogiriStatus::AwaitingSelection];
+
     public function __construct(
         private readonly OogiriModel $oogiris,
         private readonly AnswerModel $answers,
@@ -61,7 +67,7 @@ final class HostService
         }
 
         try {
-            $this->rateLimit->assertAllowed(RateLimitService::ACTION_PASSPHRASE);
+            $this->rateLimit->assertAllowed(RateLimitService::ACTION_PASSPHRASE, $oogiri->slug);
         } catch (AppException) {
             throw new AppException(ErrorCode::RateLimited, '試行回数の上限に達しました。しばらくしてからお試しください');
         }
@@ -105,7 +111,7 @@ final class HostService
      * @param list<int|string> $answerIds 1位から順。1〜3件
      *
      * @throws AppException        確定済み（ALREADY_DECIDED）
-     * @throws ValidationException 選択なし
+     * @throws ValidationException 選択なし、選べない回答を含む
      */
     public function decide(Oogiri $oogiri, array $answerIds): void
     {
@@ -114,38 +120,101 @@ final class HostService
         if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
             throw new AppException(ErrorCode::AlreadyDecided);
         }
-        if (! in_array($oogiri->status(), [OogiriStatus::AwaitingSelection, OogiriStatus::Open], true)) {
+        if (! in_array($oogiri->status(), self::DECIDABLE_BY_HOST, true)) {
             throw new AppException(ErrorCode::Forbidden);
         }
+        $ids    = self::normalizeIds($answerIds);
+        $first  = $this->saveRanks($oogiri, $ids, self::DECIDABLE_BY_HOST);
+        $oogiri = $this->oogiris->find($oogiri->id);
+        service('event')->record(EventName::Decide, ['oogiri_id' => $oogiri->id]);
+        service('ogp')->generateResult($oogiri, $first);
+        service('adminLog')->record('oogiri', $oogiri->id, '結果を確定（' . count($ids) . '件）', AdminLogService::ACTOR_HOST);
+    }
+
+    /**
+     * 選ばれた回答IDを整える（数値化・重複と空欄（0）を除く）。1〜3件でなければ拒否する
+     *
+     * @param list<int|string> $answerIds
+     *
+     * @return list<int>
+     *
+     * @throws ValidationException
+     */
+    public static function normalizeIds(array $answerIds): array
+    {
         $ids = array_values(array_unique(array_filter(array_map('intval', $answerIds))));
 
         if ($ids === [] || count($ids) > 3) {
             throw new ValidationException(['ranks' => 'ベスト回答を1〜3件選んでください']);
         }
-        $this->saveRanks($oogiri, $ids);
-        $oogiri = $this->oogiris->find($oogiri->id);
-        service('event')->record(EventName::Decide, ['oogiri_id' => $oogiri->id]);
-        service('ogp')->generateResult($oogiri, $this->answers->find($ids[0]));
-        service('adminLog')->record('oogiri', $oogiri->id, '結果を確定（' . count($ids) . '件）', AdminLogService::ACTOR_HOST);
+
+        return $ids;
     }
 
     /**
      * 順位を保存し、状態を decided にする（開催者の確定と管理者の代理変更で共通）
      *
-     * @param list<int> $ids 1位から順
+     * - 選んだ回答がすべて「この大喜利の公開中の回答」でなければ、何も保存せずに拒否する
+     * - 状態が $from のどれかであることを更新の条件にする。先に読んだ Entity の状態は古いことがあり、
+     *   同時に確定したときに後の処理が先の結果を上書きしないため（レビュー指摘 4）
+     *
+     * @param list<int>          $ids  1位から順（normalizeIds() を通したもの）
+     * @param list<OogiriStatus> $from 確定してよい今の状態
+     *
+     * @return Answer 1位の回答（OGP の結果画像に使う）
+     *
+     * @throws AppException        状態が変わっていた（ALREADY_DECIDED）
+     * @throws ValidationException 選べない回答を含む
      */
-    public function saveRanks(Oogiri $oogiri, array $ids): void
+    public function saveRanks(Oogiri $oogiri, array $ids, array $from): Answer
     {
         $db = $this->oogiris->db;
-        $db->transStart();
-        $this->answers->where('oogiri_id', $oogiri->id)->set(['rank' => null])->update();
+        $db->transBegin();
 
-        foreach ($ids as $i => $id) {
-            $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)->where('id', $id)->set(['rank' => $i + 1])->update();
+        try {
+            $this->markDecided($oogiri, $from);
+            $this->answers->where('oogiri_id', $oogiri->id)->set(['rank' => null])->update();
+
+            foreach ($ids as $i => $id) {
+                $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)->where('id', $id)->set(['rank' => $i + 1])->update();
+
+                if ($db->affectedRows() !== 1) {
+                    throw new ValidationException(['ranks' => '選べない回答が含まれています（非表示・削除された可能性があります）。選び直してください']);
+                }
+            }
+            $db->transCommit();
+        } catch (Throwable $e) {
+            $db->transRollback();
+
+            throw $e;
         }
-        $this->oogiris->update($oogiri->id, ['status' => OogiriStatus::Decided->value, 'decided_at' => Time::now()->toDateTimeString()]);
-        $db->transComplete();
         service('pageCache')->purgeOogiri($oogiri->slug);
+
+        return $this->answers->find($ids[0]);
+    }
+
+    /**
+     * 状態が $from のどれかのときだけ decided にする（条件付き更新）
+     *
+     * @param list<OogiriStatus> $from
+     *
+     * @throws AppException 状態が変わっていた
+     */
+    private function markDecided(Oogiri $oogiri, array $from): void
+    {
+        $values = array_map(static fn (OogiriStatus $s) => $s->value, $from);
+        $this->oogiris->where('id', $oogiri->id)->whereIn('status', $values)
+            ->set(['status' => OogiriStatus::Decided->value, 'decided_at' => Time::now()->toDateTimeString()])->update();
+
+        if ($this->oogiris->db->affectedRows() === 1) {
+            return;
+        }
+        // MariaDB は値が変わらない更新を 0 件と数える（管理者が同じ秒に再変更した場合など）。今の状態で判定し直す
+        $current = $this->oogiris->find($oogiri->id);
+
+        if ($current === null || ! in_array($current->status(), $from, true)) {
+            throw new AppException(ErrorCode::AlreadyDecided);
+        }
     }
 
     public function delete(Oogiri $oogiri): void
@@ -153,6 +222,7 @@ final class HostService
         $this->assertAuthorized($oogiri);
         $this->oogiris->update($oogiri->id, ['status' => OogiriStatus::Deleted->value]);
         service('pageCache')->purgeOogiri($oogiri->slug);
+        service('ogp')->removeOogiri($oogiri);
         service('adminLog')->record('oogiri', $oogiri->id, '開催者が削除', AdminLogService::ACTOR_HOST);
     }
 

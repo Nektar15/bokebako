@@ -164,7 +164,7 @@ class Services extends BaseService
 
     public static function oogiriAdmin(bool $getShared = true): OogiriAdminService
     {
-        return $getShared ? static::getSharedInstance('oogiriAdmin') : new OogiriAdminService(new OogiriModel(), new AnswerModel());
+        return $getShared ? static::getSharedInstance('oogiriAdmin') : new OogiriAdminService(new OogiriModel(), new AnswerModel(), static::lifecycle());
     }
 
     public static function answerAdmin(bool $getShared = true): AnswerAdminService
