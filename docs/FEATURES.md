@@ -115,6 +115,7 @@ URLは外側で先に確定させる。管理画面のパスは推測困難な�
 | GET / POST | `/{admin}/accounts` | A-01 管理者アカウントの一覧・追加（未確定事項10 → ADR 0007） |
 | POST | `/{admin}/accounts/{id}` `/{admin}/accounts/{id}/password` `/{admin}/accounts/{id}/delete` | 名前・権限の変更、パスワード再設定、削除（上位管理者） |
 | POST | `/{admin}/accounts/me/password` | 自分のパスワード変更 |
+| POST | `/{admin}/ogp/regenerate-all` | A-08 公開中の OGP 画像をまとめて作り直す（予約） |
 | GET / POST | `/{admin}/...` | 管理画面 A-02〜A-10 |
 
 ---
