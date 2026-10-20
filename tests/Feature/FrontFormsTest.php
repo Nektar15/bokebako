@@ -6,16 +6,26 @@ namespace Tests\Feature;
 
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
+use Config\Filters;
 
 /**
  * 送信系：開催・回答・問い合わせ・開催者操作が、正しく遷移し、入力エラーを返すこと
- * FeatureTestTrait は CSRF を通さないので、トークンなしで POST できる。
  *
  * @internal
  */
 final class FrontFormsTest extends CIUnitTestCase
 {
     use FeatureTestTrait;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // FeatureTestTrait は CSRF フィルタも通すので、このテストではトークン検証を外して POST する
+        // （Factories は setUp ごとにリセットされるため、他のテストには影響しない）
+        $filters = config(Filters::class);
+        unset($filters->globals['before']['csrf']);
+    }
 
     public function testCreateOogiriRedirectsToCreated(): void
     {
@@ -24,7 +34,9 @@ final class FrontFormsTest extends CIUnitTestCase
 
     public function testCreateOogiriWithEmptyOdaiReturnsError(): void
     {
-        $this->post('/oogiri', ['odai' => ''])->assertRedirect()->assertSessionHas('errors', ['odai' => 'お題を入力してください']);
+        $result = $this->post('/oogiri', ['odai' => '']);
+        $result->assertRedirect();
+        $result->assertSessionHas('errors', ['odai' => 'お題を入力してください']);
     }
 
     public function testCreateOogiriTooLong(): void
@@ -64,6 +76,7 @@ final class FrontFormsTest extends CIUnitTestCase
 
     public function testDecideWithTwoPicksRedirects(): void
     {
-        $this->post('/host/k7Qm2xPz/result?fixture=awaiting', ['ranks' => [90412, 90410]])->assertRedirect();
+        // フォームの値は文字列で届く（invalidchars フィルタが文字列以外を受け付けない）
+        $this->post('/host/k7Qm2xPz/result?fixture=awaiting', ['ranks' => ['90412', '90410']])->assertRedirect();
     }
 }

@@ -46,6 +46,8 @@ final class AnswerService
 
     /**
      * ベスト回答（rank 順）。未選出なら空
+     *
+     * @return list<Answer>
      */
     public function ranked(Oogiri $oogiri): array
     {

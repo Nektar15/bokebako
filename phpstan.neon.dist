@@ -12,5 +12,7 @@ parameters:
         - system
     bootstrapFiles:
         - system/Test/bootstrap.php
-    ignoreErrors:
-        - '#Call to an undefined static method Config\\Services::#'
+    # ENVIRONMENT は bootstrap で 'testing' に固定されるが、実際は .env で変わる。
+    # 値で判定されると「常に false」と誤検知されるので、動的な定数として扱う
+    dynamicConstantNames:
+        - ENVIRONMENT

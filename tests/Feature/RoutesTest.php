@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -37,11 +38,15 @@ final class RoutesTest extends CIUnitTestCase
 
     public function testStatusApiReturnsEnvelope(): void
     {
-        $this->get('/api/v1/o/demo/status')->assertOK()->assertJSONFragment(['ok' => true]);
+        $result = $this->get('/api/v1/o/demo/status');
+        $result->assertOK();
+        $result->assertJSONFragment(['ok' => true]);
     }
 
     public function testUnknownRouteIs404(): void
     {
-        $this->get('/no-such-page')->assertStatus(404);
+        // FeatureTestTrait では 404 はレスポンスにならず例外のまま上がる
+        $this->expectException(PageNotFoundException::class);
+        $this->get('/no-such-page');
     }
 }

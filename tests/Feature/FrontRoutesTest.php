@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -21,7 +22,9 @@ final class FrontRoutesTest extends CIUnitTestCase
     #[DataProvider('provideScreen')]
     public function testScreen(string $path, string $expected): void
     {
-        $this->get($path)->assertOK()->assertSee($expected);
+        $result = $this->get($path);
+        $result->assertOK();
+        $result->assertSee($expected);
     }
 
     /**
@@ -73,11 +76,15 @@ final class FrontRoutesTest extends CIUnitTestCase
 
     public function testUnknownSlugIs404(): void
     {
-        $this->get('/o/none')->assertStatus(404);
+        // FeatureTestTrait では 404 はレスポンスにならず例外のまま上がる
+        $this->expectException(PageNotFoundException::class);
+        $this->get('/o/none');
     }
 
     public function testStatusApi(): void
     {
-        $this->get('/api/v1/o/k7Qm2xPz/status')->assertOK()->assertJSONFragment(['ok' => true, 'data' => ['status' => 'open', 'answerCount' => 47]]);
+        $result = $this->get('/api/v1/o/k7Qm2xPz/status');
+        $result->assertOK();
+        $result->assertJSONFragment(['ok' => true, 'data' => ['status' => 'open', 'answerCount' => 47]]);
     }
 }
