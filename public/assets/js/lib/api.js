@@ -33,3 +33,14 @@ export function readConfig(name) {
   if (!el) return null;
   try { return JSON.parse(el.textContent); } catch (_) { return null; }
 }
+
+/**
+ * 同じサイトの HTML ページを取りに行き、Document にして返す（「もっと見る」で続きの行を足すとき）
+ * @param {string} url
+ * @returns {Promise<Document>}
+ */
+export async function fetchPage(url) {
+  const res = await fetch(url, { headers: { Accept: 'text/html' }, credentials: 'same-origin' });
+  if (!res.ok) throw new Error('読み込めませんでした');
+  return new DOMParser().parseFromString(await res.text(), 'text/html');
+}

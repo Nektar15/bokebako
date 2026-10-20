@@ -33,8 +33,11 @@ final class HostController extends BaseController
             return redirect()->to('/o/' . $slug);
         }
 
-        $format = service('display');
-        $share  = service('share');
+        $format  = service('display');
+        $share   = service('share');
+        $host    = service('host');
+        $page    = max(1, (int) $this->request->getGet('page'));
+        $picking = ! $oogiri->isOpen();
 
         return view('host/u08_host', [
             'oogiri'             => $oogiri,
@@ -44,8 +47,11 @@ final class HostController extends BaseController
             'remaining'          => $format->remaining($oogiri->ends_at),
             'selectionRemaining' => $oogiri->selection_deadline !== null ? $format->remaining($oogiri->selection_deadline) : '',
             'pv'                 => $format->number($oogiri->pv),
-            'answers'            => service('host')->answers($oogiri),
-            'hostToken'          => service('host')->tokenFromRequest($oogiri),
+            'favorites'          => $picking && $page === 1 ? $host->favorites($oogiri) : [],
+            'favoriteCount'      => $host->favoriteCount($oogiri),
+            'answers'            => $host->answers($oogiri, $page, $picking),
+            'moreUrl'            => site_url('host/' . $slug) . '?page=' . ($page + 1) . '#answers',
+            'hostToken'          => $host->tokenFromRequest($oogiri),
             'shareUrl'           => $share->url($oogiri),
             'intentUrl'          => $share->recruitIntent($oogiri),
             'errors'             => session()->getFlashdata('errors') ?? [],
@@ -109,7 +115,11 @@ final class HostController extends BaseController
 
     public function delete(string $slug): RedirectResponse
     {
-        service('host')->delete($this->findOogiriOrFail($slug));
+        try {
+            service('host')->delete($this->findOogiriOrFail($slug));
+        } catch (AppException $e) {
+            return redirect()->to('/host/' . $slug)->with('errors', ['_' => $e->getMessage()]);
+        }
 
         return redirect()->to('/')->with('toast', '大喜利を削除しました');
     }

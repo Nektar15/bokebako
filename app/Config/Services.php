@@ -128,7 +128,7 @@ class Services extends BaseService
 
     public static function moderation(bool $getShared = true): ModerationService
     {
-        return $getShared ? static::getSharedInstance('moderation') : new ModerationService(new AiJudgementModel(), new ReportModel(), new OogiriModel(), new AnswerModel(), static::settings());
+        return $getShared ? static::getSharedInstance('moderation') : new ModerationService(new AiJudgementModel(), new ReportModel(), new OogiriModel(), new AnswerModel(), static::settings(), static::answerAdmin(), static::oogiriAdmin(), static::rateLimit());
     }
 
     public static function lifecycle(bool $getShared = true): LifecycleService
@@ -140,12 +140,12 @@ class Services extends BaseService
 
     public static function oogiri(bool $getShared = true): OogiriService
     {
-        return $getShared ? static::getSharedInstance('oogiri') : new OogiriService(new OogiriModel(), static::settings(), static::identity(), static::ngWord(), static::rateLimit());
+        return $getShared ? static::getSharedInstance('oogiri') : new OogiriService(new OogiriModel(), static::settings(), static::identity(), static::ngWord(), static::rateLimit(), static::moderation());
     }
 
     public static function answer(bool $getShared = true): AnswerService
     {
-        return $getShared ? static::getSharedInstance('answer') : new AnswerService(new AnswerModel(), new OogiriModel(), static::settings(), static::display(), static::identity(), static::ngWord(), static::rateLimit());
+        return $getShared ? static::getSharedInstance('answer') : new AnswerService(new AnswerModel(), new OogiriModel(), static::settings(), static::display(), static::identity(), static::ngWord(), static::rateLimit(), static::moderation());
     }
 
     public static function host(bool $getShared = true): HostService
@@ -165,7 +165,7 @@ class Services extends BaseService
 
     public static function report(bool $getShared = true): ReportService
     {
-        return $getShared ? static::getSharedInstance('report') : new ReportService(new ReportModel(), new OogiriModel(), new AnswerModel(), static::identity(), static::rateLimit(), static::settings());
+        return $getShared ? static::getSharedInstance('report') : new ReportService(new ReportModel(), new OogiriModel(), new AnswerModel(), static::identity(), static::rateLimit(), static::settings(), static::moderation());
     }
 
     // ---- 管理画面（A-02〜A-10） ----
@@ -177,7 +177,7 @@ class Services extends BaseService
 
     public static function oogiriAdmin(bool $getShared = true): OogiriAdminService
     {
-        return $getShared ? static::getSharedInstance('oogiriAdmin') : new OogiriAdminService(new OogiriModel(), new AnswerModel(), static::lifecycle());
+        return $getShared ? static::getSharedInstance('oogiriAdmin') : new OogiriAdminService(new OogiriModel(), new AnswerModel(), static::lifecycle(), static::host());
     }
 
     public static function answerAdmin(bool $getShared = true): AnswerAdminService

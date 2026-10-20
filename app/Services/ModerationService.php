@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Entities\AdminLog;
 use App\Entities\AiJudgement;
+use App\Entities\Answer;
 use App\Entities\ModerationItem;
+use App\Entities\Oogiri;
+use App\Entities\Report;
 use App\Enums\AiVerdict;
 use App\Enums\AnswerStatus;
 use App\Enums\ModerationFlag;
@@ -49,12 +53,27 @@ final class ModerationService
         '168' => '7日間',
     ];
 
+    /**
+     * 待ち行列を組み立てるときに読む行数の上限（新しい順）
+     */
+    public const SCAN_LIMIT = 1000;
+
+    /**
+     * scan() の結果（1リクエストの中での使い回し）
+     *
+     * @var array<string, list<ModerationItem>>
+     */
+    private array $scanned = [];
+
     public function __construct(
         private readonly AiJudgementModel $judgements,
         private readonly ReportModel $reports,
         private readonly OogiriModel $oogiris,
         private readonly AnswerModel $answers,
         private readonly SettingService $settings,
+        private readonly AnswerAdminService $answerAdmin,
+        private readonly OogiriAdminService $oogiriAdmin,
+        private readonly RateLimitService $rateLimit,
     ) {
     }
 
@@ -65,6 +84,8 @@ final class ModerationService
      */
     public function flag(ReportTarget $target, int $id, string $trigger, ?string $ngDetail = null, ?string $abnormal = null): void
     {
+        $this->scanned = [];
+
         $row     = $this->judgements->where('target_type', $target->value)->where('target_id', $id)->first();
         $targets = $this->settings->list('ai_targets');
         $queue   = $this->settings->bool('ai_enabled') && in_array($trigger, $targets, true) ? 1 : 0;
@@ -94,19 +115,16 @@ final class ModerationService
     /**
      * 待ち行列（優先度の高い順：通報急増 → 通報件数 → NG検知 → 異常投稿 → AI判定）
      *
+     * 優先度は通報の内訳などから決まるので、新しい順に SCAN_LIMIT 件までを読んでから並べる。
+     * それより古い未処理は counts() の 'overflow' で件数だけ知らせる（レビュー「取得上限」）
+     *
      * @return list<ModerationItem>
      */
     public function queue(string $filter, int $limit = 50): array
     {
-        $rows  = $this->judgements->where('resolved', $filter === 'resolved' ? 1 : 0)->orderBy('updated_at', 'DESC')->findAll(200);
         $items = [];
 
-        foreach ($rows as $row) {
-            $item = $this->build($row);
-
-            if ($item === null) {
-                continue;
-            }
+        foreach ($this->scan($filter === 'resolved') as $item) {
             $keep = match ($filter) {
                 'all', 'resolved' => true,
                 'ai_review'       => in_array($item->aiVerdict(), [AiVerdict::Review, AiVerdict::Hide], true),
@@ -122,14 +140,15 @@ final class ModerationService
     }
 
     /**
-     * 絞り込みごとの件数
+     * 絞り込みごとの件数。'all' と 'resolved' は DB の全件数。'overflow' は読み込みきれなかった古い未処理の件数
      *
-     * @return array<string, int> FILTERS のキー => 件数
+     * @return array<string, int> FILTERS のキーと 'overflow' => 件数
      */
     public function counts(): array
     {
-        $open   = $this->queue('all', 200);
-        $counts = ['all' => count($open), 'surge' => 0, 'ng_word' => 0, 'ai_review' => 0, 'abnormal' => 0, 'resolved' => $this->judgements->where('resolved', 1)->countAllResults()];
+        $open   = $this->scan(false);
+        $total  = $this->judgements->where('resolved', 0)->countAllResults();
+        $counts = ['all' => $total, 'surge' => 0, 'ng_word' => 0, 'ai_review' => 0, 'abnormal' => 0, 'resolved' => $this->judgements->where('resolved', 1)->countAllResults()];
 
         foreach ($open as $item) {
             $flags = $item->flags();
@@ -138,8 +157,19 @@ final class ModerationService
             $counts['abnormal'] += in_array(ModerationFlag::Abnormal, $flags, true) ? 1 : 0;
             $counts['ai_review'] += in_array($item->aiVerdict(), [AiVerdict::Review, AiVerdict::Hide], true) ? 1 : 0;
         }
+        $counts['overflow'] = max(0, $total - self::SCAN_LIMIT);
 
         return $counts;
+    }
+
+    /**
+     * 対象の対応履歴（新しい順。A-05 の右側に出す1件だけ読む）
+     *
+     * @return list<AdminLog>
+     */
+    public function history(ModerationItem $item): array
+    {
+        return service('adminLog')->listFor($item->target_type, $item->id, 10);
     }
 
     /**
@@ -152,7 +182,7 @@ final class ModerationService
         [$type, $id] = array_pad(explode('-', $key, 2), 2, '');
         $target      = ReportTarget::tryFrom($type);
         $row         = $target === null ? null : $this->judgements->where('target_type', $target->value)->where('target_id', (int) $id)->first();
-        $item        = $row === null ? null : $this->build($row);
+        $item        = $row === null ? null : ($this->buildMany([$row])[0] ?? null);
 
         if ($item === null) {
             throw new NotFoundException();
@@ -177,7 +207,7 @@ final class ModerationService
     public function hide(string $key): void
     {
         $item = $this->find($key);
-        $item->target() === ReportTarget::Answer ? service('answerAdmin')->hide($item->id) : service('oogiriAdmin')->hide($item->id);
+        $item->target() === ReportTarget::Answer ? $this->answerAdmin->hide($item->id) : $this->oogiriAdmin->hide($item->id);
         $this->markResolved($item);
     }
 
@@ -187,7 +217,7 @@ final class ModerationService
     public function delete(string $key): void
     {
         $item = $this->find($key);
-        $item->target() === ReportTarget::Answer ? service('answerAdmin')->delete($item->id) : service('oogiriAdmin')->delete($item->id);
+        $item->target() === ReportTarget::Answer ? $this->answerAdmin->delete($item->id) : $this->oogiriAdmin->delete($item->id);
         $this->markResolved($item);
     }
 
@@ -204,7 +234,7 @@ final class ModerationService
         if ($source === null) {
             throw new NotFoundException();
         }
-        service('rateLimit')->restrict($hours * 3600, '管理者による制限（' . $item->displayId() . '）', $source->browser_id_hash, $source->ip_hash);
+        $this->rateLimit->restrict($hours * 3600, '管理者による制限（' . $item->displayId() . '）', $source->browser_id_hash, $source->ip_hash);
         service('adminLog')->record($item->target_type, $item->id, '投稿元を' . self::RESTRICT_HOURS[(string) $hours] . '制限');
     }
 
@@ -240,8 +270,8 @@ final class ModerationService
                 continue;
             }
             $target === ReportTarget::Answer
-                ? service('answerAdmin')->hide($id, AdminLogService::ACTOR_AUTO, '通報が条件に達したため一時非表示')
-                : service('oogiriAdmin')->hide($id, AdminLogService::ACTOR_AUTO, '通報が条件に達したため一時非表示');
+                ? $this->answerAdmin->hide($id, AdminLogService::ACTOR_AUTO, '通報が条件に達したため一時非表示')
+                : $this->oogiriAdmin->hide($id, AdminLogService::ACTOR_AUTO, '通報が条件に達したため一時非表示');
             $this->flag($target, $id, 'reported');
             $hidden++;
         }
@@ -269,11 +299,13 @@ final class ModerationService
         $done  = 0;
         $ai    = new OpenAiClient();
 
+        [$answers, $oogiris] = $this->loadTargets(self::idsByType($rows));
+
         foreach ($rows as $row) {
             if ($used + $done >= $limit) {
                 break;
             }
-            $texts = $this->texts($row);
+            $texts = $this->texts($row, $answers, $oogiris);
 
             if ($texts === null) {
                 $this->judgements->update($row->id, ['queued' => 0, 'resolved' => 1]);
@@ -290,8 +322,8 @@ final class ModerationService
 
             if ($result['verdict'] === AiVerdict::Hide && $this->settings->bool('ai_auto_hide')) {
                 $row->target() === ReportTarget::Answer
-                    ? service('answerAdmin')->hide($row->target_id, AdminLogService::ACTOR_AUTO, 'AI判定「非表示推奨」により自動で非表示')
-                    : service('oogiriAdmin')->hide($row->target_id, AdminLogService::ACTOR_AUTO, 'AI判定「非表示推奨」により自動で非表示');
+                    ? $this->answerAdmin->hide($row->target_id, AdminLogService::ACTOR_AUTO, 'AI判定「非表示推奨」により自動で非表示')
+                    : $this->oogiriAdmin->hide($row->target_id, AdminLogService::ACTOR_AUTO, 'AI判定「非表示推奨」により自動で非表示');
             }
         }
 
@@ -300,21 +332,122 @@ final class ModerationService
 
     private function markResolved(ModerationItem $item): void
     {
+        $this->scanned = [];
         $this->judgements->where('target_type', $item->target_type)->where('target_id', $item->id)->set(['resolved' => 1, 'queued' => 0])->update();
         $this->reports->where('target_type', $item->target_type)->where('target_id', $item->id)->set(['resolved' => 1])->update();
     }
 
     /**
-     * ai_judgements の1行から表示用の1件を組み立てる。対象が消えていれば null
+     * 未処理（または処理済み）の行を新しい順に SCAN_LIMIT 件まで読み、表示用にする。1リクエストの中では読み直さない
+     *
+     * @return list<ModerationItem>
      */
-    private function build(AiJudgement $row): ?ModerationItem
+    private function scan(bool $resolved): array
     {
-        $texts = $this->texts($row);
+        $key = $resolved ? 'resolved' : 'open';
 
-        if ($texts === null) {
-            return null;
+        if (! isset($this->scanned[$key])) {
+            $rows                = $this->judgements->where('resolved', $resolved ? 1 : 0)->orderBy('updated_at', 'DESC')->findAll(self::SCAN_LIMIT);
+            $this->scanned[$key] = $this->buildMany($rows);
         }
-        $reports = $this->reports->where('target_type', $row->target_type)->where('target_id', $row->target_id)->where('resolved', 0)->findAll();
+
+        return $this->scanned[$key];
+    }
+
+    /**
+     * ai_judgements の行から表示用の項目を組み立てる。対象・通報はまとめて読む（ループの中でクエリを出さない：CODING_RULES 6章）。
+     * 対象が消えていた行は飛ばす
+     *
+     * @param list<AiJudgement> $rows
+     *
+     * @return list<ModerationItem>
+     */
+    private function buildMany(array $rows): array
+    {
+        if ($rows === []) {
+            return [];
+        }
+        $idsByType           = self::idsByType($rows);
+        [$answers, $oogiris] = $this->loadTargets($idsByType);
+        $reports             = $this->unresolvedReports($idsByType);
+        $items               = [];
+
+        foreach ($rows as $row) {
+            $texts = $this->texts($row, $answers, $oogiris);
+
+            if ($texts !== null) {
+                $items[] = $this->item($row, $texts, $reports[$row->target_type . '-' . $row->target_id] ?? []);
+            }
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param list<AiJudgement> $rows
+     *
+     * @return array<string, list<int>> ReportTarget の値 => 対象ID
+     */
+    private static function idsByType(array $rows): array
+    {
+        /** @var array<string, list<int>> $ids */
+        $ids = [ReportTarget::Answer->value => [], ReportTarget::Oogiri->value => []];
+
+        foreach ($rows as $row) {
+            $ids[$row->target_type][] = $row->target_id;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * 対象の回答と大喜利（回答の親を含む）をまとめて読む
+     *
+     * @param array<string, list<int>> $idsByType
+     *
+     * @return array{0: array<int, Answer>, 1: array<int, Oogiri>}
+     */
+    private function loadTargets(array $idsByType): array
+    {
+        $answerIds = $idsByType[ReportTarget::Answer->value] ?? [];
+        $answers   = $answerIds === [] ? [] : $this->keyById($this->answers->whereIn('id', $answerIds)->findAll(count($answerIds)));
+        $oogiriIds = array_values(array_unique(array_merge($idsByType[ReportTarget::Oogiri->value] ?? [], array_map(static fn (Answer $a) => $a->oogiri_id, array_values($answers)))));
+        $oogiris   = $oogiriIds === [] ? [] : $this->keyById($this->oogiris->whereIn('id', $oogiriIds)->findAll(count($oogiriIds)));
+
+        return [$answers, $oogiris];
+    }
+
+    /**
+     * 未処理の通報を対象ごとにまとめて読む
+     *
+     * @param array<string, list<int>> $idsByType ReportTarget の値 => 対象ID
+     *
+     * @return array<string, list<Report>> 「種類-ID」 => 通報
+     */
+    private function unresolvedReports(array $idsByType): array
+    {
+        $grouped = [];
+
+        foreach ($idsByType as $type => $ids) {
+            if ($ids === []) {
+                continue;
+            }
+
+            // 1対象あたりの通報は運用設定の閾値で自動非表示になるので多くはない。上限は念のため
+            foreach ($this->reports->where('target_type', $type)->whereIn('target_id', $ids)->where('resolved', 0)->findAll(self::SCAN_LIMIT * 20) as $report) {
+                $grouped[$type . '-' . $report->target_id][] = $report;
+            }
+        }
+
+        return $grouped;
+    }
+
+    /**
+     * @param array{text: string, odai: string, oogiri_id: int, status: string, created_at: Time} $texts
+     * @param list<Report>                                                                        $reports
+     */
+    private function item(AiJudgement $row, array $texts, array $reports): ModerationItem
+    {
         $byEnv   = [];
         $reasons = [];
         $recent  = 0;
@@ -365,28 +498,48 @@ final class ModerationService
             'ai_verdict'    => $row->verdict,
             'ai_reason'     => $row->reason ?? ($row->queued ? 'まだ判定していません（次回のバッチで判定します）' : 'AI判定の対象外です。'),
             'resolved'      => $row->resolved,
-            'history'       => service('adminLog')->listFor($row->target_type, $row->target_id, 10),
         ]);
     }
 
     /**
      * 対象の本文・お題・状態。消えていれば null
      *
+     * @param array<int, Answer> $answers
+     * @param array<int, Oogiri> $oogiris
+     *
      * @return array{text: string, odai: string, oogiri_id: int, status: string, created_at: Time}|null
      */
-    private function texts(AiJudgement $row): ?array
+    private function texts(AiJudgement $row, array $answers, array $oogiris): ?array
     {
         if ($row->target() === ReportTarget::Answer) {
-            $answer = $this->answers->find($row->target_id);
-            $oogiri = $answer !== null ? $this->oogiris->find($answer->oogiri_id) : null;
+            $answer = $answers[$row->target_id] ?? null;
+            $oogiri = $answer !== null ? ($oogiris[$answer->oogiri_id] ?? null) : null;
 
             return $answer === null || $oogiri === null ? null
                 : ['text' => $answer->body, 'odai' => $oogiri->odai, 'oogiri_id' => $oogiri->id, 'status' => $answer->status, 'created_at' => $answer->created_at];
         }
-        $oogiri = $this->oogiris->find($row->target_id);
+        $oogiri = $oogiris[$row->target_id] ?? null;
 
         return $oogiri === null ? null
             : ['text' => $oogiri->odai, 'odai' => $oogiri->odai, 'oogiri_id' => $oogiri->id, 'status' => $oogiri->status, 'created_at' => $oogiri->created_at];
+    }
+
+    /**
+     * @template T of object{id: int}
+     *
+     * @param list<T> $rows
+     *
+     * @return array<int, T>
+     */
+    private function keyById(array $rows): array
+    {
+        $keyed = [];
+
+        foreach ($rows as $row) {
+            $keyed[$row->id] = $row;
+        }
+
+        return $keyed;
     }
 
     private static function priority(ModerationItem $item): int

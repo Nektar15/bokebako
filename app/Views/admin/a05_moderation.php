@@ -10,6 +10,8 @@
  * @var string                            $selectedAt 対象の投稿日時（整形済み）
  * @var list<array{when: string, what: string}> $history 対応履歴（新しい順）
  * @var array<string, string> $restrictHours 投稿元を制限する期間の選択肢（値 => 表示名）
+ * @var bool   $hasOverflow 古すぎて一覧に読み込めなかった未処理があるか
+ * @var string $overflow    その件数（整形済み）
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -23,6 +25,9 @@
 <?= part('partials/admin_tabs', ['tabs' => $tabs, 'ariaLabel' => '絞り込み']) ?>
 <span class="p-mod__order">優先度の高い順（通報急増 → 通報件数 → NG検知 → 異常投稿 → AI判定）</span>
 </div>
+<?php if ($hasOverflow): ?>
+<p class="c-notice c-notice--error" role="status">未処理が多いため、古い <?= esc($overflow) ?> 件はこの一覧に出ていません。上から処理すると順に表示されます。</p>
+<?php endif; ?>
 
 <div class="p-mod">
 <ul class="p-mod__queue">

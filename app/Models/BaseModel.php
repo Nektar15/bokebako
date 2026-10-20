@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use CodeIgniter\Model;
+use Throwable;
 
 /**
  * 全 Model の親。DB の読み書きだけを置く（CODING_RULES 3章）。
@@ -40,5 +41,38 @@ abstract class BaseModel extends Model
     public function decrement(int $id, string $column, int $by = 1): void
     {
         $this->builder()->where('id', $id)->set($column, "CASE WHEN {$column} >= {$by} THEN {$column} - {$by} ELSE 0 END", false)->update();
+    }
+
+    /**
+     * $work をトランザクションの中で実行する。例外が出たら取り消して、そのまま投げ直す（CODING_RULES 6章：複数テーブルの更新）
+     *
+     * @template T
+     *
+     * @param callable(): T $work
+     *
+     * @return T
+     */
+    public function transaction(callable $work): mixed
+    {
+        $this->db->transBegin();
+
+        try {
+            $result = $work();
+            $this->db->transCommit();
+
+            return $result;
+        } catch (Throwable $e) {
+            $this->db->transRollback();
+
+            throw $e;
+        }
+    }
+
+    /**
+     * 直前の UPDATE / DELETE で変わった行数（条件付き更新が効いたかの確認用）
+     */
+    public function affectedRows(): int
+    {
+        return $this->db->affectedRows();
     }
 }
