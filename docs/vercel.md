@@ -15,9 +15,11 @@
 
 リポジトリは `https://github.com/Nektar15/bokebako`（2026-10-20 に全ブランチを push 済み。コミットの作者は Claude と lunaticbeat15@gmail.com だけ）。Vercel は `develop` ブランチを使う。
 
+Vercel の Import 画面は GitHub の既定ブランチを読み込む。main は古いので、先に GitHub の Settings → General → Default branch を `develop` にしておく（または Import 後に Vercel の Project Settings → Git → Production Branch を `develop` にして Redeploy）。
+
 ## 2. Vercel で読み込む（ブラウザ）
 
-1. 001d3d@gmail.com で Vercel にログインし、「Add New… → Project」で `Nektar15/bokebako` を Import する（一覧に出なければ「Adjust GitHub App Permissions」で Nektar15 のリポジトリへのアクセスを許可する）
+1. lunaticbeat15@gmail.com で Vercel にログインし、「Add New… → Project」で `Nektar15/bokebako` を Import する（一覧に出なければ「Adjust GitHub App Permissions」で Nektar15 のリポジトリへのアクセスを許可する）
 2. 設定画面で次のとおりにする
    - Framework Preset：**Other**
    - Root Directory：そのまま（`./`）
