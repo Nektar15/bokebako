@@ -77,4 +77,17 @@ class Paths
      * is used when no value is provided to `Services::renderer()`.
      */
     public string $viewDirectory = __DIR__ . '/../Views';
+
+    /**
+     * ぼけばこ：書き込み先を環境変数 BOKEBAKO_WRITABLE で差し替えられるようにする。
+     * Vercel など、プロジェクトのフォルダに書き込めない環境で /tmp を使うため（ADR 0008）。本番（Xserver）では設定しない
+     */
+    public function __construct()
+    {
+        $writable = getenv('BOKEBAKO_WRITABLE');
+
+        if (is_string($writable) && $writable !== '') {
+            $this->writableDirectory = rtrim($writable, '/');
+        }
+    }
 }

@@ -36,9 +36,12 @@ class DevSeeder extends Seeder
         }
 
         // ---- 管理者（A-01）。ログイン：dev-admin / dev-general、パスワードは ADMIN_PASSWORD ----
+        // 公開される場所（Vercel の仮置き）では、環境変数 devSeeder.adminPassword で別のパスワードにする（ADR 0008）
+        $adminPassword = (string) env('devSeeder.adminPassword', self::ADMIN_PASSWORD);
+
         foreach ([[1, 'dev-admin', 'dev-admin', 'super'], [2, 'dev-general', 'dev-general', 'general']] as [$aid, $loginId, $name, $role]) {
             $this->db->table('admins')->insert([
-                'id'           => $aid, 'login_id' => $loginId, 'name' => $name, 'role' => $role, 'password_hash' => password_hash(self::ADMIN_PASSWORD, PASSWORD_BCRYPT, ['cost' => 4]),
+                'id'           => $aid, 'login_id' => $loginId, 'name' => $name, 'role' => $role, 'password_hash' => password_hash($adminPassword, PASSWORD_BCRYPT, ['cost' => 4]),
                 'failed_count' => 0, 'created_at' => $now->toDateTimeString(), 'updated_at' => $now->toDateTimeString(),
             ]);
         }
