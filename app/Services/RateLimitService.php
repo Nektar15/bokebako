@@ -12,7 +12,8 @@ use CodeIgniter\I18n\Time;
 /**
  * レート制限と投稿元の制限（S-03、FEATURES 0-3）
  *
- * 判定は CodeIgniter の Throttler。キーは「操作の種類＋ブラウザIDのハッシュ＋IPのハッシュ」（CODING_RULES 7章）。
+ * 判定は CodeIgniter の Throttler。キーは「操作の種類＋ブラウザIDのハッシュ＋IPのハッシュ」（CODING_RULES 7章）に加え、
+ * 「操作の種類＋IPのハッシュ」でも数える（ADR 0006-3）。
  * 閾値（回数・時間窓）と制限方法は運用設定（A-10）から読む。
  */
 final class RateLimitService
@@ -24,11 +25,27 @@ final class RateLimitService
     public const ACTION_CONTACT    = 'contact';
 
     /**
-     * 合言葉の試行回数の上限（10分あたり）。運用設定にはしない（CODING_RULES 5章：固定値はクラス定数）
+     * 合言葉の試行回数の上限（PASSPHRASE_WINDOW_SEC あたり）：同じ IP から同じ大喜利へ。
+     * 運用設定にはしない（CODING_RULES 5章：固定値はクラス定数）
      */
     public const PASSPHRASE_ATTEMPTS = 5;
 
+    /**
+     * 合言葉の試行回数の上限：同じ IP から（大喜利を問わず）
+     */
+    public const PASSPHRASE_IP_ATTEMPTS = 20;
+
+    /**
+     * 合言葉の試行回数の上限：同じ大喜利へ（IP を問わず。IP を変えながらの総当たり対策。ADR 0006-3【仮】）
+     */
+    public const PASSPHRASE_TARGET_ATTEMPTS = 30;
+
     public const PASSPHRASE_WINDOW_SEC = 600;
+
+    /**
+     * IP 単位の上限は「ブラウザ単位の上限 × この倍率」。携帯回線や学校などで IP を共有する人を巻き込みにくくする（ADR 0006-3【仮】）
+     */
+    public const IP_FACTOR = 5;
 
     public function __construct(
         private readonly SettingService $settings,
@@ -40,36 +57,46 @@ final class RateLimitService
     /**
      * 投稿してよいか。超えていれば RateLimited を投げ、超えた直後なら制限方法に応じて投稿停止を記録する
      *
+     * ブラウザIDは Cookie なので利用者が変えられる。ブラウザ単位に加えて IP 単位でも数え、
+     * Cookie を変えても上限を回避できないようにする（レビュー指摘 3）
+     *
+     * @param string $scope 対象（合言葉ではスラッグ）。対象ごとにも数える操作だけ渡す
+     *
      * @throws AppException RATE_LIMITED
      */
-    public function assertAllowed(string $action): void
+    public function assertAllowed(string $action, string $scope = ''): void
     {
         if ($this->isRestricted()) {
             throw new AppException(ErrorCode::RateLimited);
         }
-        $count  = $action === self::ACTION_PASSPHRASE ? self::PASSPHRASE_ATTEMPTS : $this->settings->int('burst_count');
-        $window = $action === self::ACTION_PASSPHRASE ? self::PASSPHRASE_WINDOW_SEC : $this->settings->int('burst_window_sec');
 
-        if (service('throttler')->check($this->key($action), $count, $window)) {
-            return;
-        }
-        if ($action !== self::ACTION_PASSPHRASE && $this->settings->string('limit_method') === 'ban') {
-            $this->restrict($this->settings->int('ban_minutes') * 60, '連続投稿を検知（' . $action . '）');
-        }
+        foreach ($this->limits($action, $scope) as $key => $count) {
+            if (service('throttler')->check($key, $count, $this->window($action))) {
+                continue;
+            }
+            if ($action !== self::ACTION_PASSPHRASE && $this->settings->string('limit_method') === 'ban') {
+                $this->restrict($this->settings->int('ban_minutes') * 60, '連続投稿を検知（' . $action . '）');
+            }
 
-        throw new AppException(ErrorCode::RateLimited);
+            throw new AppException(ErrorCode::RateLimited);
+        }
     }
 
     /**
-     * 異常投稿とみなす回数を超えたか（判定だけ。S-03 の「異常投稿候補」）
+     * 異常投稿とみなす回数を超えたか（判定だけ。S-03 の「異常投稿候補」）。ブラウザ単位と IP 単位の両方で数える
      */
     public function isBursting(string $action): bool
     {
-        $key   = $this->key($action) . '_watch';
-        $count = (int) cache($key) + 1;
-        cache()->save($key, $count, $this->settings->int('burst_window_sec'));
+        $bursting = false;
 
-        return $count > $this->settings->int('burst_count');
+        foreach ($this->limits($action) as $key => $count) {
+            $key .= '_watch';
+            $seen = (int) cache($key) + 1;
+            cache()->save($key, $seen, $this->settings->int('burst_window_sec'));
+            $bursting = $bursting || $seen > $count;
+        }
+
+        return $bursting;
     }
 
     /**
@@ -111,9 +138,42 @@ final class RateLimitService
         return $this->settings->string('limit_method') === 'captcha' && $this->isBursting($action);
     }
 
-    private function key(string $action): string
+    /**
+     * 数える単位ごとのキーと上限回数
+     *
+     * @return array<string, int> Throttler のキー => 上限回数
+     */
+    private function limits(string $action, string $scope = ''): array
+    {
+        $browser = substr($this->identity->browserIdHash(), 0, 16);
+        $ip      = substr($this->identity->ipHash(), 0, 16);
+
+        if ($action === self::ACTION_PASSPHRASE) {
+            // 合言葉は Cookie を持たないアクセス（総当たり）を想定し、ブラウザIDでは数えない
+            $target = substr($this->identity->hash($scope), 0, 16);
+
+            return [
+                $this->key($action, 'i', $ip, 's', $target) => self::PASSPHRASE_ATTEMPTS,
+                $this->key($action, 'i', $ip)               => self::PASSPHRASE_IP_ATTEMPTS,
+                $this->key($action, 's', $target)           => self::PASSPHRASE_TARGET_ATTEMPTS,
+            ];
+        }
+        $count = $this->settings->int('burst_count');
+
+        return [
+            $this->key($action, 'b', $browser, 'i', $ip) => $count,
+            $this->key($action, 'i', $ip)                => $count * self::IP_FACTOR,
+        ];
+    }
+
+    private function window(string $action): int
+    {
+        return $action === self::ACTION_PASSPHRASE ? self::PASSPHRASE_WINDOW_SEC : $this->settings->int('burst_window_sec');
+    }
+
+    private function key(string $action, string ...$parts): string
     {
         // キャッシュキーに使える文字は英数と _- だけ（{}()/\@: は予約）
-        return 'rl_' . $action . '_' . substr($this->identity->browserIdHash(), 0, 16) . '_' . substr($this->identity->ipHash(), 0, 16);
+        return 'rl_' . $action . '_' . implode('_', $parts);
     }
 }

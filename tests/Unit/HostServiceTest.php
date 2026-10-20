@@ -10,6 +10,8 @@ use App\Enums\OogiriStatus;
 use App\Exceptions\AppException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\ValidationException;
+use App\Filters\BrowserId;
+use App\Services\RateLimitService;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\SiteURI;
 use CodeIgniter\HTTP\UserAgent;
@@ -128,12 +130,84 @@ final class HostServiceTest extends DatabaseTestCase
         }
     }
 
-    public function testHiddenAnswerCannotBeRanked(): void
+    /**
+     * 選べない回答を含む確定は、残りだけで確定せずに全体を拒否する（レビュー指摘 1・読みやすさ 5）
+     */
+    public function testHiddenAnswerIsRejectedAndNothingIsSaved(): void
     {
         $this->requestWithToken('dev-token-Zp3cW9aQ');
         $this->db->table('answers')->where('id', 90341)->update(['status' => 'hidden']);
-        service('host')->decide(service('oogiri')->findBySlug('Zp3cW9aQ'), [90341, 90322]);
-        $this->seeInDatabase('answers', ['id' => 90341, 'rank' => null]);
-        $this->seeInDatabase('answers', ['id' => 90322, 'rank' => 2]);
+
+        try {
+            service('host')->decide(service('oogiri')->findBySlug('Zp3cW9aQ'), [90341, 90322]);
+            $this->fail('非表示の回答を含む確定は通らないはず');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('ranks', $e->errors);
+        }
+        $this->seeInDatabase('oogiris', ['id' => 12466, 'status' => OogiriStatus::AwaitingSelection->value, 'decided_at' => null]);
+        $this->seeInDatabase('answers', ['id' => 90322, 'rank' => null]);
+    }
+
+    /**
+     * 別の大喜利の回答IDでは確定できない（レビュー指摘 1 の再現手順：12466 に 12480 の回答 90412）
+     */
+    public function testAnswerOfAnotherOogiriIsRejected(): void
+    {
+        $this->requestWithToken('dev-token-Zp3cW9aQ');
+
+        try {
+            service('host')->decide(service('oogiri')->findBySlug('Zp3cW9aQ'), [90412]);
+            $this->fail('別の大喜利の回答は通らないはず');
+        } catch (ValidationException) {
+        }
+        $this->seeInDatabase('oogiris', ['id' => 12466, 'status' => OogiriStatus::AwaitingSelection->value]);
+        $this->seeInDatabase('answers', ['id' => 90412, 'rank' => null]);
+        // 拒否されたあと、正しい回答で確定し直せる
+        service('host')->decide(service('oogiri')->findBySlug('Zp3cW9aQ'), [90322]);
+        $this->seeInDatabase('oogiris', ['id' => 12466, 'status' => OogiriStatus::Decided->value]);
+    }
+
+    /**
+     * 同時に始まった確定（同じ未確定の状態を読んだ2つの処理）は、後の方が先の結果を上書きしない（レビュー指摘 4）
+     */
+    public function testStaleDecideDoesNotOverwriteEarlierResult(): void
+    {
+        $this->requestWithToken('dev-token-Zp3cW9aQ');
+        $first  = service('oogiri')->findBySlug('Zp3cW9aQ');
+        $second = service('oogiri')->findBySlug('Zp3cW9aQ'); // どちらも awaiting_selection のまま読み込んだ Entity
+        service('host')->decide($first, [90341]);
+
+        try {
+            service('host')->decide($second, [90322]);
+            $this->fail('後から来た確定は通らないはず');
+        } catch (AppException $e) {
+            $this->assertSame(ErrorCode::AlreadyDecided, $e->errorCode);
+        }
+        $this->seeInDatabase('answers', ['id' => 90341, 'rank' => 1]);
+        $this->seeInDatabase('answers', ['id' => 90322, 'rank' => null]);
+    }
+
+    /**
+     * 合言葉の試行回数は Cookie（ブラウザID）を変えても戻らない（レビュー指摘 3）
+     */
+    public function testPassphraseLimitSurvivesCookieChange(): void
+    {
+        $this->requestWithToken(null);
+
+        for ($i = 0; $i < RateLimitService::PASSPHRASE_ATTEMPTS; $i++) {
+            try {
+                service('host')->recover(service('oogiri')->findBySlug('k7Qm2xPz'), 'ちがう' . $i);
+            } catch (ValidationException) {
+            }
+        }
+        $_COOKIE[BrowserId::COOKIE_NAME] = 'another-browser';
+        $this->requestWithToken(null);
+
+        try {
+            service('host')->recover(service('oogiri')->findBySlug('k7Qm2xPz'), DevSeeder::PASSPHRASE);
+            $this->fail('Cookie を変えても上限は戻らないはず');
+        } catch (AppException $e) {
+            $this->assertSame(ErrorCode::RateLimited, $e->errorCode);
+        }
     }
 }

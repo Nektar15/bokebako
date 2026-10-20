@@ -80,7 +80,7 @@ final class AnswerController extends BaseController
             'oogiri'          => $oogiri,
             'remaining'       => $format->remaining($oogiri->ends_at),
             'progressPercent' => $format->progressPercent($oogiri->starts_at, $oogiri->ends_at),
-            'answers'         => service('answer')->listVisible($oogiri, $page),
+            'answers'         => service('answer')->listVisible($oogiri, $page, true), // U-07 はキャッシュしないので本人の印を付けてよい
             'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
         ]);
     }

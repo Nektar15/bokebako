@@ -1,6 +1,6 @@
 # 引き継ぎメモ（新しいセッション・別の開発者向け）
 
-最終更新：2026-10-20　ブランチ：`develop`（工程0〜5まで取り込み済み）
+最終更新：2026-10-20　ブランチ：`develop`（工程0〜5まで取り込み済み）＋ `fix/review-stage5`（コードレビューの修正。develop へは未取り込み）
 
 ## 今どこまでできているか
 
@@ -11,6 +11,7 @@
 | 2 管理画面の外側（A-02〜A-10） | 完了・develop に取り込み済み | `feature/admin-views` |
 | 3 DB とモデル／4 中身 | 完了・develop に取り込み済み | `feature/database` |
 | 5 仕上げ | 完了・develop に取り込み済み（`composer check` 通過、165 テスト） | `feature/release-prep` |
+| レビュー修正（P1 5件・P2 2件） | 完了・`composer check` 通過（178 テスト）。**develop へは未取り込み** | `fix/review-stage5` |
 | A-01 ログイン・2FA | **未実装**（下の「残課題」） | |
 
 ## 最初にやること（新しいセッションでそのまま貼る指示）
@@ -27,6 +28,11 @@ docs/PROMPT.md と docs/HANDOFF.md を読んでから進めてください。
 GitHub Releases の phar（phpstan 1.12、php-cs-fixer 3.95）と、PHPUnit 10.5 とその依存を GitHub から clone して
 `vendor/bin/{phpstan,php-cs-fixer,phpunit}` に置く薄いラッパーで `composer check` を通した。
 普通の環境では `composer install` だけでよい（`composer.lock` はまだない。初回の `composer install` で作ってコミットすること：CODING_RULES 1章）。
+
+レビュー修正の作業環境（2026-10-20）も packagist に繋がらず、同じ方法を取った。手順の補足：
+- PHPUnit 10.5.58 と依存（sebastian/*、phpunit/php-*、phar-io/*、theseer/tokenizer、myclabs/deep-copy、nikic/php-parser 5）、codeigniter/coding-standard 1.9.2、nexusphp/cs-config 3.29 を GitHub から `git clone`。リポジトリの外に置き、`classmap`／`psr-4`／`files` を並べた composer.json で `composer dump-autoload` する
+- CodeIgniter の起動は `Composer\InstalledVersions` を使うので、composer の phar から `src/Composer/InstalledVersions.php` を取り出し、空の `vendor/composer/installed.php` と一緒に置く
+- リポジトリの `vendor/autoload.php` はその autoload を読むだけ。`vendor/bin/php-cs-fixer` は `-d auto_prepend_file=` で同じ autoload を読ませる（設定ファイルが CodingStandard のクラスを使うため）
 
 ## 残課題（本番公開前）
 
@@ -63,7 +69,7 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 
 - `.env`（`app.hashSecret` は一度決めたら変えない）、php.ini（OPcache）、cron 3本、フォント（`writable/fonts/`）、Turnstile・OpenAI のキー、通知メールの宛先
 - ステージングで `tests/load/k6.js` を流し、`docs/load-test.md` に追記
-- Cloudflare（任意）
+- Cloudflare（任意）。使う場合、非表示・削除で消した OGP 画像（`/ogp/*`）は CDN のキャッシュが切れるまで配信される。`/ogp/*` のキャッシュ時間を短くするか、消したときに CDN のパージを足す（ADR 0006-7）
 
 ### 4. 小さな積み残し
 
@@ -72,6 +78,28 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 - `events` の削除は 90 日固定（`StatsService::EVENT_KEEP_DAYS`）。運用設定にはしていない
 - Google Fonts の見た目は作業環境の都合で未確認（工程1から同じ）
 - Vercel に仮置きする場合の差分（vercel-php、`writable/` を `/tmp` へ、外部 DB、cron の代替）は未着手。本番の Xserver 向けコードは変えず、`vercel.json` と環境変数で吸収する方針
+
+## 工程5後のコードレビューで直したもの（`fix/review-stage5`。ADR 0006）
+
+| 指摘 | 内容 | 直し方 | テスト |
+|---|---|---|---|
+| 1 P1 | 別の大喜利・非表示の回答IDでも確定できた | 全件が「この大喜利の公開中の回答」でなければ全体を拒否 | `HostServiceTest`・`OogiriAdminServiceTest` |
+| 2 P1 | 共有キャッシュの結果ページに「あなたの回答」 | U-10・U-12 では付けない（U-07 だけ） | `ResultPageCacheTest` |
+| 3 P1 | Cookie を変えると試行回数制限が戻った | IP 単位の枠を追加。合言葉は IP＋大喜利・IP・大喜利の3枠 | `RateLimitServiceTest`・`HostServiceTest` |
+| 4 P1 | 同時の確定で先の結果が上書きされた | 読んだ状態を条件にした UPDATE（確定・S-01・S-02） | `HostServiceTest` |
+| 5 P2 | 「もっと見る」が1ページ目のキャッシュを返した | キャッシュキーに `page` を含め、`?page=` 付きは保存しない | `ResultPageCacheTest` |
+| 6 P2 | 締切後の再公開で選出期限が空のまま | S-01 と同じ選出期限を入れる | `OogiriAdminServiceTest` |
+| 7 P1 | 非表示・削除後も OGP 画像が残った | 消す・作り直す。生成失敗時は古い画像を消す | `OogiriAdminServiceTest` |
+
+あわせて、テストの土台でページキャッシュが `writable/cache/` に書かれ、テストや実行をまたいで古い HTML が返っていたのを直した（`DatabaseTestCase`）。
+
+### レビューの「読みやすさ」で残したもの（今回は直していない）
+
+- 状態遷移の集約：確定・S-01・S-02 は条件付き更新にそろえたが、非表示・再公開・削除（`OogiriAdminService`・`HostService::delete`）は条件なしのまま。1か所にまとめるなら別ブランチで
+- Service の依存：コンストラクタ注入と `service('…')` の混在はそのまま（今回足したのは `OogiriAdminService` → `LifecycleService` の注入だけ）
+- 保存と副作用の境界：回答保存と件数加算、通報保存と件数加算は別の更新のまま
+- 取得上限：`HostService::answers()` は新着200件で打ち切り。201件目以降の回答を開催者が選べない。モデレーション一覧も先に200件に絞っている
+- 確認できていないこと：MariaDB での同時実行（テストは SQLite で、同じ状態を読んだ2つの処理を順に流して確認）、HTTP サーバー越しの画面操作
 
 ## 工程5で作ったもの
 
@@ -95,6 +123,7 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 - `docs/adr/0003`：工程2（管理画面の外側）
 - `docs/adr/0004`：工程3・4（DB・Service）。直した不具合4件も「工程4」の節に
 - `docs/adr/0005`：工程5（仕上げ）
+- `docs/adr/0006`：工程5後のコードレビューの修正
 
 ## 環境のメモ
 

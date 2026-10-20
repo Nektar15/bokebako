@@ -159,6 +159,9 @@ class Cache extends BaseConfig
      *            of query parameters.
      *
      * @var bool|list<string>
+     *
+     * ぼけばこ：U-10・U-12 の「もっと見る」（?page=2）が1ページ目のキャッシュを返さないよう、page だけをキーに含める。
+     * ?page= なしのキーは含めない場合と同じなので、PageCacheService::key() はそのまま使える（レビュー指摘 5）
      */
-    public $cacheQueryString = false;
+    public $cacheQueryString = ['page'];
 }

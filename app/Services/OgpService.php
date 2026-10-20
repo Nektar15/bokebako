@@ -7,7 +7,9 @@ namespace App\Services;
 use App\Entities\Answer;
 use App\Entities\OgpJob;
 use App\Entities\Oogiri;
+use App\Enums\AnswerStatus;
 use App\Enums\OgpKind;
+use App\Enums\OogiriStatus;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Libraries\OgpImage;
@@ -34,6 +36,11 @@ final class OgpService
         'background' => '背景',
         'logo'       => 'ロゴ',
     ];
+
+    /**
+     * removeOogiri() で一度に取る回答の件数
+     */
+    private const REMOVE_CHUNK = 500;
 
     public function __construct(
         private readonly OgpImage $image,
@@ -92,6 +99,69 @@ final class OgpService
     }
 
     /**
+     * 結果画像に載せる1位：順位のついた公開中の回答のうち最上位（U-10 の表示と同じ並び）。なければ null
+     */
+    public function firstRanked(Oogiri $oogiri): ?Answer
+    {
+        return $this->answers->where('oogiri_id', $oogiri->id)->where('rank IS NOT NULL')->where('status', AnswerStatus::Visible->value)->orderBy('rank', 'ASC')->first();
+    }
+
+    /**
+     * 大喜利を非表示・削除したとき、公開ディレクトリに残る画像（募集・結果・その回答のシェア用）を消す（レビュー指摘 7）
+     *
+     * 消すのはこのサーバーのファイルだけ。CDN や SNS 側に保存された画像は消えない（docs/admin-manual.md）
+     */
+    public function removeOogiri(Oogiri $oogiri): void
+    {
+        $this->remove(OgpKind::Recruit, $oogiri->slug);
+        $this->remove(OgpKind::Result, $oogiri->slug);
+        $lastId = 0;
+
+        // 回答は数が多いことがあるので、ID 順に区切って取る（CODING_RULES 6章：上限なしで全件を取らない）
+        do {
+            $ids = $this->answers->where('oogiri_id', $oogiri->id)->where('id >', $lastId)->orderBy('id', 'ASC')->limit(self::REMOVE_CHUNK)->findColumn('id') ?? [];
+
+            foreach ($ids as $id) {
+                $this->remove(OgpKind::Answer, (string) $id);
+                $lastId = (int) $id;
+            }
+        } while (count($ids) === self::REMOVE_CHUNK);
+    }
+
+    /**
+     * 大喜利を再公開したとき、消した募集・結果の画像を作り直す（回答シェア用は初回アクセス時に作られる）
+     */
+    public function restoreOogiri(Oogiri $oogiri): void
+    {
+        $this->generateRecruit($oogiri);
+
+        if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
+            $this->generateResult($oogiri, $this->firstRanked($oogiri));
+        }
+    }
+
+    /**
+     * 回答を非表示・削除・再公開したとき：その回答のシェア用画像を消し、結果画像を今の公開状態で作り直す（レビュー指摘 7）
+     */
+    public function refreshForAnswer(Answer $answer, Oogiri $oogiri): void
+    {
+        $this->remove(OgpKind::Answer, (string) $answer->id);
+
+        if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
+            $this->generateResult($oogiri, $this->firstRanked($oogiri));
+        }
+    }
+
+    private function remove(OgpKind $kind, string $key): void
+    {
+        $path = $this->path($kind, $key);
+
+        if (is_file($path)) {
+            unlink($path);
+        }
+    }
+
+    /**
      * 最近の生成（新しい順）
      *
      * @return list<OgpJob>
@@ -130,7 +200,7 @@ final class OgpService
                 $oogiri = $this->findOogiri($target);
                 $ok     = $kind === OgpKind::Recruit
                     ? $this->generateRecruit($oogiri, $actor)
-                    : $this->generateResult($oogiri, $this->answers->where('oogiri_id', $oogiri->id)->where('rank', 1)->first(), $actor);
+                    : $this->generateResult($oogiri, $this->firstRanked($oogiri), $actor);
             }
         } catch (NotFoundException) {
             throw new ValidationException(['target' => '対象が見つかりません']);
@@ -181,6 +251,8 @@ final class OgpService
         try {
             $this->image->save($draw(), $this->path($kind, $key));
         } catch (Throwable $e) {
+            // 作り直しに失敗したら古い画像を残さない（非表示にした本文が載ったままにならないように。既定の画像が使われる）
+            $this->remove($kind, $key);
             $error = mb_substr($e->getMessage(), 0, 255);
             log_message('error', 'OGP 生成に失敗 (' . $kind->value . ' ' . $targetId . '): ' . $e->getMessage());
         }

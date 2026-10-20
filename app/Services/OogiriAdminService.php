@@ -7,7 +7,9 @@ namespace App\Services;
 use App\Entities\AdminLog;
 use App\Entities\Answer;
 use App\Entities\Oogiri;
+use App\Enums\ErrorCode;
 use App\Enums\OogiriStatus;
+use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Models\AnswerModel;
@@ -52,9 +54,15 @@ final class OogiriAdminService
         'custom' => '期間指定',
     ];
 
+    /**
+     * 管理者がベスト回答を変更できる状態
+     */
+    public const DECIDABLE_BY_ADMIN = [OogiriStatus::Open, OogiriStatus::AwaitingSelection, OogiriStatus::Decided, OogiriStatus::NoResult];
+
     public function __construct(
         private readonly OogiriModel $oogiris,
         private readonly AnswerModel $answers,
+        private readonly LifecycleService $lifecycle,
     ) {
     }
 
@@ -190,22 +198,31 @@ final class OogiriAdminService
         }
         $this->oogiris->update($id, ['status' => OogiriStatus::Hidden->value, 'status_before_hide' => $oogiri->status]);
         service('pageCache')->purgeOogiri($oogiri->slug);
+        service('ogp')->removeOogiri($oogiri);
         service('adminLog')->record('oogiri', $id, $what, $actor);
     }
 
     /**
-     * 再公開する（非表示にする前の状態へ。終了日時を過ぎていれば結果選択待ちにする）
+     * 再公開する（非表示にする前の状態へ）
+     *
+     * 終了日時を過ぎた募集中は結果選択待ちにし、S-01 と同じ選出期限を入れる（レビュー指摘 6）。
+     * 選出期限もすでに過ぎていれば、次の S-02（cron 1分間隔）が結果未選出にする（ADR 0006-5）
      */
     public function publish(int $id): void
     {
         $oogiri = $this->find($id);
         $status = OogiriStatus::tryFrom((string) $oogiri->status_before_hide) ?? OogiriStatus::Open;
+        $data   = ['status_before_hide' => null];
 
         if ($status === OogiriStatus::Open && Time::now()->isAfter($oogiri->ends_at)) {
             $status = OogiriStatus::AwaitingSelection;
         }
-        $this->oogiris->update($id, ['status' => $status->value, 'status_before_hide' => null]);
+        if ($status === OogiriStatus::AwaitingSelection && $oogiri->selection_deadline === null) {
+            $data['selection_deadline'] = $this->lifecycle->selectionDeadline($oogiri)->toDateTimeString();
+        }
+        $this->oogiris->update($id, ['status' => $status->value] + $data);
         service('pageCache')->purgeOogiri($oogiri->slug);
+        service('ogp')->restoreOogiri($this->find($id));
         service('adminLog')->record('oogiri', $id, '再公開（' . $status->label() . '）');
     }
 
@@ -217,27 +234,32 @@ final class OogiriAdminService
         $oogiri = $this->find($id);
         $this->oogiris->update($id, ['status' => OogiriStatus::Deleted->value]);
         service('pageCache')->purgeOogiri($oogiri->slug);
+        service('ogp')->removeOogiri($oogiri);
         service('adminLog')->record('oogiri', $id, '削除');
     }
 
     /**
      * 開催者の代理でベスト回答を変える（A-03 詳細。誤操作対応用）
      *
+     * 回答の検証と状態の条件付き更新は開催者の確定と共通（HostService::saveRanks）。
+     * 状態は読み込んだときのまま変わっていないことを条件にする（非表示・削除と同時に操作されたら拒否）
+     *
      * @param list<int|string> $answerIds 1位から順。空欄（0）は「なし」
      *
-     * @throws ValidationException
+     * @throws AppException        状態が変わっていた、ベスト回答を選べない状態
+     * @throws ValidationException 選択なし、選べない回答を含む
      */
     public function decide(int $id, array $answerIds): void
     {
         $oogiri = $this->find($id);
-        $ids    = array_values(array_unique(array_filter(array_map('intval', $answerIds))));
 
-        if ($ids === [] || count($ids) > 3) {
-            throw new ValidationException(['ranks' => 'ベスト回答を1〜3件選んでください']);
+        if (! in_array($oogiri->status(), self::DECIDABLE_BY_ADMIN, true)) {
+            throw new AppException(ErrorCode::Forbidden, '非表示・削除中の大喜利のベスト回答は変更できません');
         }
-        service('host')->saveRanks($oogiri, $ids);
+        $ids   = HostService::normalizeIds($answerIds);
+        $first = service('host')->saveRanks($oogiri, $ids, [$oogiri->status()]);
         $actor = service('currentAdmin')->get()->name;
-        service('ogp')->generateResult($this->find($id), $this->answers->find($ids[0]), $actor);
+        service('ogp')->generateResult($this->find($id), $first, $actor);
         service('adminLog')->record('oogiri', $id, '代理でベスト回答を変更（' . count($ids) . '件）');
     }
 

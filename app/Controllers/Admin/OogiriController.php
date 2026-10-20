@@ -7,6 +7,7 @@ namespace App\Controllers\Admin;
 use App\Entities\Answer;
 use App\Entities\Oogiri;
 use App\Enums\OogiriStatus;
+use App\Exceptions\AppException;
 use App\Exceptions\ValidationException;
 use App\Services\OogiriAdminService;
 use CodeIgniter\HTTP\RedirectResponse;
@@ -119,6 +120,8 @@ final class OogiriController extends AdminController
             $this->orFail(fn () => service('oogiriAdmin')->decide($id, (array) $this->request->getPost('ranks')));
         } catch (ValidationException $e) {
             return $this->backWithErrors($e->errors);
+        } catch (AppException $e) {
+            return $this->backWithErrors(['_' => $e->getMessage()]);
         }
 
         return redirect()->to(admin_url('oogiri/' . $id))->with('notice', '順位を保存しました');
