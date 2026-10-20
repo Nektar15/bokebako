@@ -12,7 +12,7 @@
 5. **cron の代わりに、1分に1回まで、リクエストのついでに `cron:minute` を動かす**。Vercel Cron は無料プランだと1日1回のため。
 6. **利用者の IP は `x-real-ip` から取る**。Vercel の PHP からは接続元がすべて 127.0.0.1 に見え、IP 単位のレート制限（ADR 0006-3）が全員共通になってしまうため。
 7. **環境変数の名前は「.」を「_」にして登録し、入口で読み替える**（Vercel は名前に「.」を使えない）。`composer.json` は `.vercelignore` で上げない（ランタイムが `composer install` を走らせ、`ext-gd` がないので失敗する。フレームワークは `system/` にある）。
-8. **GitHub と Vercel は 001d3d@gmail.com のアカウント**（発注者側の指示）。このセッションからは接続されていないので、手順を `docs/vercel.md` に書き、Masato さんが上げる。
+8. **GitHub は `Nektar15/bokebako`、Vercel は 001d3d@gmail.com のアカウント**（Masato さんの指示）。コミットの作者は Claude か lunaticbeat15@gmail.com に限る。Vercel の Import は Masato さんが行う（手順は `docs/vercel.md`）。
 
 ## 確認したこと（ローカルで Vercel と同じ条件を再現）
 
