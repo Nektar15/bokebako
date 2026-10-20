@@ -1,0 +1,7 @@
+/* A-01 管理者アカウント */
+.p-accounts { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+.p-accounts__main { display: flex; flex-direction: column; gap: 14px; }
+.p-accounts__side { display: flex; flex-direction: column; gap: 18px; }
+.p-accounts__table { --table-cols: minmax(0, 1fr) minmax(0, 1fr) 100px 120px 150px; }
+.p-accounts__form { padding: 18px; gap: 16px; }
+.p-accounts__reset { display: flex; gap: 8px; }

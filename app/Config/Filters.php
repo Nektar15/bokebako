@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Config;
 
 use App\Filters\AdminAuth;
+use App\Filters\AdminIp;
 use App\Filters\AjaxOnly;
 use App\Filters\BrowserId;
 use App\Filters\SecurityHeaders;
@@ -40,7 +41,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
-        'adminAuth'     => AdminAuth::class, // 管理画面の認証。A-01 実装までは仮認証（CODING_RULES 7-1）
+        'adminIp'       => AdminIp::class,   // 管理画面の IP 制限（任意。ADMIN_ALLOWED_IPS）
+        'adminAuth'     => AdminAuth::class, // 管理画面のログイン確認（A-01）
         'browserId'     => BrowserId::class, // 匿名ブラウザIDの発行（FEATURES 0-2）
     ];
 

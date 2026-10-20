@@ -21,13 +21,26 @@ class DevSeeder extends Seeder
 {
     public const PASSPHRASE = 'ぼけばこ';
 
+    /**
+     * 開発用の管理者（A-01）。上位管理者 dev-admin と一般管理者 dev-general。パスワードは共通（本番では使わない）
+     */
+    public const ADMIN_PASSWORD = 'dev-password-bokebako';
+
     public function run(): void
     {
         $identity = new IdentityService();
         $now      = Time::now();
 
-        foreach (['admin_logs', 'ai_judgements', 'reports', 'answers', 'oogiris', 'ng_words', 'ads', 'inquiries', 'ogp_jobs', 'daily_stats', 'events', 'restrictions', 'settings'] as $table) {
+        foreach (['admins', 'admin_logs', 'ai_judgements', 'reports', 'answers', 'oogiris', 'ng_words', 'ads', 'inquiries', 'ogp_jobs', 'daily_stats', 'events', 'restrictions', 'settings'] as $table) {
             $this->db->table($table)->truncate();
+        }
+
+        // ---- 管理者（A-01）。ログイン：dev-admin / dev-general、パスワードは ADMIN_PASSWORD ----
+        foreach ([[1, 'dev-admin', 'dev-admin', 'super'], [2, 'dev-general', 'dev-general', 'general']] as [$aid, $loginId, $name, $role]) {
+            $this->db->table('admins')->insert([
+                'id'           => $aid, 'login_id' => $loginId, 'name' => $name, 'role' => $role, 'password_hash' => password_hash(self::ADMIN_PASSWORD, PASSWORD_BCRYPT, ['cost' => 4]),
+                'failed_count' => 0, 'created_at' => $now->toDateTimeString(), 'updated_at' => $now->toDateTimeString(),
+            ]);
         }
 
         // ---- 大喜利（docs/design/A03-Oogiri の見本） ----

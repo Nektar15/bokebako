@@ -4,62 +4,35 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
-use App\Entities\AdminUser;
-use App\Enums\AdminRole;
 use CodeIgniter\Filters\FilterInterface;
-use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
 /**
- * 管理画面の認証 Filter
+ * 管理画面のログイン確認（A-01）
  *
- * 仮認証：A-01（ログイン・2FA）の実装時に本認証へ置き換える（HANDOFF「残課題」）。
- * それまでは CODING_RULES 7-1 の仮認証で動かす。
- *   development … 固定の仮管理者（上位管理者）でログイン済みとして扱う
- *   staging     … ADMIN_ALLOWED_IPS に含まれる IP だけ仮管理者。それ以外は 403
- *   production  … 常に 403
- * 判定に迷う場合は拒否する。
+ * ログイン中なら「現在の管理者」（CurrentAdminService）を用意する。Controller と Service はそこから管理者ID・権限を受け取る。
+ * 未ログイン・期限切れならログイン画面へ。IP 制限は手前の adminIp Filter。
  */
 class AdminAuth implements FilterInterface
 {
-    public const DEV_ADMIN_ID   = 0;
-    public const DEV_ADMIN_NAME = 'dev-admin';
-
     public function before(RequestInterface $request, $arguments = null)
     {
-        if (! self::allowsTemporaryAdmin($request->getIPAddress())) {
-            return service('response')->setStatusCode(403)->setBody(view('errors/html/error_403'));
-        }
+        $account = service('adminAuth')->current();
 
-        // 仮管理者は上位管理者。権限による出し分け（A-04）を確認するため、development では ?role=general で一般管理者に落とせる
-        $role = AdminRole::Super;
-        if ($request instanceof IncomingRequest && ENVIRONMENT !== 'production' && $request->getGet('role') === AdminRole::General->value) {
-            $role = AdminRole::General;
+        if ($account === null) {
+            return redirect()->to(admin_url('login'))->with('notice', 'ログインしてください');
         }
-
-        service('currentAdmin')->set(new AdminUser(self::DEV_ADMIN_ID, self::DEV_ADMIN_NAME, $role));
+        service('currentAdmin')->set($account->toAdminUser());
 
         return null;
     }
 
     public function after(RequestInterface $request, ResponseInterface $response, $arguments = null)
     {
+        // ログイン中の画面はブラウザ・中継サーバーに残さない（ログアウト後に「戻る」で見えないように）
+        $response->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+
         return null;
-    }
-
-    /**
-     * 仮管理者を許可するか（環境と IP だけで判定する。Service から切り離してテストしやすくする）
-     */
-    public static function allowsTemporaryAdmin(string $ip, ?string $environment = null, ?string $allowedIps = null): bool
-    {
-        $environment ??= ENVIRONMENT;
-        $allowedIps ??= (string) env('ADMIN_ALLOWED_IPS', '');
-
-        return match ($environment) {
-            'development', 'testing' => true,
-            'staging'                => in_array($ip, array_filter(array_map('trim', explode(',', $allowedIps))), true),
-            default                  => false,
-        };
     }
 }

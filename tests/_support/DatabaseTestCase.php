@@ -5,7 +5,10 @@ declare(strict_types=1);
 namespace Tests\Support;
 
 use App\Database\Seeds\DevSeeder;
+use App\Enums\AdminRole;
 use App\Filters\BrowserId;
+use App\Models\AdminModel;
+use App\Services\AdminAuthService;
 use CodeIgniter\Cache\ResponseCache;
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
@@ -61,6 +64,22 @@ abstract class DatabaseTestCase extends CIUnitTestCase
     {
         unset($_COOKIE[BrowserId::COOKIE_NAME]);
         parent::tearDown();
+    }
+
+    /**
+     * 管理者としてログインした状態でリクエストする（A-01。DevSeeder の dev-admin（上位）/ dev-general（一般））
+     */
+    protected function asAdmin(AdminRole $role = AdminRole::Super): static
+    {
+        $account = model(AdminModel::class)->where('login_id', $role === AdminRole::Super ? 'dev-admin' : 'dev-general')->first();
+        $now     = time();
+
+        return $this->withSession([
+            AdminAuthService::SESSION_ID          => $account->id,
+            AdminAuthService::SESSION_FINGERPRINT => AdminAuthService::fingerprint($account),
+            AdminAuthService::SESSION_LOGIN_AT    => $now,
+            AdminAuthService::SESSION_SEEN_AT     => $now,
+        ]);
     }
 
     /**

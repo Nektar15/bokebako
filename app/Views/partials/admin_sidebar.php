@@ -15,6 +15,7 @@ $menu = [
     ['A-08', 'OGP', 'ogp', 0],
     ['A-09', 'お問い合わせ', 'inquiries', $badges['inquiries']],
     ['A-10', '運用設定', 'settings', 0],
+    ['A-01', '管理者アカウント', 'accounts', 0],
 ];
 $admin = service('currentAdmin');
 ?>
@@ -39,10 +40,12 @@ $admin = service('currentAdmin');
 </nav>
 <div class="l-sidebar__user">
 <?php if ($admin->has()): ?>
-<?php if ($admin->get()->id === App\Filters\AdminAuth::DEV_ADMIN_ID): ?><span class="c-tag c-tag--outline">開発用の仮ログイン</span><?php endif; ?>
 <span class="l-sidebar__username"><?= esc($admin->get()->name) ?></span>
 <span class="l-sidebar__role"><?= esc($admin->get()->role->label()) ?></span>
 <?php endif; ?>
-<span class="l-sidebar__role">ログアウトは A-01 実装後に有効</span>
+<form class="c-action" method="post" action="<?= admin_url('logout') ?>">
+<?= csrf_field() ?>
+<button type="submit" class="c-abutton c-abutton--small l-sidebar__logout">ログアウト</button>
+</form>
 </div>
 </aside>
