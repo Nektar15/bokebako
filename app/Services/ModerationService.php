@@ -276,7 +276,7 @@ final class ModerationService
             $hidden++;
         }
         if ($hidden > 0) {
-            service('mail')->notifyAdmin("通報により {$hidden} 件を一時非表示にしました", "管理画面の「通報・モデレーション」で確認してください。\n" . site_url(trim((string) env('app.adminPath', 'admin'), '/') . '/moderation'));
+            service('mail')->notifyAdmin('autoHidden', ['count' => $hidden, 'url' => admin_url('moderation')]);
             service('adminLog')->record('answer', null, "通報の集計：{$hidden} 件を一時非表示にし、管理者へメール通知", AdminLogService::ACTOR_AUTO);
         }
 

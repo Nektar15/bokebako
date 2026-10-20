@@ -98,7 +98,7 @@ final class OogiriService
         // NGワード「要確認」は開催を通したうえで管理画面に記録する（FEATURES 0-3）
         if (($ng['action'] ?? null) === NgWordAction::Review) {
             $this->moderation->flag(ReportTarget::Oogiri, $id, 'ng_review', $ng['detail']);
-            service('mail')->notifyAdmin('NGワード「要確認」のお題が開催されました', "お題 #{$id}\n管理画面の「通報・モデレーション」で確認してください。");
+            service('mail')->notifyAdmin('ngReview', ['id' => $id, 'detail' => $ng['detail'], 'url' => admin_url('moderation?item=oogiri-' . $id)]);
         }
         if ($this->rateLimit->isBursting(RateLimitService::ACTION_CREATE)) {
             $this->moderation->flag(ReportTarget::Oogiri, $id, 'abnormal', null, '同一環境から短時間に連続して開催');

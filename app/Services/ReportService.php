@@ -85,7 +85,7 @@ final class ReportService
         $recent = $this->reports->where('created_at >=', Time::now()->subHours(1)->toDateTimeString())->countAllResults();
 
         if ($recent <= $this->settings->int('surge_count')) {
-            service('mail')->notifyAdmin('通報を受け付けました（' . $reason->label() . '）', "対象：{$target->label()} {$id}\n管理画面の「通報・モデレーション」で確認してください。");
+            service('mail')->notifyAdmin('report', ['target' => $target->label(), 'id' => $id, 'reason' => $reason->label(), 'url' => admin_url('moderation?item=' . $target->value . '-' . $id)]);
         }
     }
 }

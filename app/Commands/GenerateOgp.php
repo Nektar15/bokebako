@@ -8,7 +8,7 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
 /**
- * S-07 OGP画像生成：欠けている募集用・結果用の画像を作る
+ * S-07 OGP画像生成：欠けている募集用・結果用の画像を作る。A-08 で一括の作り直しが予約されていれば、それも少しずつ進める
  *
  * cron から1分間隔で実行する（README）。Service を呼ぶだけ（CODING_RULES 3章）。
  */
@@ -24,6 +24,7 @@ final class GenerateOgp extends BaseCommand
     public function run(array $params): void
     {
         $count = service('lifecycle')->generateMissingOgp();
-        CLI::write("ogp:generate: {$count} 件の画像を生成しました");
+        $bulk  = service('ogp')->regenerateNextBatch();
+        CLI::write("ogp:generate: {$count} 件の画像を生成しました（一括の作り直し：{$bulk} 件の大喜利）");
     }
 }
