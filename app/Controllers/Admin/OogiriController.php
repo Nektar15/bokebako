@@ -86,9 +86,7 @@ final class OogiriController extends AdminController
      */
     public function hide(int $id): RedirectResponse
     {
-        $this->orFail(static fn () => service('oogiriAdmin')->hide($id));
-
-        return $this->backWithNotice("#{$id} を非表示にしました");
+        return $this->act(static fn () => service('oogiriAdmin')->hide($id), "#{$id} を非表示にしました");
     }
 
     /**
@@ -96,9 +94,7 @@ final class OogiriController extends AdminController
      */
     public function publish(int $id): RedirectResponse
     {
-        $this->orFail(static fn () => service('oogiriAdmin')->publish($id));
-
-        return $this->backWithNotice("#{$id} を再公開しました");
+        return $this->act(static fn () => service('oogiriAdmin')->publish($id), "#{$id} を再公開しました");
     }
 
     /**
@@ -106,7 +102,11 @@ final class OogiriController extends AdminController
      */
     public function delete(int $id): RedirectResponse
     {
-        $this->orFail(static fn () => service('oogiriAdmin')->delete($id));
+        try {
+            $this->orFail(static fn () => service('oogiriAdmin')->delete($id));
+        } catch (AppException $e) {
+            return $this->backWithErrors(['_' => $e->getMessage()]);
+        }
 
         return redirect()->to(admin_url('oogiri'))->with('notice', "#{$id} を削除しました");
     }

@@ -45,7 +45,9 @@ final class ModerationController extends AdminController
             'queue'         => array_map(fn (ModerationItem $i) => $this->queueRow($i, $selected, $filter), $queue),
             'selected'      => $selected,
             'selectedAt'    => $selected !== null ? $display->datetime($selected->created_at) : '',
-            'history'       => $selected !== null ? $display->logs($selected->history) : [],
+            'history'       => $selected !== null ? $display->logs($service->history($selected)) : [],
+            'overflow'      => $display->number($counts['overflow']),
+            'hasOverflow'   => $counts['overflow'] > 0,
             'restrictHours' => ModerationService::RESTRICT_HOURS,
         ]);
     }

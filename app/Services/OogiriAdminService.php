@@ -33,6 +33,11 @@ final class OogiriAdminService
     public const REPORT_ALERT = 5;
 
     /**
+     * 状態の変更がほかの処理と重なったときにやり直す回数
+     */
+    private const CHANGE_RETRY = 3;
+
+    /**
      * 並び替えの選択肢（値 => 表示名）。SPEC A-03
      */
     public const SORTS = [
@@ -63,6 +68,7 @@ final class OogiriAdminService
         private readonly OogiriModel $oogiris,
         private readonly AnswerModel $answers,
         private readonly LifecycleService $lifecycle,
+        private readonly HostService $host,
     ) {
     }
 
@@ -191,48 +197,64 @@ final class OogiriAdminService
      */
     public function hide(int $id, ?string $actor = null, string $what = '非表示にした'): void
     {
-        $oogiri = $this->find($id);
+        $oogiri = $this->changeStatus($id, static fn (Oogiri $o): ?array => in_array($o->status(), [OogiriStatus::Hidden, OogiriStatus::Deleted], true)
+            ? null
+            : ['status' => OogiriStatus::Hidden->value, 'status_before_hide' => $o->status]);
 
-        if (in_array($oogiri->status(), [OogiriStatus::Hidden, OogiriStatus::Deleted], true)) {
+        if ($oogiri === null) {
             return;
         }
-        $this->oogiris->update($id, ['status' => OogiriStatus::Hidden->value, 'status_before_hide' => $oogiri->status]);
         service('pageCache')->purgeOogiri($oogiri->slug);
         service('ogp')->removeOogiri($oogiri);
         service('adminLog')->record('oogiri', $id, $what, $actor);
     }
 
     /**
-     * 再公開する（非表示にする前の状態へ）
+     * 再公開する（非表示・削除にする前の状態へ）
      *
      * 終了日時を過ぎた募集中は結果選択待ちにし、S-01 と同じ選出期限を入れる（レビュー指摘 6）。
      * 選出期限もすでに過ぎていれば、次の S-02（cron 1分間隔）が結果未選出にする（ADR 0006-5）
      */
     public function publish(int $id): void
     {
-        $oogiri = $this->find($id);
-        $status = OogiriStatus::tryFrom((string) $oogiri->status_before_hide) ?? OogiriStatus::Open;
-        $data   = ['status_before_hide' => null];
+        $status = null;
+        $oogiri = $this->changeStatus($id, function (Oogiri $o) use (&$status): ?array {
+            if (! in_array($o->status(), [OogiriStatus::Hidden, OogiriStatus::Deleted], true)) {
+                return null;
+            }
+            $status = OogiriStatus::tryFrom((string) $o->status_before_hide) ?? OogiriStatus::Open;
+            $data   = ['status_before_hide' => null];
 
-        if ($status === OogiriStatus::Open && Time::now()->isAfter($oogiri->ends_at)) {
-            $status = OogiriStatus::AwaitingSelection;
+            if ($status === OogiriStatus::Open && Time::now()->isAfter($o->ends_at)) {
+                $status = OogiriStatus::AwaitingSelection;
+            }
+            if ($status === OogiriStatus::AwaitingSelection && $o->selection_deadline === null) {
+                $data['selection_deadline'] = $this->lifecycle->selectionDeadline($o)->toDateTimeString();
+            }
+
+            return ['status' => $status->value] + $data;
+        });
+
+        if ($oogiri === null || $status === null) {
+            return;
         }
-        if ($status === OogiriStatus::AwaitingSelection && $oogiri->selection_deadline === null) {
-            $data['selection_deadline'] = $this->lifecycle->selectionDeadline($oogiri)->toDateTimeString();
-        }
-        $this->oogiris->update($id, ['status' => $status->value] + $data);
         service('pageCache')->purgeOogiri($oogiri->slug);
         service('ogp')->restoreOogiri($this->find($id));
         service('adminLog')->record('oogiri', $id, '再公開（' . $status->label() . '）');
     }
 
     /**
-     * 削除する（論理削除。物理削除はしない）
+     * 削除する（論理削除。物理削除はしない）。再公開で戻せるよう、削除前の状態を覚えておく（非表示中なら非表示前の状態のまま）
      */
     public function delete(int $id): void
     {
-        $oogiri = $this->find($id);
-        $this->oogiris->update($id, ['status' => OogiriStatus::Deleted->value]);
+        $oogiri = $this->changeStatus($id, static fn (Oogiri $o): ?array => $o->status() === OogiriStatus::Deleted
+            ? null
+            : ['status' => OogiriStatus::Deleted->value, 'status_before_hide' => $o->status() === OogiriStatus::Hidden ? $o->status_before_hide : $o->status]);
+
+        if ($oogiri === null) {
+            return;
+        }
         service('pageCache')->purgeOogiri($oogiri->slug);
         service('ogp')->removeOogiri($oogiri);
         service('adminLog')->record('oogiri', $id, '削除');
@@ -257,10 +279,39 @@ final class OogiriAdminService
             throw new AppException(ErrorCode::Forbidden, '非表示・削除中の大喜利のベスト回答は変更できません');
         }
         $ids   = HostService::normalizeIds($answerIds);
-        $first = service('host')->saveRanks($oogiri, $ids, [$oogiri->status()]);
+        $first = $this->host->saveRanks($oogiri, $ids, [$oogiri->status()]);
         $actor = service('currentAdmin')->get()->name;
         service('ogp')->generateResult($this->find($id), $first, $actor);
         service('adminLog')->record('oogiri', $id, '代理でベスト回答を変更（' . count($ids) . '件）');
+    }
+
+    /**
+     * 状態を変える。読んだときの状態のままであることを条件に更新し、その間に変わっていたら読み直してやり直す。
+     * 古い状態で上書きしないため（例：確定と同時に非表示にすると、再公開で確定前の状態に戻ってしまう。レビュー「状態遷移」）
+     *
+     * @param callable(Oogiri): (array<string, mixed>|null) $change 今の行から更新内容を作る。何もしないなら null
+     *
+     * @return Oogiri|null 更新する前の行。何もしなかったら null
+     *
+     * @throws NotFoundException
+     */
+    private function changeStatus(int $id, callable $change): ?Oogiri
+    {
+        for ($try = 0; $try < self::CHANGE_RETRY; $try++) {
+            $oogiri = $this->find($id);
+            $data   = $change($oogiri);
+
+            if ($data === null) {
+                return null;
+            }
+            $this->oogiris->where('id', $id)->where('status', $oogiri->status)->set($data)->update();
+
+            if ($this->oogiris->affectedRows() === 1) {
+                return $oogiri;
+            }
+        }
+
+        throw new AppException(ErrorCode::Conflict);
     }
 
     /**

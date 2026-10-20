@@ -33,6 +33,7 @@ final class OogiriService
         private readonly IdentityService $identity,
         private readonly NgWordService $ngWords,
         private readonly RateLimitService $rateLimit,
+        private readonly ModerationService $moderation,
     ) {
     }
 
@@ -86,10 +87,35 @@ final class OogiriService
         $token      = $this->identity->issueHostToken();
         $passphrase = trim((string) ($input['passphrase'] ?? ''));
         $parent     = $this->parentIdFromSlug((string) ($input['from'] ?? ''));
-        $id         = $this->oogiris->insert([
+        // 開催と派生元の派生開催数の加算は一緒に成功・失敗させる
+        $id     = $this->oogiris->transaction(fn (): int => $this->insertOogiri($odai, $token['hash'], $passphrase, $parent, $now));
+        $oogiri = $this->oogiris->find($id);
+        $this->identity->rememberHostToken($oogiri->slug, $token['token']);
+        service('event')->record(EventName::Create, ['oogiri_id' => $id, 'parent_oogiri_id' => $parent]);
+        service('ogp')->generateRecruit($oogiri);
+        service('adminLog')->record('oogiri', $id, '開催', AdminLogService::ACTOR_HOST);
+
+        // NGワード「要確認」は開催を通したうえで管理画面に記録する（FEATURES 0-3）
+        if (($ng['action'] ?? null) === NgWordAction::Review) {
+            $this->moderation->flag(ReportTarget::Oogiri, $id, 'ng_review', $ng['detail']);
+            service('mail')->notifyAdmin('NGワード「要確認」のお題が開催されました', "お題 #{$id}\n管理画面の「通報・モデレーション」で確認してください。");
+        }
+        if ($this->rateLimit->isBursting(RateLimitService::ACTION_CREATE)) {
+            $this->moderation->flag(ReportTarget::Oogiri, $id, 'abnormal', null, '同一環境から短時間に連続して開催');
+        }
+
+        return ['oogiri' => $oogiri, 'hostToken' => $token['token']];
+    }
+
+    /**
+     * 大喜利の行を入れ、派生元があれば派生開催数を足す（transaction() の中で呼ぶ）
+     */
+    private function insertOogiri(string $odai, string $tokenHash, string $passphrase, ?int $parent, Time $now): int
+    {
+        $id = (int) $this->oogiris->insert([
             'slug'             => $this->uniqueSlug(),
             'odai'             => $odai,
-            'host_token_hash'  => $token['hash'],
+            'host_token_hash'  => $tokenHash,
             'passphrase_hash'  => $passphrase === '' ? null : password_hash($passphrase, PASSWORD_DEFAULT),
             'browser_id_hash'  => $this->identity->browserIdHash(),
             'ip_hash'          => $this->identity->ipHash(),
@@ -98,26 +124,12 @@ final class OogiriService
             'ends_at'          => $now->addHours($this->settings->int('open_hours'))->toDateTimeString(),
             'parent_oogiri_id' => $parent,
         ]);
-        $oogiri = $this->oogiris->find($id);
 
         if ($parent !== null) {
             $this->oogiris->increment($parent, 'derived_count');
         }
-        $this->identity->rememberHostToken($oogiri->slug, $token['token']);
-        service('event')->record(EventName::Create, ['oogiri_id' => $id, 'parent_oogiri_id' => $parent]);
-        service('ogp')->generateRecruit($oogiri);
-        service('adminLog')->record('oogiri', $id, '開催', AdminLogService::ACTOR_HOST);
 
-        // NGワード「要確認」は開催を通したうえで管理画面に記録する（FEATURES 0-3）
-        if (($ng['action'] ?? null) === NgWordAction::Review) {
-            service('moderation')->flag(ReportTarget::Oogiri, $id, 'ng_review', $ng['detail']);
-            service('mail')->notifyAdmin('NGワード「要確認」のお題が開催されました', "お題 #{$id}\n管理画面の「通報・モデレーション」で確認してください。");
-        }
-        if ($this->rateLimit->isBursting(RateLimitService::ACTION_CREATE)) {
-            service('moderation')->flag(ReportTarget::Oogiri, $id, 'abnormal', null, '同一環境から短時間に連続して開催');
-        }
-
-        return ['oogiri' => $oogiri, 'hostToken' => $token['token']];
+        return $id;
     }
 
     /**

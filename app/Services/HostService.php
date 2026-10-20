@@ -16,7 +16,6 @@ use App\Exceptions\ValidationException;
 use App\Models\AnswerModel;
 use App\Models\OogiriModel;
 use CodeIgniter\I18n\Time;
-use Throwable;
 
 /**
  * 開催者の認証と操作（U-08・U-09）
@@ -27,6 +26,16 @@ final class HostService
      * 開催者が結果を確定できる状態（募集中の早期確定を含む）
      */
     public const DECIDABLE_BY_HOST = [OogiriStatus::Open, OogiriStatus::AwaitingSelection];
+
+    /**
+     * 開催者画面で一度に出す回答の件数
+     */
+    public const PER_PAGE = 100;
+
+    /**
+     * 結果選択待ちで上にまとめて出すお気に入りの上限
+     */
+    public const FAVORITES_MAX = 100;
 
     public function __construct(
         private readonly OogiriModel $oogiris,
@@ -168,26 +177,18 @@ final class HostService
      */
     public function saveRanks(Oogiri $oogiri, array $ids, array $from): Answer
     {
-        $db = $this->oogiris->db;
-        $db->transBegin();
-
-        try {
+        $this->oogiris->transaction(function () use ($oogiri, $ids, $from): void {
             $this->markDecided($oogiri, $from);
             $this->answers->where('oogiri_id', $oogiri->id)->set(['rank' => null])->update();
 
             foreach ($ids as $i => $id) {
                 $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)->where('id', $id)->set(['rank' => $i + 1])->update();
 
-                if ($db->affectedRows() !== 1) {
+                if ($this->answers->affectedRows() !== 1) {
                     throw new ValidationException(['ranks' => '選べない回答が含まれています（非表示・削除された可能性があります）。選び直してください']);
                 }
             }
-            $db->transCommit();
-        } catch (Throwable $e) {
-            $db->transRollback();
-
-            throw $e;
-        }
+        });
         service('pageCache')->purgeOogiri($oogiri->slug);
 
         return $this->answers->find($ids[0]);
@@ -206,7 +207,7 @@ final class HostService
         $this->oogiris->where('id', $oogiri->id)->whereIn('status', $values)
             ->set(['status' => OogiriStatus::Decided->value, 'decided_at' => Time::now()->toDateTimeString()])->update();
 
-        if ($this->oogiris->db->affectedRows() === 1) {
+        if ($this->oogiris->affectedRows() === 1) {
             return;
         }
         // MariaDB は値が変わらない更新を 0 件と数える（管理者が同じ秒に再変更した場合など）。今の状態で判定し直す
@@ -217,23 +218,81 @@ final class HostService
         }
     }
 
+    /**
+     * 開催者が削除する（募集中・結果選択待ちだけ）。状態は読んだときのままであることを条件にする（確定と同時に消さない）
+     *
+     * @throws AppException       削除できる状態でない、ほかの操作と重なった
+     * @throws ForbiddenException 開催者でない
+     */
     public function delete(Oogiri $oogiri): void
     {
         $this->assertAuthorized($oogiri);
-        $this->oogiris->update($oogiri->id, ['status' => OogiriStatus::Deleted->value]);
+
+        if (! in_array($oogiri->status(), self::DECIDABLE_BY_HOST, true)) {
+            throw new AppException(ErrorCode::Forbidden, 'この大喜利は削除できません');
+        }
+        $this->oogiris->where('id', $oogiri->id)->where('status', $oogiri->status)
+            ->set(['status' => OogiriStatus::Deleted->value, 'status_before_hide' => $oogiri->status])->update();
+
+        if ($this->oogiris->affectedRows() !== 1) {
+            throw new AppException(ErrorCode::Conflict);
+        }
         service('pageCache')->purgeOogiri($oogiri->slug);
         service('ogp')->removeOogiri($oogiri);
         service('adminLog')->record('oogiri', $oogiri->id, '開催者が削除', AdminLogService::ACTOR_HOST);
     }
 
     /**
-     * 開催者画面の回答（お気に入りを含む、新しい順）
+     * 開催者画面の回答（新しい順、PER_PAGE 件ずつ）
+     *
+     * 回答が多い大喜利でも古い回答まで選べるよう、ページで区切って続きを読めるようにする（レビュー「取得上限」）。
+     * 結果選択待ちではお気に入りを favorites() で上にまとめて出すので、ここからは外す
+     *
+     * @return array{items: list<Answer>, hasMore: bool, page: int}
+     */
+    public function answers(Oogiri $oogiri, int $page = 1, bool $excludeFavorites = false): array
+    {
+        $builder = $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value);
+
+        if ($excludeFavorites) {
+            $builder->where('is_favorite', 0);
+        }
+        $items   = $builder->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->findAll(self::PER_PAGE + 1, ($page - 1) * self::PER_PAGE);
+        $hasMore = count($items) > self::PER_PAGE;
+
+        return ['items' => $this->withLabels(array_slice($items, 0, self::PER_PAGE)), 'hasMore' => $hasMore, 'page' => $page];
+    }
+
+    /**
+     * お気に入りにした回答（新しい順、FAVORITES_MAX 件まで）。結果選択待ちで上にまとめて出す
      *
      * @return list<Answer>
      */
-    public function answers(Oogiri $oogiri): array
+    public function favorites(Oogiri $oogiri): array
     {
-        return $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->findAll(200);
+        return $this->withLabels($this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)->where('is_favorite', 1)
+            ->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->findAll(self::FAVORITES_MAX));
+    }
+
+    public function favoriteCount(Oogiri $oogiri): int
+    {
+        return $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)->where('is_favorite', 1)->countAllResults();
+    }
+
+    /**
+     * 投稿からの経過（「3分前」）を付ける。View で日時を計算しないため
+     *
+     * @param list<Answer> $answers
+     *
+     * @return list<Answer>
+     */
+    private function withLabels(array $answers): array
+    {
+        foreach ($answers as $answer) {
+            $answer->posted_label = service('display')->ago($answer->created_at);
+        }
+
+        return $answers;
     }
 
     private function assertAuthorized(Oogiri $oogiri): void

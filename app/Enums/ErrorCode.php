@@ -16,18 +16,19 @@ enum ErrorCode: string
     case NotFound         = 'NOT_FOUND';         // 404
     case Closed           = 'CLOSED';            // 409 締切後の回答など
     case AlreadyDecided   = 'ALREADY_DECIDED';   // 409
+    case Conflict         = 'CONFLICT';          // 409 ほかの操作と同時に状態が変わった
     case RateLimited      = 'RATE_LIMITED';      // 429
     case ServerError      = 'SERVER_ERROR';      // 500
 
     public function httpStatus(): int
     {
         return match ($this) {
-            self::ValidationFailed, self::NgWord => 400,
-            self::Forbidden                      => 403,
-            self::NotFound                       => 404,
-            self::Closed, self::AlreadyDecided   => 409,
-            self::RateLimited                    => 429,
-            self::ServerError                    => 500,
+            self::ValidationFailed, self::NgWord               => 400,
+            self::Forbidden                                    => 403,
+            self::NotFound                                     => 404,
+            self::Closed, self::AlreadyDecided, self::Conflict => 409,
+            self::RateLimited                                  => 429,
+            self::ServerError                                  => 500,
         };
     }
 
@@ -43,6 +44,7 @@ enum ErrorCode: string
             self::NotFound         => '見つかりませんでした',
             self::Closed           => 'この大喜利の募集は終了しています',
             self::AlreadyDecided   => '結果はすでに確定しています',
+            self::Conflict         => 'ほかの操作と重なりました。もう一度お試しください',
             self::RateLimited      => '少し時間をおいてから投稿してください',
             self::ServerError      => 'エラーが発生しました。時間をおいてもう一度お試しください',
         };

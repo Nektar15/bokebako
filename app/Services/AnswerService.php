@@ -39,6 +39,7 @@ final class AnswerService
         private readonly IdentityService $identity,
         private readonly NgWordService $ngWords,
         private readonly RateLimitService $rateLimit,
+        private readonly ModerationService $moderation,
     ) {
     }
 
@@ -146,22 +147,27 @@ final class AnswerService
             throw new ValidationException($errors);
         }
 
-        $id = $this->answers->insert([
-            'oogiri_id'       => $oogiri->id,
-            'body'            => $body,
-            'status'          => AnswerStatus::Visible->value,
-            'browser_id_hash' => $this->identity->browserIdHash(),
-            'ip_hash'         => $this->identity->ipHash(),
-        ]);
-        $this->oogiris->increment($oogiri->id, 'answer_count');
+        // 回答の保存と回答数の加算は一緒に成功・失敗させる（片方だけ残ると回答数がずれる）
+        $id = $this->answers->transaction(function () use ($oogiri, $body): int {
+            $id = (int) $this->answers->insert([
+                'oogiri_id'       => $oogiri->id,
+                'body'            => $body,
+                'status'          => AnswerStatus::Visible->value,
+                'browser_id_hash' => $this->identity->browserIdHash(),
+                'ip_hash'         => $this->identity->ipHash(),
+            ]);
+            $this->oogiris->increment($oogiri->id, 'answer_count');
+
+            return $id;
+        });
         session()->set(self::SESSION_LAST . ':' . $oogiri->slug, $id);
         service('event')->record(EventName::Answer, ['oogiri_id' => $oogiri->id, 'answer_id' => $id]);
 
         if ($ng['action'] === NgWordAction::Review) {
-            service('moderation')->flag(ReportTarget::Answer, $id, 'ng_review', $ng['detail']);
+            $this->moderation->flag(ReportTarget::Answer, $id, 'ng_review', $ng['detail']);
         }
         if ($this->rateLimit->isBursting(RateLimitService::ACTION_ANSWER)) {
-            service('moderation')->flag(ReportTarget::Answer, $id, 'abnormal', null, '同一環境から' . $this->settings->int('burst_window_sec') . '秒間に' . $this->settings->int('burst_count') . '件を超える投稿');
+            $this->moderation->flag(ReportTarget::Answer, $id, 'abnormal', null, '同一環境から' . $this->settings->int('burst_window_sec') . '秒間に' . $this->settings->int('burst_count') . '件を超える投稿');
         }
 
         return $this->answers->find($id);

@@ -9,7 +9,10 @@
  * @var string $remaining           募集の残り時間（募集中のみ意味を持つ）
  * @var string $selectionRemaining  結果選出の残り時間（選択待ちのみ）
  * @var string $pv                  表示用に整形したPV
- * @var list<\App\Entities\Answer> $answers 回答一覧（新着順）
+ * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers 回答一覧（新着順、100件ずつ。結果選択待ちではお気に入りを除く）
+ * @var list<\App\Entities\Answer> $favorites  お気に入り（結果選択待ちの1ページ目だけ。上にまとめて出す）
+ * @var int    $favoriteCount お気に入りの件数
+ * @var string $moreUrl       「もっと見る」の行き先（次のページ）
  * @var string $shareUrl
  * @var string $intentUrl
  * @var array<string, string> $errors
@@ -50,7 +53,7 @@
 <?php if ($isOpen): ?>
 <div class="p-host__stat"><dt>残り</dt><dd class="p-host__stat--small"><?= esc($remaining) ?></dd></div>
 <?php else: ?>
-<div class="p-host__stat"><dt>お気に入り</dt><dd><?= count(array_filter($answers, static fn ($a) => $a->is_favorite)) ?></dd></div>
+<div class="p-host__stat"><dt>お気に入り</dt><dd><?= esc((string) $favoriteCount) ?></dd></div>
 <?php endif; ?>
 </dl>
 <p class="u-sub">募集期間：<?= esc($startsAt) ?>〜<?= esc($endsAt) ?></p>
@@ -83,30 +86,30 @@
 </section>
 <?php endif; ?>
 
+<?php if ($favorites !== []): ?>
 <section class="l-section p-host__answers">
-<div class="p-host__title"><h2 class="p-host__h2">集まったボケ（<?= esc((string) $oogiri->answer_count) ?>）</h2><span class="u-sub">新着順</span></div>
-<?php if ($answers === []): ?>
-<p class="p-host__empty">まだ回答はありません。Xでシェアして、ボケを集めましょう。</p>
-<?php endif; ?>
+<div class="p-host__title"><h2 class="p-host__h2">お気に入り（<?= esc((string) count($favorites)) ?>）</h2><span class="u-sub">募集中に★を付けた回答</span></div>
 <ul class="p-host__list">
-<?php foreach ($answers as $answer): ?>
-<li class="p-host__item" data-js-answer="<?= $answer->id ?>">
-<?php if ($isOpen): ?>
-<p class="p-host__body"><?= nl2br_esc($answer->body) ?></p>
-<div class="p-host__item-meta">
-<span class="u-sub"><?= esc($answer->posted_label ?? '') ?></span>
-<button type="submit" form="favorite-<?= $answer->id ?>" class="p-host__fav<?= $answer->is_favorite ? ' is-on' : '' ?>" aria-pressed="<?= $answer->is_favorite ? 'true' : 'false' ?>" aria-label="お気に入り">★</button>
-</div>
-<?php else: ?>
-<label class="p-host__pick">
-<input type="checkbox" class="u-visually-hidden" name="ranks[]" value="<?= $answer->id ?>" data-js-pick<?= $answer->rank !== null ? ' checked' : '' ?>>
-<span class="p-host__pick-badge" data-js-pick-badge></span>
-<span class="p-host__pick-body"><span class="p-host__body"><?= nl2br_esc($answer->body) ?></span><span class="u-sub"><?= esc($answer->posted_label ?? '') ?><?= $answer->is_favorite ? ' ・ ★お気に入り' : '' ?></span></span>
-</label>
-<?php endif; ?>
-</li>
+<?php foreach ($favorites as $answer): ?>
+<?= part('partials/host_answer_item', ['answer' => $answer, 'isOpen' => $isOpen, 'slug' => $oogiri->slug]) ?>
 <?php endforeach; ?>
 </ul>
+</section>
+<?php endif; ?>
+
+<section class="l-section p-host__answers" id="answers">
+<div class="p-host__title"><h2 class="p-host__h2"><?= $favorites !== [] ? 'そのほかのボケ' : '集まったボケ' ?>（<?= esc((string) $oogiri->answer_count) ?>）</h2><span class="u-sub">新着順</span></div>
+<?php if ($answers['items'] === [] && $favorites === []): ?>
+<p class="p-host__empty"><?= $isOpen ? 'まだ回答はありません。Xでシェアして、ボケを集めましょう。' : 'この先の回答はありません。' ?></p>
+<?php endif; ?>
+<ul class="p-host__list" data-js-host-list>
+<?php foreach ($answers['items'] as $answer): ?>
+<?= part('partials/host_answer_item', ['answer' => $answer, 'isOpen' => $isOpen, 'slug' => $oogiri->slug]) ?>
+<?php endforeach; ?>
+</ul>
+<?php if ($answers['hasMore']): ?>
+<a class="c-button c-button--secondary u-mt-2" href="<?= esc($moreUrl, 'attr') ?>" data-js-host-more>もっと見る</a>
+<?php endif; ?>
 </section>
 
 <?php if (! $isOpen): ?>
@@ -135,9 +138,6 @@
 </form>
 
 <?php if ($isOpen): ?>
-<?php foreach ($answers as $answer): ?>
-<form class="u-hidden" id="favorite-<?= $answer->id ?>" method="post" action="<?= site_url('host/' . $oogiri->slug . '/favorites/' . $answer->id) ?>"><?= csrf_field() ?></form>
-<?php endforeach; ?>
 <section class="l-section">
 <form method="post" action="<?= site_url('host/' . $oogiri->slug . '/delete') ?>" data-js-confirm="この大喜利を削除します。集まった回答も見られなくなります。よろしいですか？">
 <?= csrf_field() ?>

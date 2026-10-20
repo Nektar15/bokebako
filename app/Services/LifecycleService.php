@@ -93,7 +93,7 @@ final class LifecycleService
     {
         $this->oogiris->where('id', $oogiri->id)->where('status', $from->value)->set($data)->update();
 
-        return $this->oogiris->db->affectedRows() === 1;
+        return $this->oogiris->affectedRows() === 1;
     }
 
     /**

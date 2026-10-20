@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Controllers\BaseController;
+use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use Closure;
 use CodeIgniter\Exceptions\PageNotFoundException;
@@ -99,6 +100,22 @@ abstract class AdminController extends BaseController
     protected function page(): int
     {
         return max(1, (int) $this->request->getGet('page'));
+    }
+
+    /**
+     * 操作して元の画面へ戻る。対象がなければ 404、業務エラー（状態が合わない・重なった）は画面にエラーを出す
+     *
+     * @param callable(): void $action
+     */
+    protected function act(callable $action, string $notice): RedirectResponse
+    {
+        try {
+            $this->orFail($action);
+        } catch (AppException $e) {
+            return $this->backWithErrors(['_' => $e->getMessage()]);
+        }
+
+        return $this->backWithNotice($notice);
     }
 
     /**

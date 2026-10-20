@@ -58,9 +58,7 @@ final class AnswerController extends AdminController
      */
     public function hide(int $id): RedirectResponse
     {
-        $this->orFail(static fn () => service('answerAdmin')->hide($id));
-
-        return $this->backWithNotice("A-{$id} を非表示にしました");
+        return $this->act(static fn () => service('answerAdmin')->hide($id), "A-{$id} を非表示にしました");
     }
 
     /**
@@ -68,9 +66,7 @@ final class AnswerController extends AdminController
      */
     public function publish(int $id): RedirectResponse
     {
-        $this->orFail(static fn () => service('answerAdmin')->publish($id));
-
-        return $this->backWithNotice("A-{$id} を再公開しました");
+        return $this->act(static fn () => service('answerAdmin')->publish($id), "A-{$id} を再公開しました");
     }
 
     /**
@@ -78,8 +74,6 @@ final class AnswerController extends AdminController
      */
     public function delete(int $id): RedirectResponse
     {
-        $this->orFail(static fn () => service('answerAdmin')->delete($id));
-
-        return $this->backWithNotice("A-{$id} を削除しました");
+        return $this->act(static fn () => service('answerAdmin')->delete($id), "A-{$id} を削除しました");
     }
 }

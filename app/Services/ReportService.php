@@ -31,6 +31,7 @@ final class ReportService
         private readonly IdentityService $identity,
         private readonly RateLimitService $rateLimit,
         private readonly SettingService $settings,
+        private readonly ModerationService $moderation,
     ) {
     }
 
@@ -63,17 +64,22 @@ final class ReportService
         if ($already) {
             return;
         }
-        $this->reports->insert([
-            'target_type'     => $target->value,
-            'target_id'       => $id,
-            'reason'          => $reason->value,
-            'browser_id_hash' => $browser,
-            'ip_hash'         => $this->identity->ipHash(),
-            'resolved'        => 0,
-        ]);
-        $target === ReportTarget::Answer ? $this->answers->increment($id, 'report_count') : null;
-        $this->oogiris->increment($oogiri->id, 'report_count');
-        service('moderation')->flag($target, $id, 'reported');
+        // 通報の保存と通報数の加算は一緒に成功・失敗させる
+        $this->reports->transaction(function () use ($target, $id, $reason, $browser, $oogiri): void {
+            $this->reports->insert([
+                'target_type'     => $target->value,
+                'target_id'       => $id,
+                'reason'          => $reason->value,
+                'browser_id_hash' => $browser,
+                'ip_hash'         => $this->identity->ipHash(),
+                'resolved'        => 0,
+            ]);
+            if ($target === ReportTarget::Answer) {
+                $this->answers->increment($id, 'report_count');
+            }
+            $this->oogiris->increment($oogiri->id, 'report_count');
+        });
+        $this->moderation->flag($target, $id, 'reported');
 
         // 通報のたびに管理者へ通知。急増時（1時間に surge_count 件超）は cron のまとめ通知に任せる（FEATURES 0-8）
         $recent = $this->reports->where('created_at >=', Time::now()->subHours(1)->toDateTimeString())->countAllResults();
