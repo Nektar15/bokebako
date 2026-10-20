@@ -8,6 +8,10 @@ use App\Entities\OgpJob;
 
 /**
  * OGP 生成記録（ogp_jobs テーブル）の読み書き
+ *
+ * @method OgpJob|null  find(int|string|null $id = null)
+ * @method list<OgpJob> findAll(int $limit = 0, int $offset = 0)
+ * @method OgpJob|null  first()
  */
 final class OgpJobModel extends BaseModel
 {

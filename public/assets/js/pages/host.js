@@ -3,6 +3,15 @@
  * チェックボックス（name="ranks[]"）が本体。JS なしでも 3件までの選択と送信はできる（順位は選んだ順＝DOM順になる）。
  * 送信時は選んだ順で hidden を並べ替え、サーバーは ranks[] の順を 1位から読む。
  */
+import { storage, keys } from '../lib/storage.js';
+import { readConfig } from '../lib/api.js';
+
+// 開催者トークンを localStorage にも持つ（Cookie が消えたときの復旧用）
+const hostConfig = readConfig('host');
+if (hostConfig && hostConfig.slug && hostConfig.token) {
+  storage.set(keys.host(hostConfig.slug), hostConfig.token);
+}
+
 const form = document.querySelector('[data-js-host-form]');
 const picks = [...document.querySelectorAll('[data-js-pick]')];
 if (form && picks.length) {

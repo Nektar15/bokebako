@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Entities\Answer;
+use App\Enums\AnswerStatus;
 use App\Exceptions\NotFoundException;
-use App\Services\Fixtures\AdminAnswerFixture;
+use App\Models\AnswerModel;
+use App\Models\OogiriModel;
 
 /**
  * 回答管理（A-04）：大喜利をまたいだ回答の一覧と、管理者による操作
@@ -32,8 +34,14 @@ final class AnswerAdminService
         '3'   => '3件以上',
     ];
 
+    public function __construct(
+        private readonly AnswerModel $answers,
+        private readonly OogiriModel $oogiris,
+    ) {
+    }
+
     /**
-     * 一覧（検索・絞り込み・ページ）
+     * 一覧（検索・絞り込み・ページ）。お題は oogiris と JOIN して付ける
      *
      * @param AnswerFilter $filter
      *
@@ -41,25 +49,31 @@ final class AnswerAdminService
      */
     public function list(array $filter, int $page): array
     {
-        // TODO(inner): AnswerModel で検索する（oogiris と JOIN してお題を付ける。LIMIT 必須）。戻り値の形は変えない
-        $items = AdminAnswerFixture::all();
+        $builder = $this->answers->builder()
+            ->select('answers.*, oogiris.odai AS odai')
+            ->join('oogiris', 'oogiris.id = answers.oogiri_id');
 
         if ($filter['status'] !== 'all') {
-            $items = array_filter($items, static fn (Answer $a) => $a->status()->value === $filter['status']);
+            $builder->where('answers.status', $filter['status']);
         }
         if ($filter['reports'] !== 'all') {
-            $items = array_filter($items, static fn (Answer $a) => $a->report_count >= (int) $filter['reports']);
+            $builder->where('answers.report_count >=', (int) $filter['reports']);
         }
         if ($filter['q'] !== '') {
-            $items = array_filter($items, static fn (Answer $a) => str_contains($a->body, $filter['q']));
+            $builder->like('answers.body', $filter['q']);
         }
         if ($filter['oogiri'] !== '') {
-            $items = array_filter($items, static fn (Answer $a) => str_contains($a->odai, $filter['oogiri']) || (string) $a->oogiri_id === ltrim($filter['oogiri'], '#'));
+            $o = ltrim($filter['oogiri'], '#');
+            $builder->groupStart()->like('oogiris.odai', $o)->orWhere('oogiris.slug', $o);
+            if (ctype_digit($o)) {
+                $builder->orWhere('oogiris.id', (int) $o);
+            }
+            $builder->groupEnd();
         }
-        $items = array_values($items);
-
-        // 外側フェーズ：件数は見本の数字に合わせる（ページ送りの見た目を確認するため）
-        $total = $filter === ['q' => '', 'oogiri' => '', 'status' => 'all', 'reports' => 'all', 'period' => 'all'] ? 402118 : count($items);
+        OogiriAdminService::applyPeriod($builder, $filter['period'], 'answers.created_at');
+        $total = $builder->countAllResults(false);
+        $rows  = $builder->orderBy('answers.created_at', 'DESC')->orderBy('answers.id', 'DESC')->get(self::PER_PAGE, ($page - 1) * self::PER_PAGE)->getResultArray();
+        $items = array_map(static fn (array $row) => new Answer($row), $rows);
 
         return ['items' => $items, 'total' => $total, 'page' => $page, 'perPage' => self::PER_PAGE, 'pages' => max(1, (int) ceil($total / self::PER_PAGE))];
     }
@@ -69,40 +83,71 @@ final class AnswerAdminService
      */
     public function find(int $id): Answer
     {
-        // TODO(inner): AnswerModel から取得する
-        foreach (AdminAnswerFixture::all() as $answer) {
-            if ($answer->id === $id) {
-                return $answer;
-            }
+        $answer = $this->answers->find($id);
+
+        if ($answer === null) {
+            throw new NotFoundException();
         }
 
-        throw new NotFoundException();
+        return $answer;
     }
 
     /**
-     * 非表示にする（A-04）
+     * 非表示にする（A-04、S-04 の自動処理、AI の自動非表示）。回答数カウンタとキャッシュの整合もここで
      */
-    public function hide(int $id): void
+    public function hide(int $id, ?string $actor = null, string $what = '非表示にした'): void
     {
-        $this->find($id);
-        // TODO(inner): status を hidden に、回答数カウンタの減算、キャッシュ破棄、操作履歴の記録
+        $answer = $this->find($id);
+
+        if ($answer->status() !== AnswerStatus::Visible) {
+            return;
+        }
+        $this->answers->update($id, ['status' => AnswerStatus::Hidden->value]);
+        $this->oogiris->decrement($answer->oogiri_id, 'answer_count');
+        $this->purge($answer);
+        service('adminLog')->record('answer', $id, $what, $actor);
     }
 
     /**
-     * 再公開する（A-04）
+     * 再公開する
      */
     public function publish(int $id): void
     {
-        $this->find($id);
-        // TODO(inner): status を visible に、回答数カウンタの加算、キャッシュ破棄、操作履歴の記録
+        $answer = $this->find($id);
+
+        if ($answer->status() === AnswerStatus::Visible) {
+            return;
+        }
+        $this->answers->update($id, ['status' => AnswerStatus::Visible->value]);
+        $this->oogiris->increment($answer->oogiri_id, 'answer_count');
+        $this->purge($answer);
+        service('adminLog')->record('answer', $id, '再公開');
     }
 
     /**
-     * 削除する（A-04）
+     * 削除する（論理削除）
      */
     public function delete(int $id): void
     {
-        $this->find($id);
-        // TODO(inner): status を deleted に、回答数カウンタの整合、キャッシュ破棄、操作履歴の記録。物理削除はしない
+        $answer = $this->find($id);
+
+        if ($answer->status() === AnswerStatus::Deleted) {
+            return;
+        }
+        if ($answer->status() === AnswerStatus::Visible) {
+            $this->oogiris->decrement($answer->oogiri_id, 'answer_count');
+        }
+        $this->answers->update($id, ['status' => AnswerStatus::Deleted->value, 'rank' => null]);
+        $this->purge($answer);
+        service('adminLog')->record('answer', $id, '削除');
+    }
+
+    private function purge(Answer $answer): void
+    {
+        $oogiri = $this->oogiris->find($answer->oogiri_id);
+
+        if ($oogiri !== null) {
+            service('pageCache')->purgeOogiri($oogiri->slug);
+        }
     }
 }

@@ -8,6 +8,10 @@ use App\Entities\AdminAccount;
 
 /**
  * 管理者アカウント（A-01）（admins テーブル）の読み書き
+ *
+ * @method AdminAccount|null  find(int|string|null $id = null)
+ * @method list<AdminAccount> findAll(int $limit = 0, int $offset = 0)
+ * @method AdminAccount|null  first()
  */
 final class AdminModel extends BaseModel
 {

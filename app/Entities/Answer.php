@@ -34,4 +34,22 @@ final class Answer extends Entity
     {
         return AnswerStatus::from($this->attributes['status']);
     }
+
+    /**
+     * 投稿元の表示用（先頭4文字…末尾4文字。A-04。ハッシュ全体は出さない）
+     */
+    public function shortIpHash(): string
+    {
+        return self::shorten((string) ($this->attributes['ip_hash'] ?? ''));
+    }
+
+    public function shortBrowserIdHash(): string
+    {
+        return self::shorten((string) ($this->attributes['browser_id_hash'] ?? ''));
+    }
+
+    private static function shorten(string $hash): string
+    {
+        return strlen($hash) > 12 ? substr($hash, 0, 4) . '…' . substr($hash, -4) : $hash;
+    }
 }

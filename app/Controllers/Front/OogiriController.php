@@ -6,7 +6,9 @@ namespace App\Controllers\Front;
 
 use App\Controllers\BaseController;
 use App\Entities\Oogiri;
+use App\Enums\OgpKind;
 use App\Enums\OogiriStatus;
+use App\Services\PageCacheService;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -46,8 +48,8 @@ final class OogiriController extends BaseController
             'shareUrl'  => service('share')->url($oogiri),
             'intentUrl' => service('share')->recruitIntent($oogiri),
             'hostUrl'   => site_url('host/' . $slug),
-            'ogpUrl'    => base_url('ogp/recruit/' . $slug . '.png'),
-            'hostToken' => 'fixture-host-token', // TODO(inner): 開催時に発行したトークン（この画面と U-08 からだけ渡す）
+            'ogpUrl'    => service('ogp')->url(OgpKind::Recruit, $slug),
+            'hostToken' => service('host')->tokenFromRequest($oogiri), // 開催時に発行したトークン（この画面と U-08 からだけ渡す）
         ]);
     }
 
@@ -56,6 +58,8 @@ final class OogiriController extends BaseController
      */
     private function closedPage(Oogiri $oogiri): string
     {
+        $this->cachePage(PageCacheService::TTL_RESULT);
+
         return view('front/u11_closed', ['oogiri' => $oogiri]);
     }
 
@@ -69,9 +73,14 @@ final class OogiriController extends BaseController
         $format = service('display');
         $share  = service('share');
 
+        if ($page === 1) {
+            $this->cachePage(PageCacheService::TTL_RESULT); // 結果ページはキャッシュ配信（SPEC 4.1）。確定・非表示で捨てる
+        }
+
         return view('front/u10_result', [
             'oogiri'          => $oogiri,
             'period'          => $format->period($oogiri->starts_at, $oogiri->ends_at),
+            'ogpUrl'          => service('ogp')->url(OgpKind::Result, $oogiri->slug),
             'ranked'          => $ranked,
             'answers'         => service('answer')->listVisible($oogiri, $page),
             'resultIntentUrl' => $share->resultIntent($oogiri, $ranked[0] ?? null),
@@ -87,6 +96,10 @@ final class OogiriController extends BaseController
     {
         $page  = max(1, (int) $this->request->getGet('page'));
         $share = service('share');
+
+        if ($page === 1) {
+            $this->cachePage(PageCacheService::TTL_RESULT);
+        }
 
         return view('front/u12_no_result', [
             'oogiri'          => $oogiri,

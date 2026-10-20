@@ -44,7 +44,8 @@ final class HostController extends BaseController
             'remaining'          => $format->remaining($oogiri->ends_at),
             'selectionRemaining' => $oogiri->selection_deadline !== null ? $format->remaining($oogiri->selection_deadline) : '',
             'pv'                 => $format->number($oogiri->pv),
-            'answers'            => service('answer')->listVisible($oogiri, 1)['items'],
+            'answers'            => service('host')->answers($oogiri),
+            'hostToken'          => service('host')->tokenFromRequest($oogiri),
             'shareUrl'           => $share->url($oogiri),
             'intentUrl'          => $share->recruitIntent($oogiri),
             'errors'             => session()->getFlashdata('errors') ?? [],
@@ -66,7 +67,18 @@ final class HostController extends BaseController
             return redirect()->back()->with('errors', ['_' => $e->getMessage()]);
         }
 
-        return redirect()->to('/host/' . $slug);
+        return redirect()->to('/host/' . $slug)->withCookies();
+    }
+
+    /**
+     * localStorage に残っていた開催者トークンで Cookie を復元する（JS からの POST。U-08）
+     */
+    public function restore(string $slug): RedirectResponse
+    {
+        $oogiri = $this->findOogiriOrFail($slug);
+        $ok     = service('host')->restoreToken($oogiri, (string) $this->request->getPost('token'));
+
+        return redirect()->to('/host/' . $slug . ($ok ? '' : '?restored=1'))->withCookies();
     }
 
     public function favorite(string $slug, int $answerId): RedirectResponse
@@ -92,7 +104,7 @@ final class HostController extends BaseController
             return redirect()->back()->with('errors', ['_' => $e->getMessage()]);
         }
 
-        return redirect()->to('/o/' . $slug . '?fixture=decided'); // TODO(inner): 本実装後は ?fixture= を外す
+        return redirect()->to('/o/' . $slug);
     }
 
     public function delete(string $slug): RedirectResponse

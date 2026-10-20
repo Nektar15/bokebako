@@ -7,6 +7,8 @@ namespace App\Controllers\Front;
 use App\Controllers\BaseController;
 use App\Exceptions\AppException;
 use App\Exceptions\ValidationException;
+use App\Libraries\Captcha;
+use App\Services\RateLimitService;
 use App\Services\SettingService;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -27,6 +29,7 @@ final class TopController extends BaseController
             'errors'    => session()->getFlashdata('errors') ?? [],
             'old'       => ['odai' => (string) old('odai'), 'passphrase' => (string) old('passphrase'), 'from' => (string) old('from')],
             'ads'       => service('ads')->slots(),
+            'captcha'   => service('rateLimit')->needsCaptcha(RateLimitService::ACTION_CREATE) ? (new Captcha())->siteKey() : '',
         ]);
     }
 
@@ -39,16 +42,18 @@ final class TopController extends BaseController
             'odai'       => (string) $this->request->getPost('odai'),
             'passphrase' => (string) $this->request->getPost('passphrase'),
             'from'       => (string) $this->request->getPost('from'),
+            'captcha'    => (string) $this->request->getPost(Captcha::FIELD),
         ];
 
         try {
-            $oogiri = service('oogiri')->create($input);
+            $oogiri = service('oogiri')->create($input)['oogiri'];
         } catch (ValidationException $e) {
             return redirect()->back()->withInput()->with('errors', $e->errors);
         } catch (AppException $e) {
             return redirect()->back()->withInput()->with('errors', ['_' => $e->getMessage()]);
         }
 
-        return redirect()->to('/o/' . $oogiri->slug . '/created');
+        // 開催者トークンの Cookie は共有 Response に積まれるので、リダイレクトに写して返す
+        return redirect()->to('/o/' . $oogiri->slug . '/created')->withCookies();
     }
 }

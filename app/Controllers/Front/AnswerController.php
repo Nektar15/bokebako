@@ -8,6 +8,7 @@ use App\Controllers\BaseController;
 use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
+use App\Libraries\Captcha;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -25,7 +26,7 @@ final class AnswerController extends BaseController
         $oogiri = $this->findOogiriOrFail($slug);
 
         try {
-            service('answer')->create($oogiri, ['body' => (string) $this->request->getPost('body')]);
+            service('answer')->create($oogiri, ['body' => (string) $this->request->getPost('body'), 'captcha' => (string) $this->request->getPost(Captcha::FIELD)]);
         } catch (ValidationException $e) {
             return redirect()->back()->withInput()->with('errors', $e->errors);
         } catch (AppException $e) {
@@ -100,6 +101,7 @@ final class AnswerController extends BaseController
         } catch (NotFoundException) {
             return redirect()->to('/o/' . $slug);
         }
+        service('ogp')->ensureAnswer($oogiri, $answer); // 回答シェア用 OGP は初回アクセス時に生成（S-07）
 
         return $this->renderAnswerPage($oogiri, $answer);
     }

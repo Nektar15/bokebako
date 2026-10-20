@@ -8,6 +8,10 @@ use App\Entities\Restriction;
 
 /**
  * 投稿元の制限（restrictions テーブル）の読み書き
+ *
+ * @method Restriction|null  find(int|string|null $id = null)
+ * @method list<Restriction> findAll(int $limit = 0, int $offset = 0)
+ * @method Restriction|null  first()
  */
 final class RestrictionModel extends BaseModel
 {

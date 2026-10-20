@@ -14,7 +14,7 @@ use CodeIgniter\HTTP\ResponseInterface;
 /**
  * 管理画面の認証 Filter
  *
- * TODO(inner): A-01 実装時に本認証へ置き換える。
+ * 仮認証：A-01（ログイン・2FA）の実装時に本認証へ置き換える（HANDOFF「残課題」）。
  * それまでは CODING_RULES 7-1 の仮認証で動かす。
  *   development … 固定の仮管理者（上位管理者）でログイン済みとして扱う
  *   staging     … ADMIN_ALLOWED_IPS に含まれる IP だけ仮管理者。それ以外は 403

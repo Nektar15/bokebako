@@ -6,12 +6,18 @@ namespace App\Services;
 
 use App\Entities\Answer;
 use App\Entities\Oogiri;
+use App\Enums\AnswerStatus;
 use App\Enums\ErrorCode;
+use App\Enums\EventName;
+use App\Enums\NgWordAction;
+use App\Enums\ReportTarget;
 use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
-use App\Services\Fixtures\FixtureContext;
-use App\Services\Fixtures\OogiriFixture;
+use App\Libraries\Captcha;
+use App\Models\AnswerModel;
+use App\Models\OogiriModel;
+use CodeIgniter\I18n\Time;
 
 /**
  * 回答の取得・登録・回答済み判定（U-04〜U-07、U-10、U-12）
@@ -20,28 +26,42 @@ final class AnswerService
 {
     public const PER_PAGE = 20;
 
+    /**
+     * 直前に投稿した回答の ID を置くセッションのキー（U-06）
+     */
+    public const SESSION_LAST = 'bk_last_answer';
+
     public function __construct(
+        private readonly AnswerModel $answers,
+        private readonly OogiriModel $oogiris,
         private readonly SettingService $settings,
         private readonly DisplayService $display,
+        private readonly IdentityService $identity,
+        private readonly NgWordService $ngWords,
+        private readonly RateLimitService $rateLimit,
     ) {
     }
 
     /**
-     * 公開中の回答を新着順で返す
+     * 公開中の回答を新着順で返す（ページング）。is_mine はブラウザIDで判定
      *
      * @return array{items: list<Answer>, hasMore: bool, page: int}
      */
     public function listVisible(Oogiri $oogiri, int $page = 1): array
     {
-        // TODO(inner): AnswerModel から status=visible を新着順・ページングで取得。is_mine はブラウザIDで判定
-        $all   = OogiriFixture::answers(FixtureContext::name(), $oogiri->id);
-        $items = array_slice($all, ($page - 1) * self::PER_PAGE, self::PER_PAGE);
+        $items = $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)
+            ->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')
+            ->findAll(self::PER_PAGE + 1, ($page - 1) * self::PER_PAGE);
+        $hasMore = count($items) > self::PER_PAGE;
+        $items   = array_slice($items, 0, self::PER_PAGE);
+        $mine    = $this->identity->browserIdHash();
 
         foreach ($items as $answer) {
+            $answer->is_mine      = $mine !== '' && $answer->browser_id_hash === $mine;
             $answer->posted_label = $this->display->ago($answer->created_at); // View で日時計算をしないため、ここで文字列にする
         }
 
-        return ['items' => $items, 'hasMore' => $oogiri->answer_count > $page * self::PER_PAGE, 'page' => $page];
+        return ['items' => $items, 'hasMore' => $hasMore, 'page' => $page];
     }
 
     /**
@@ -51,50 +71,49 @@ final class AnswerService
      */
     public function ranked(Oogiri $oogiri): array
     {
-        $ranked = array_filter(OogiriFixture::answers(FixtureContext::name(), $oogiri->id), static fn (Answer $a) => $a->rank !== null);
-        usort($ranked, static fn (Answer $a, Answer $b) => $a->rank <=> $b->rank);
-
-        return array_values($ranked);
+        return $this->answers->where('oogiri_id', $oogiri->id)->where('rank IS NOT NULL')->where('status', AnswerStatus::Visible->value)->orderBy('rank', 'ASC')->findAll(3);
     }
 
     /**
+     * 公開中の回答を1件（回答シェア用URL）
+     *
      * @throws NotFoundException
      */
     public function find(Oogiri $oogiri, int $answerId): Answer
     {
-        foreach (OogiriFixture::answers(FixtureContext::name(), $oogiri->id) as $answer) {
-            if ($answer->id === $answerId) {
-                return $answer;
-            }
+        $answer = $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)->find($answerId);
+
+        if ($answer === null) {
+            throw new NotFoundException();
         }
 
-        throw new NotFoundException();
+        return $answer;
     }
 
     /**
-     * このブラウザがこの大喜利に回答済みか（ブラウザ保存情報＋サーバー側の投稿記録：U-07）
+     * このブラウザがこの大喜利に回答済みか（サーバー側の投稿記録で判定：U-07）
      */
     public function hasAnswered(Oogiri $oogiri): bool
     {
-        // TODO(inner): ブラウザIDのハッシュで answers を検索する
-        return FixtureContext::name() !== 'not_answered';
+        $mine = $this->identity->browserIdHash();
+
+        return $mine !== '' && $this->answers->where('oogiri_id', $oogiri->id)->where('browser_id_hash', $mine)->countAllResults() > 0;
     }
 
     /**
-     * 直前に投稿した回答（U-06）。なければ null
+     * 直前に投稿した回答（U-06。セッションから）。なければ null
      */
     public function lastPosted(Oogiri $oogiri): ?Answer
     {
-        // TODO(inner): セッション（フラッシュ）から取得する
-        $answers = OogiriFixture::answers(FixtureContext::name(), $oogiri->id);
+        $id = (int) session()->get(self::SESSION_LAST . ':' . $oogiri->slug);
 
-        return $answers[0] ?? null;
+        return $id > 0 ? $this->answers->where('oogiri_id', $oogiri->id)->find($id) : null;
     }
 
     /**
      * 回答を登録する（U-05「同意して回答する」）
      *
-     * @param array{body?: string} $input
+     * @param array{body?: string, captcha?: string} $input
      *
      * @throws AppException        締切後（CLOSED）、レート制限
      * @throws ValidationException 文字数・NGワード
@@ -102,25 +121,47 @@ final class AnswerService
     public function create(Oogiri $oogiri, array $input): Answer
     {
         // 締切判定は画面の表示に依存せず、ここで必ず行う（S-01）
-        if (! $oogiri->status()->acceptsAnswers()) {
+        if (! $oogiri->status()->acceptsAnswers() || Time::now()->isAfter($oogiri->ends_at)) {
             throw new AppException(ErrorCode::Closed);
         }
-
+        $this->rateLimit->assertAllowed(RateLimitService::ACTION_ANSWER);
         $errors = $this->validate($input);
+        $body   = trim((string) ($input['body'] ?? ''));
+        $ng     = ['action' => null, 'detail' => ''];
 
-        // TODO(inner): NGワード判定、連続投稿の判定（S-03。閾値は運用設定）、投稿元識別情報の保存
-        match (FixtureContext::error()) {
-            'ngword'    => $errors['body'] = ErrorCode::NgWord->message(),
-            'ratelimit' => throw new AppException(ErrorCode::RateLimited),
-            default     => null,
-        };
+        if ($errors === []) {
+            $ng = $this->ngWords->check($body);
 
+            if ($ng['action'] === NgWordAction::Reject) {
+                $errors['body'] = ErrorCode::NgWord->message();
+            }
+        }
+        if ($errors === [] && $this->rateLimit->needsCaptcha(RateLimitService::ACTION_ANSWER) && ! (new Captcha())->verify((string) ($input['captcha'] ?? ''))) {
+            $errors['_'] = 'CAPTCHA の確認に失敗しました。もう一度お試しください';
+        }
         if ($errors !== []) {
             throw new ValidationException($errors);
         }
 
-        // TODO(inner): 保存、回答数カウンタの加算、「回答」イベントの記録、回答済みの記録
-        return OogiriFixture::answers('open', $oogiri->id)[0];
+        $id = $this->answers->insert([
+            'oogiri_id'       => $oogiri->id,
+            'body'            => $body,
+            'status'          => AnswerStatus::Visible->value,
+            'browser_id_hash' => $this->identity->browserIdHash(),
+            'ip_hash'         => $this->identity->ipHash(),
+        ]);
+        $this->oogiris->increment($oogiri->id, 'answer_count');
+        session()->set(self::SESSION_LAST . ':' . $oogiri->slug, $id);
+        service('event')->record(EventName::Answer, ['oogiri_id' => $oogiri->id, 'answer_id' => $id]);
+
+        if ($ng['action'] === NgWordAction::Review) {
+            service('moderation')->flag(ReportTarget::Answer, $id, 'ng_review', $ng['detail']);
+        }
+        if ($this->rateLimit->isBursting(RateLimitService::ACTION_ANSWER)) {
+            service('moderation')->flag(ReportTarget::Answer, $id, 'abnormal', null, '同一環境から' . $this->settings->int('burst_window_sec') . '秒間に' . $this->settings->int('burst_count') . '件を超える投稿');
+        }
+
+        return $this->answers->find($id);
     }
 
     /**

@@ -8,6 +8,10 @@ use App\Entities\AiJudgement;
 
 /**
  * AI補助判定（S-05）とモデレーションの検知記録（ai_judgements テーブル）の読み書き
+ *
+ * @method AiJudgement|null  find(int|string|null $id = null)
+ * @method list<AiJudgement> findAll(int $limit = 0, int $offset = 0)
+ * @method AiJudgement|null  first()
  */
 final class AiJudgementModel extends BaseModel
 {

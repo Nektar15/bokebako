@@ -39,9 +39,9 @@
 </section>
 
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($answerIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="answer_share" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>" data-js-track-answer="<?= $answer->id ?>"><?= $this->include('partials/icon_share') ?>この回答をXでシェアする</a>
+<a class="c-button c-button--x" href="<?= esc($answerIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_answer" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>" data-js-track-answer="<?= $answer->id ?>"><?= $this->include('partials/icon_share') ?>この回答をXでシェアする</a>
 <div class="p-answered__pair">
-<a class="c-button c-button--secondary p-answered__half" href="<?= esc($oogiriIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="recruit_share" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>">大喜利だけ<br>シェアする</a>
+<a class="c-button c-button--secondary p-answered__half" href="<?= esc($oogiriIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_recruit" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>">大喜利だけ<br>シェアする</a>
 <a class="c-button c-button--secondary c-button--accent p-answered__half" href="<?= site_url('o/' . $oogiri->slug . '/answers') ?>">みんなの回答<br>を見る（<?= esc((string) $oogiri->answer_count) ?>）</a>
 </div>
 </section>

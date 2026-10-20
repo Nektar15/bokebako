@@ -8,6 +8,10 @@ use App\Entities\Oogiri;
 
 /**
  * 大喜利（oogiris テーブル）の読み書き
+ *
+ * @method Oogiri|null  find(int|string|null $id = null)
+ * @method list<Oogiri> findAll(int $limit = 0, int $offset = 0)
+ * @method Oogiri|null  first()
  */
 final class OogiriModel extends BaseModel
 {

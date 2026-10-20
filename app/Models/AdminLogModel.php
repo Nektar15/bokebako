@@ -8,6 +8,10 @@ use App\Entities\AdminLog;
 
 /**
  * 操作履歴（admin_logs テーブル）の読み書き
+ *
+ * @method AdminLog|null  find(int|string|null $id = null)
+ * @method list<AdminLog> findAll(int $limit = 0, int $offset = 0)
+ * @method AdminLog|null  first()
  */
 final class AdminLogModel extends BaseModel
 {

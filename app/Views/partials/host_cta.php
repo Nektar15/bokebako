@@ -8,4 +8,4 @@
  */
 $label ??= '自分も大喜利を開催する';
 ?>
-<a class="c-button c-button--primary" href="<?= site_url('/?from=' . rawurlencode($slug)) ?>" data-js-track="create_click" data-js-track-oogiri="<?= esc($slug, 'attr') ?>" data-js-track-from="<?= esc($from, 'attr') ?>"><?= esc($label) ?></a>
+<a class="c-button c-button--primary" href="<?= site_url('/?from=' . rawurlencode($slug)) ?>" data-js-track="click_create" data-js-track-oogiri="<?= esc($slug, 'attr') ?>" data-js-track-from="<?= esc($from, 'attr') ?>"><?= esc($label) ?></a>

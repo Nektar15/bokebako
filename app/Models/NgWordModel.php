@@ -8,6 +8,10 @@ use App\Entities\NgWord;
 
 /**
  * NGワード（ng_words テーブル）の読み書き
+ *
+ * @method NgWord|null  find(int|string|null $id = null)
+ * @method list<NgWord> findAll(int $limit = 0, int $offset = 0)
+ * @method NgWord|null  first()
  */
 final class NgWordModel extends BaseModel
 {

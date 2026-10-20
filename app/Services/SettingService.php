@@ -6,15 +6,22 @@ namespace App\Services;
 
 use App\Entities\AdminLog;
 use App\Exceptions\ValidationException;
-use App\Services\Fixtures\SettingFixture;
+use App\Models\AdminLogModel;
+use App\Models\AiJudgementModel;
+use App\Models\SettingModel;
+use CodeIgniter\I18n\Time;
 
 /**
  * 運用設定（A-10）の読み出しと保存
  *
- * TODO(inner): settings テーブルから読み、キャッシュする。キー名と初期値はここが正。
+ * settings テーブルの値で DEFAULTS を上書きし、キャッシュする（毎リクエストで DB を引かない：FEATURES 0-8）。
+ * キー名と初期値はここが正。
  */
 final class SettingService
 {
+    public const CACHE_KEY = 'settings';
+    public const CACHE_TTL = 3600;
+
     /**
      * 連続投稿の制限方法（値 => 表示名）。SPEC S-03
      */
@@ -85,19 +92,24 @@ final class SettingService
         '絶対に売れない○○の商品名とは？',
     ];
 
+    /**
+     * @var array<string, bool|int|list<string>|string>|null
+     */
+    private ?array $values = null;
+
     public function int(string $key): int
     {
-        return (int) self::DEFAULTS[$key];
+        return (int) $this->all()[$key];
     }
 
     public function string(string $key): string
     {
-        return (string) self::DEFAULTS[$key];
+        return (string) $this->all()[$key];
     }
 
     public function bool(string $key): bool
     {
-        return (bool) self::DEFAULTS[$key];
+        return (bool) $this->all()[$key];
     }
 
     /**
@@ -105,18 +117,54 @@ final class SettingService
      */
     public function list(string $key): array
     {
-        return (array) self::DEFAULTS[$key];
+        return (array) $this->all()[$key];
     }
 
     /**
-     * すべての設定値（A-10 のフォームの初期値）
+     * すべての設定値（DEFAULTS を settings テーブルの値で上書きしたもの。キャッシュ済み）
      *
      * @return array<string, bool|int|list<string>|string>
      */
     public function all(): array
     {
-        // TODO(inner): settings テーブルの値で DEFAULTS を上書きして返す
-        return self::DEFAULTS;
+        if ($this->values !== null) {
+            return $this->values;
+        }
+        $stored = cache(self::CACHE_KEY);
+
+        if (! is_array($stored)) {
+            $stored = [];
+
+            foreach ((new SettingModel())->findAll() as $row) {
+                $stored[$row['name']] = $row['value'];
+            }
+            cache()->save(self::CACHE_KEY, $stored, self::CACHE_TTL);
+        }
+        $values = self::DEFAULTS;
+
+        foreach ($stored as $key => $raw) {
+            if (! array_key_exists($key, self::DEFAULTS)) {
+                continue;
+            }
+            $default      = self::DEFAULTS[$key];
+            $values[$key] = match (true) {
+                is_bool($default)  => $raw === '1',
+                is_int($default)   => (int) $raw,
+                is_array($default) => $raw === '' ? [] : explode(',', $raw),
+                default            => (string) $raw,
+            };
+        }
+
+        return $this->values = $values;
+    }
+
+    /**
+     * キャッシュを捨てる（保存後、テスト）
+     */
+    public function clearCache(): void
+    {
+        $this->values = null;
+        cache()->delete(self::CACHE_KEY);
     }
 
     /**
@@ -134,8 +182,11 @@ final class SettingService
      */
     public function aiMonthlyUsed(): int
     {
-        // TODO(inner): 今月の AI 判定件数を数える
-        return 1284;
+        return (new AiJudgementModel())
+            ->where('queued', 0)
+            ->where('verdict !=', 'none')
+            ->where('updated_at >=', Time::now()->format('Y-m-01 00:00:00'))
+            ->countAllResults();
     }
 
     /**
@@ -145,8 +196,7 @@ final class SettingService
      */
     public function history(): array
     {
-        // TODO(inner): admin_logs から設定変更の分を取る
-        return SettingFixture::history();
+        return (new AdminLogModel())->where('target_type', 'setting')->orderBy('created_at', 'DESC')->findAll(20);
     }
 
     /**
@@ -189,6 +239,48 @@ final class SettingService
         if ($errors !== []) {
             throw new ValidationException($errors);
         }
-        // TODO(inner): settings テーブルへ保存、設定キャッシュの破棄、変更内容を操作履歴に記録
+        $before  = $this->all();
+        $model   = new SettingModel();
+        $changes = [];
+
+        foreach (self::DEFAULTS as $key => $default) {
+            $value = match (true) {
+                is_bool($default)  => ($input[$key] ?? '') === '1',
+                is_int($default)   => (int) $input[$key],
+                is_array($default) => array_values((array) ($input[$key] ?? [])),
+                default            => (string) $input[$key],
+            };
+            $raw = match (true) {
+                is_bool($value)  => $value ? '1' : '0',
+                is_array($value) => implode(',', $value),
+                default          => (string) $value,
+            };
+            $row = $model->where('name', $key)->first();
+            $row === null ? $model->insert(['name' => $key, 'value' => $raw]) : $model->update($row['id'], ['value' => $raw]);
+
+            if ($before[$key] !== $value) {
+                $changes[] = $key . ' ' . $this->describe($before[$key]) . ' → ' . $this->describe($value);
+            }
+        }
+        $this->clearCache();
+
+        if ($changes !== []) {
+            service('adminLog')->record('setting', null, implode('、', $changes));
+        }
+    }
+
+    /**
+     * 変更履歴に書く値の表記
+     *
+     * @param bool|int|list<string>|string $value
+     */
+    private function describe(array|bool|int|string $value): string
+    {
+        return match (true) {
+            is_bool($value)  => $value ? 'ON' : 'OFF',
+            is_array($value) => implode('/', $value),
+            is_int($value)   => number_format($value),
+            default          => str_replace("\n", ' ', $value),
+        };
     }
 }

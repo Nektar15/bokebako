@@ -23,6 +23,7 @@
 <h1 class="c-heading c-heading--sm">開催者の確認</h1>
 <p class="u-sub">このブラウザには開催者の情報がありません。開催したときに決めた合言葉を入力してください。</p>
 <?= part('partials/odai_card', ['odai' => $oogiri->odai, 'raised' => false]) ?>
+<form class="u-hidden" method="post" action="<?= site_url('host/' . $oogiri->slug . '/restore') ?>" data-js-restore-form><?= csrf_field() ?><input type="hidden" name="token" value="" data-js-restore-token></form>
 <form class="c-card c-card--raised" method="post" action="<?= site_url('host/' . $oogiri->slug . '/recover') ?>" data-js-once>
 <?= csrf_field() ?>
 <?php if (isset($errors['_'])): ?><p class="c-field__error" role="alert"><?= esc($errors['_']) ?></p><?php endif; ?>
@@ -36,4 +37,9 @@
 </form>
 <a class="c-button c-button--ghost" href="<?= site_url('o/' . $oogiri->slug) ?>">回答ページへ戻る</a>
 </section>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script type="application/json" data-js-config="host"><?= json_encode(['slug' => $oogiri->slug], JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
+<script type="module" src="<?= asset_url('js/pages/recover.js') ?>"></script>
 <?= $this->endSection() ?>

@@ -4,16 +4,26 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Entities\Answer;
 use App\Entities\OgpJob;
+use App\Entities\Oogiri;
 use App\Enums\OgpKind;
+use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
-use App\Services\Fixtures\OgpFixture;
+use App\Libraries\OgpImage;
+use App\Models\AnswerModel;
+use App\Models\OgpJobModel;
+use App\Models\OogiriModel;
 use CodeIgniter\HTTP\Files\UploadedFile;
+use CodeIgniter\I18n\Time;
+use GdImage;
+use Throwable;
 
 /**
- * OGP 画像の管理（A-08）：プレビュー・再生成・テンプレート画像の差し替え
+ * OGP 画像の生成・再生成・テンプレート画像の差し替え（S-07、A-08）
  *
- * 画像の生成そのものは工程4で app/Libraries/ に置く（S-07）。
+ * 画像は public/ogp/{kind}/{key}.png に保存して静的配信する（SPEC 4.1）。key は募集用・結果用がスラッグ、回答シェア用が回答ID。
+ * 募集用は開催時、結果用は確定時、回答シェア用は初回アクセス時に生成する。
  */
 final class OgpService
 {
@@ -25,19 +35,74 @@ final class OgpService
         'logo'       => 'ロゴ',
     ];
 
+    public function __construct(
+        private readonly OgpImage $image,
+        private readonly OgpJobModel $jobs,
+        private readonly OogiriModel $oogiris,
+        private readonly AnswerModel $answers,
+    ) {
+    }
+
+    /**
+     * 画像の公開 URL。ファイルがなければ既定の画像（public/assets/img/ogp-default.png）
+     */
+    public function url(OgpKind $kind, string $key): string
+    {
+        $path = $this->path($kind, $key);
+
+        return is_file($path) ? base_url('ogp/' . $kind->value . '/' . $key . '.png') . '?v=' . filemtime($path) : base_url('assets/img/ogp-default.png');
+    }
+
+    public function path(OgpKind $kind, string $key): string
+    {
+        return FCPATH . 'ogp/' . $kind->value . '/' . basename($key) . '.png';
+    }
+
+    public function exists(OgpKind $kind, string $key): bool
+    {
+        return is_file($this->path($kind, $key));
+    }
+
+    /**
+     * 募集用（開催時）
+     */
+    public function generateRecruit(Oogiri $oogiri, string $actor = AdminLogService::ACTOR_AUTO): bool
+    {
+        return $this->run(OgpKind::Recruit, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->recruit($oogiri->odai));
+    }
+
+    /**
+     * 結果用（確定時）
+     */
+    public function generateResult(Oogiri $oogiri, ?Answer $first, string $actor = AdminLogService::ACTOR_AUTO): bool
+    {
+        return $this->run(OgpKind::Result, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->result($oogiri->odai, $first?->body ?? '（選出なし）', $oogiri->answer_count));
+    }
+
+    /**
+     * 回答シェア用（初回アクセス時。すでにあれば何もしない）
+     */
+    public function ensureAnswer(Oogiri $oogiri, Answer $answer): bool
+    {
+        if ($this->exists(OgpKind::Answer, (string) $answer->id)) {
+            return true;
+        }
+
+        return $this->run(OgpKind::Answer, $answer->id, (string) $answer->id, 'A-' . $answer->id, AdminLogService::ACTOR_AUTO, fn () => $this->image->answer($oogiri->odai, $answer->body));
+    }
+
     /**
      * 最近の生成（新しい順）
      *
      * @return list<OgpJob>
      */
-    public function recentJobs(): array
+    public function recentJobs(int $limit = 20): array
     {
-        // TODO(inner): ogp_jobs から新しい順に取る（LIMIT 必須）
-        return OgpFixture::recentJobs();
+        return $this->jobs->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->findAll($limit);
     }
 
     /**
-     * 個別に再生成する
+     * 個別に再生成する（A-08）
      *
      * @param string $target 大喜利のURL・スラッグ・ID、または回答ID（例：A-90412）
      *
@@ -46,15 +111,38 @@ final class OgpService
     public function regenerate(OgpKind $kind, string $target): void
     {
         $target = trim($target);
+        $actor  = service('currentAdmin')->has() ? service('currentAdmin')->get()->name : AdminLogService::ACTOR_AUTO;
 
         if ($target === '') {
             throw new ValidationException(['target' => $kind === OgpKind::Answer ? '回答IDを入力してください' : '大喜利のURL・スラッグ・IDを入力してください']);
         }
-        // TODO(inner): 対象を特定して画像を生成し直し、ogp_jobs に記録する
+
+        try {
+            if ($kind === OgpKind::Answer) {
+                $answer = $this->answers->find((int) ltrim(strtoupper($target), 'A-'));
+                $oogiri = $answer !== null ? $this->oogiris->find($answer->oogiri_id) : null;
+
+                if ($answer === null || $oogiri === null) {
+                    throw new NotFoundException();
+                }
+                $ok = $this->run($kind, $answer->id, (string) $answer->id, 'A-' . $answer->id, $actor, fn () => $this->image->answer($oogiri->odai, $answer->body));
+            } else {
+                $oogiri = $this->findOogiri($target);
+                $ok     = $kind === OgpKind::Recruit
+                    ? $this->generateRecruit($oogiri, $actor)
+                    : $this->generateResult($oogiri, $this->answers->where('oogiri_id', $oogiri->id)->where('rank', 1)->first(), $actor);
+            }
+        } catch (NotFoundException) {
+            throw new ValidationException(['target' => '対象が見つかりません']);
+        }
+
+        if (! $ok) {
+            throw new ValidationException(['target' => '生成に失敗しました（フォントの配置を確認してください）']);
+        }
     }
 
     /**
-     * テンプレートの背景・ロゴを差し替える
+     * テンプレートの背景・ロゴを差し替える（writable/ogp-templates/）
      *
      * @param string $asset ASSETS のキー
      *
@@ -68,6 +156,64 @@ final class OgpService
         if ($file === null || ! $file->isValid()) {
             throw new ValidationException(['file' => '画像ファイルを選んでください']);
         }
-        // TODO(inner): PNG/JPG の確認、writable/ogp-templates/ へ保存、操作履歴の記録
+        if (! in_array($file->getMimeType(), ['image/png', 'image/jpeg'], true)) {
+            throw new ValidationException(['file' => 'PNG か JPG の画像を選んでください']);
+        }
+        $dir  = WRITEPATH . 'ogp-templates';
+        $name = ($asset === 'logo' ? 'logo' : $kind->value . '-background') . '.png';
+
+        if (! is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+        $file->move($dir, $name, true);
+        service('adminLog')->record('ogp', null, $kind->label() . 'の' . self::ASSETS[$asset] . 'を差し替え');
+    }
+
+    /**
+     * 生成して記録する。失敗しても例外にしない（投稿の流れを止めない）
+     *
+     * @param callable(): GdImage $draw
+     */
+    private function run(OgpKind $kind, int $targetId, string $key, string $target, string $actor, callable $draw): bool
+    {
+        $error = null;
+
+        try {
+            $this->image->save($draw(), $this->path($kind, $key));
+        } catch (Throwable $e) {
+            $error = mb_substr($e->getMessage(), 0, 255);
+            log_message('error', 'OGP 生成に失敗 (' . $kind->value . ' ' . $targetId . '): ' . $e->getMessage());
+        }
+        $this->jobs->insert([
+            'kind'       => $kind->value,
+            'target_id'  => $targetId,
+            'target'     => mb_substr($target, 0, 255),
+            'actor'      => $actor,
+            'succeeded'  => $error === null ? 1 : 0,
+            'error'      => $error,
+            'created_at' => Time::now()->toDateTimeString(),
+        ]);
+
+        return $error === null;
+    }
+
+    /**
+     * @throws NotFoundException
+     */
+    private function findOogiri(string $target): Oogiri
+    {
+        $target = ltrim($target, '#');
+        $oogiri = ctype_digit($target) ? $this->oogiris->find((int) $target) : null;
+
+        if ($oogiri === null) {
+            // URL かスラッグ
+            $slug   = preg_match('#/o/([A-Za-z0-9]+)#', $target, $m) === 1 ? $m[1] : $target;
+            $oogiri = $this->oogiris->where('slug', $slug)->first();
+        }
+        if ($oogiri === null) {
+            throw new NotFoundException();
+        }
+
+        return $oogiri;
     }
 }

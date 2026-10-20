@@ -39,6 +39,6 @@ abstract class BaseModel extends Model
      */
     public function decrement(int $id, string $column, int $by = 1): void
     {
-        $this->builder()->where('id', $id)->set($column, "GREATEST({$column} - {$by}, 0)", false)->update();
+        $this->builder()->where('id', $id)->set($column, "CASE WHEN {$column} >= {$by} THEN {$column} - {$by} ELSE 0 END", false)->update();
     }
 }

@@ -8,6 +8,10 @@ use App\Entities\Event;
 
 /**
  * 計測イベント（生ログ）（events テーブル）の読み書き
+ *
+ * @method Event|null  find(int|string|null $id = null)
+ * @method list<Event> findAll(int $limit = 0, int $offset = 0)
+ * @method Event|null  first()
  */
 final class EventModel extends BaseModel
 {

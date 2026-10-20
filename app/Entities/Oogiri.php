@@ -11,22 +11,27 @@ use CodeIgniter\I18n\Time;
 /**
  * 大喜利（oogiris テーブルの1行。SPEC 3.3）
  *
- * @property int       $answer_count
- * @property Time      $created_at
- * @property Time|null $decided_at
- * @property int       $derived_count      派生開催数（管理画面用。Service が付ける）
- * @property Time      $ends_at
- * @property bool      $fixable            非表示のとき、修正して再募集できるか（U-13）
- * @property int       $id
- * @property string    $odai
- * @property int|null  $parent_oogiri_id   派生元
- * @property int       $pv
- * @property int       $report_count       通報数（管理画面用。Service が付ける）
- * @property Time|null $selection_deadline 結果選出の期限（ends_at + 72時間）
- * @property int       $share_count        シェア数（管理画面用。Service が付ける）
- * @property string    $slug               公開URL用（推測困難）
- * @property Time      $starts_at
- * @property string    $status             OogiriStatus の値
+ * @property int         $answer_count
+ * @property string      $browser_id_hash
+ * @property Time        $created_at
+ * @property Time|null   $decided_at
+ * @property int         $derived_count      派生開催数（管理画面用。Service が付ける）
+ * @property Time        $ends_at
+ * @property bool        $fixable            非表示のとき、修正して再募集できるか（U-13）
+ * @property string      $host_token_hash
+ * @property int         $id
+ * @property string      $ip_hash
+ * @property string      $odai
+ * @property int|null    $parent_oogiri_id   派生元
+ * @property string|null $passphrase_hash
+ * @property int         $pv
+ * @property int         $report_count       通報数（管理画面用。Service が付ける）
+ * @property Time|null   $selection_deadline 結果選出の期限（ends_at + 72時間）
+ * @property int         $share_count        シェア数（管理画面用。Service が付ける）
+ * @property string      $slug               公開URL用（推測困難）
+ * @property Time        $starts_at
+ * @property string      $status             OogiriStatus の値
+ * @property string|null $status_before_hide 非表示にする前の状態（再公開で戻す）
  */
 final class Oogiri extends Entity
 {

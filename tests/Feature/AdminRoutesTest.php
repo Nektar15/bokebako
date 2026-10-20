@@ -6,9 +6,8 @@ namespace Tests\Feature;
 
 use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\DownloadResponse;
-use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\FeatureTestTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Support\DatabaseTestCase;
 
 /**
  * 管理画面（A-02〜A-10）：各URLが期待する画面を返すこと（CODING_RULES 13章）
@@ -17,10 +16,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * @internal
  */
-final class AdminRoutesTest extends CIUnitTestCase
+final class AdminRoutesTest extends DatabaseTestCase
 {
-    use FeatureTestTrait;
-
     #[DataProvider('provideScreen')]
     public function testScreen(string $path, string $expected): void
     {
@@ -62,7 +59,9 @@ final class AdminRoutesTest extends CIUnitTestCase
     {
         $result = $this->get('admin/oogiri');
         $result->assertOK();
-        $result->assertSee('12,480');
+        // DevSeeder の大喜利 11 件（すべて）と、募集中 3 件
+        $this->assertStringContainsString('<span class="c-pills__count">11</span>', $result->response()->getBody());
+        $this->assertStringContainsString('<span class="c-pills__count">3</span>', $result->response()->getBody());
     }
 
     public function testUnknownOogiriIs404(): void

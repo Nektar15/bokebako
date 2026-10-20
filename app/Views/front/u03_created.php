@@ -37,7 +37,7 @@
 </section>
 
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($intentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="recruit_share" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>Xで回答を募集する</a>
+<a class="c-button c-button--x" href="<?= esc($intentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_recruit" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>Xで回答を募集する</a>
 <div class="p-created__url">
 <label class="u-visually-hidden" for="share-url">募集URL</label>
 <input class="c-input u-mono p-created__url-input" id="share-url" type="text" readonly value="<?= esc($shareUrl, 'attr') ?>">

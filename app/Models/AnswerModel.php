@@ -8,6 +8,10 @@ use App\Entities\Answer;
 
 /**
  * 回答（answers テーブル）の読み書き
+ *
+ * @method Answer|null  find(int|string|null $id = null)
+ * @method list<Answer> findAll(int $limit = 0, int $offset = 0)
+ * @method Answer|null  first()
  */
 final class AnswerModel extends BaseModel
 {

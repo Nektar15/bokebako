@@ -3,6 +3,7 @@
  * U-10 結果発表ページ（ページキャッシュの対象）
  *
  * @var \App\Entities\Oogiri $oogiri
+ * @var string $ogpUrl 結果用 OGP 画像の URL
  * @var string $period                    募集期間の表示（例：「9月16日 22:15〜9月17日 22:15」）
  * @var list<\App\Entities\Answer> $ranked 1位から順のベスト回答（1〜3件）
  * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers 全回答（新着順）
@@ -19,9 +20,10 @@ $first = $ranked[0] ?? null;
 <meta name="description" content="大喜利「<?= esc($oogiri->odai, 'attr') ?>」の結果発表。<?= $first !== null ? '1位：' . esc(mb_strimwidth($first->body, 0, 60, '…'), 'attr') : '' ?>（全<?= esc((string) $oogiri->answer_count) ?>回答）">
 <meta property="og:title" content="結果発表：<?= esc($oogiri->odai, 'attr') ?>">
 <meta property="og:description" content="<?= $first !== null ? '1位：' . esc(mb_strimwidth($first->body, 0, 60, '…'), 'attr') : '' ?>">
-<meta property="og:image" content="<?= esc(base_url('ogp/result/' . $oogiri->slug . '.png'), 'attr') ?>">
+<meta property="og:image" content="<?= esc($ogpUrl, 'attr') ?>">
 <meta property="og:url" content="<?= esc(site_url('o/' . $oogiri->slug), 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="bk:pv" content="<?= esc($oogiri->slug, 'attr') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
@@ -53,7 +55,7 @@ $first = $ranked[0] ?? null;
 </section>
 
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($resultIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="result_share" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>結果をXでシェアする</a>
+<a class="c-button c-button--x" href="<?= esc($resultIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_result" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>結果をXでシェアする</a>
 <?= part('partials/host_cta', ['slug' => $oogiri->slug, 'from' => 'U-10']) ?>
 </section>
 

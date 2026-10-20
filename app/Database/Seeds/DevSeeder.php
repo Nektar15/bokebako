@@ -43,6 +43,7 @@ class DevSeeder extends Seeder
             [12398, 'Bx2gHj8k', '宇宙人が地球で驚いたこと', 110, 'no_result', 610, 20, 1, null],
             [12377, 'Ty9pQw1z', '（削除済みのお題）', 130, 'deleted', 98, 0, 0, null],
             [12301, 'Aa1bCc2d', 'こんな○○は嫌だ（派生元の見本）', 200, 'decided', 2200, 90, 5, null],
+            [12481, 'Ee4fGg5h', '回答がまだない大喜利', 0, 'open', 3, 0, 0, null],
         ];
 
         foreach ($oogiris as [$id, $slug, $odai, $hoursAgo, $status, $pv, $shares, $derived, $parent]) {
@@ -125,8 +126,10 @@ class DevSeeder extends Seeder
                 'report_count'    => $reports, 'created_at' => $at, 'updated_at' => $at,
             ]);
         }
-        $this->db->query('UPDATE oogiris o SET answer_count = (SELECT COUNT(*) FROM answers a WHERE a.oogiri_id = o.id AND a.status = \'visible\')');
-        $this->db->query('UPDATE oogiris o SET report_count = (SELECT COALESCE(SUM(a.report_count), 0) FROM answers a WHERE a.oogiri_id = o.id)');
+        $o = $this->db->prefixTable('oogiris');
+        $a = $this->db->prefixTable('answers');
+        $this->db->query("UPDATE {$o} SET answer_count = (SELECT COUNT(*) FROM {$a} WHERE {$a}.oogiri_id = {$o}.id AND {$a}.status = 'visible')");
+        $this->db->query("UPDATE {$o} SET report_count = (SELECT COALESCE(SUM({$a}.report_count), 0) FROM {$a} WHERE {$a}.oogiri_id = {$o}.id)");
         $this->db->table('oogiris')->where('id', 12471)->update(['report_count' => 5]);
         $this->db->table('oogiris')->where('id', 12377)->update(['report_count' => 7]);
 

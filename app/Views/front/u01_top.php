@@ -8,6 +8,7 @@
  * @var array<string, string> $errors    項目名 => 文言。'_' は項目に属さないエラー
  * @var array{odai:string, passphrase:string, from:string} $old 前回の入力
  * @var array{top: array|null, bottom: array|null} $ads
+ * @var string $captcha CAPTCHA のサイトキー（連続投稿の制限方法が CAPTCHA のときだけ。空なら出さない）
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -65,6 +66,7 @@
 <p class="c-field__help p-top__hint"><?= $this->include('partials/icon_key') ?><span>別の端末から開催者ページを開くときに使います。ふだんは入力不要です。</span></p>
 </div>
 
+<?= part('partials/captcha', ['siteKey' => $captcha]) ?>
 <button type="submit" class="c-button c-button--primary" data-js-open-dialog="confirm-dialog">24時間大喜利を開催する</button>
 
 <?= $this->include('partials/u02_confirm') ?>

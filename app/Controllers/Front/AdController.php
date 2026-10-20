@@ -14,7 +14,8 @@ final class AdController extends BaseController
 {
     public function click(int $id): RedirectResponse
     {
-        // TODO(inner): クリック数を記録し、ads.link_url へリダイレクトする
-        return redirect()->to('/');
+        $url = service('ads')->click($id);
+
+        return redirect()->to($url ?? '/');
     }
 }

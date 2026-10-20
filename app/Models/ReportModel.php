@@ -8,6 +8,10 @@ use App\Entities\Report;
 
 /**
  * 通報（reports テーブル）の読み書き
+ *
+ * @method Report|null  find(int|string|null $id = null)
+ * @method list<Report> findAll(int $limit = 0, int $offset = 0)
+ * @method Report|null  first()
  */
 final class ReportModel extends BaseModel
 {
