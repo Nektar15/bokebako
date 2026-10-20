@@ -1,0 +1,17 @@
+# Vercel 仮置き（ADR 0008）に上げないもの
+# composer.json を上げると vercel-php が composer install を走らせ、ext-gd がないので失敗する（フレームワークは system/ にある）
+/composer.json
+/composer.lock
+/vendor
+/tests
+/docs
+/build
+/.env
+/writable/cache/*
+/writable/logs/*
+/writable/session/*
+/writable/debugbar/*
+/public/ogp/**/*.png
+/phpunit*.xml*
+/phpstan.neon.dist
+/.php-cs-fixer*
