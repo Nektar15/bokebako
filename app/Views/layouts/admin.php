@@ -9,11 +9,12 @@
  * @var array{todo:int, inquiries:int} $badges 左メニューに出す未処理件数（AdminController::render() が渡す。なければ 0）
  * @var string|null           $notice 操作後の通知（同上）
  * @var array<string, string> $errors 入力エラー（同上）
+ * @var bool                  $guest  ログイン前の画面（A-01 ログイン）。左メニューと見出しを出さない
  */
+$guest ??= false;
 $badges ??= ['todo' => 0, 'inquiries' => 0];
 $notice ??= null;
 $errors ??= [];
-$admin = service('currentAdmin');
 ?>
 <!doctype html>
 <html lang="ja">
@@ -36,6 +37,13 @@ $admin = service('currentAdmin');
 <link rel="stylesheet" href="<?= asset_url('css/components/admin-history.css') ?>">
 <?= $this->renderSection('styles') ?>
 </head>
+<?php if ($guest): ?>
+<body class="l-admin l-admin--guest">
+<main class="l-admin__guest">
+<?= part('partials/admin_notice', ['notice' => $notice, 'errors' => $errors]) ?>
+<?= $this->renderSection('content') ?>
+</main>
+<?php else: ?>
 <body class="l-admin">
 <?= $this->include('partials/admin_sidebar') ?>
 <main class="l-admin__main">
@@ -51,6 +59,7 @@ $admin = service('currentAdmin');
 <?= $this->renderSection('content') ?>
 </div>
 </main>
+<?php endif; ?>
 <?= $this->include('partials/toast') ?>
 <script type="module" src="<?= asset_url('js/main.js') ?>"></script>
 <?= $this->renderSection('scripts') ?>

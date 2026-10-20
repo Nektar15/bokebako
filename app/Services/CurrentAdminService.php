@@ -11,7 +11,7 @@ use RuntimeException;
  * 現在の管理者の置き場所
  *
  * adminAuth Filter が set() し、Controller と Service は get() で受け取る。
- * 認証方法（仮認証／本認証）が変わっても、ここから先は変えない。
+ * 認証方法（二段階認証の追加など）が変わっても、ここから先は変えない。
  */
 final class CurrentAdminService
 {
@@ -29,6 +29,14 @@ final class CurrentAdminService
         }
 
         return $this->admin;
+    }
+
+    /**
+     * ログアウト・セッション切れのとき
+     */
+    public function clear(): void
+    {
+        $this->admin = null;
     }
 
     public function has(): bool

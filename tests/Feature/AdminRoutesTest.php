@@ -12,12 +12,18 @@ use Tests\Support\DatabaseTestCase;
 /**
  * 管理画面（A-02〜A-10）：各URLが期待する画面を返すこと（CODING_RULES 13章）
  *
- * testing 環境は development と同じく仮管理者（上位管理者）で通る。
+ * 上位管理者（dev-admin）でログインした状態で開く（A-01）。
  *
  * @internal
  */
 final class AdminRoutesTest extends DatabaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->asAdmin(); // 上位管理者でログイン済み（A-01）
+    }
+
     #[DataProvider('provideScreen')]
     public function testScreen(string $path, string $expected): void
     {

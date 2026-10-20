@@ -18,8 +18,7 @@ final class RoutesTest extends DatabaseTestCase
     #[DataProvider('provideAdminRouteRespondsInTesting')]
     public function testAdminRouteRespondsInTesting(string $path): void
     {
-        // testing 環境は development と同じく仮管理者で通る
-        $this->get($path)->assertOK();
+        $this->asAdmin()->get($path)->assertOK();
     }
 
     /**

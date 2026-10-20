@@ -1,0 +1,7 @@
+/* A-01 管理者ログイン */
+.p-login { padding: 28px 26px; gap: 18px; }
+.p-login__brand { display: flex; align-items: center; gap: 8px; }
+.p-login__name { font-family: var(--font-display); font-size: 22px; }
+.p-login__title { font-size: 18px; font-weight: 900; }
+.p-login__submit { width: 100%; }
+.p-login__note { font-size: 12px; color: var(--ink-sub); }

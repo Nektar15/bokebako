@@ -9,7 +9,7 @@ use App\Enums\AdminRole;
 /**
  * ログイン中の管理者
  *
- * A-01 実装後は admins テーブルの行から作る。仮認証（CODING_RULES 7-1）でも同じ形で渡す。
+ * admins テーブルの行（AdminAccount::toAdminUser()）から、adminAuth Filter が作る。
  */
 final class AdminUser
 {

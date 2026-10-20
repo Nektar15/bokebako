@@ -7,6 +7,7 @@ namespace Config;
 use App\Libraries\Captcha;
 use App\Libraries\OgpImage;
 use App\Models\AdminLogModel;
+use App\Models\AdminModel;
 use App\Models\AdModel;
 use App\Models\AiJudgementModel;
 use App\Models\AnswerModel;
@@ -18,6 +19,8 @@ use App\Models\OgpJobModel;
 use App\Models\OogiriModel;
 use App\Models\ReportModel;
 use App\Models\RestrictionModel;
+use App\Services\AdminAccountService;
+use App\Services\AdminAuthService;
 use App\Services\AdminLogService;
 use App\Services\AdService;
 use App\Services\AnswerAdminService;
@@ -56,6 +59,16 @@ class Services extends BaseService
     public static function currentAdmin(bool $getShared = true): CurrentAdminService
     {
         return $getShared ? static::getSharedInstance('currentAdmin') : new CurrentAdminService();
+    }
+
+    public static function adminAuth(bool $getShared = true): AdminAuthService
+    {
+        return $getShared ? static::getSharedInstance('adminAuth') : new AdminAuthService(new AdminModel(), static::identity());
+    }
+
+    public static function adminAccount(bool $getShared = true): AdminAccountService
+    {
+        return $getShared ? static::getSharedInstance('adminAccount') : new AdminAccountService(new AdminModel());
     }
 
     public static function settings(bool $getShared = true): SettingService

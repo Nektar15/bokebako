@@ -62,11 +62,26 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
 });
 
 // ---------------------------------------------------------------
-// 管理画面（Admin）— すべて adminAuth の内側
+// 管理画面（Admin）— ログイン画面以外はすべて adminAuth の内側。全体に IP 制限（adminIp）
 // ---------------------------------------------------------------
 $adminPath = trim((string) env('app.adminPath', 'admin'), '/');
 
-$routes->group($adminPath, ['namespace' => 'App\Controllers\Admin', 'filter' => 'adminAuth'], static function (RouteCollection $routes): void {
+// A-01 ログイン（未ログインで開ける。IP 制限だけかける）
+$routes->group($adminPath, ['namespace' => 'App\Controllers\Admin', 'filter' => 'adminIp'], static function (RouteCollection $routes): void {
+    $routes->get('login', 'LoginController::show');
+    $routes->post('login', 'LoginController::login');
+});
+
+$routes->group($adminPath, ['namespace' => 'App\Controllers\Admin', 'filter' => ['adminIp', 'adminAuth']], static function (RouteCollection $routes): void {
+    $routes->post('logout', 'LoginController::logout');                 // A-01
+
+    $routes->get('accounts', 'AccountController::index');                // A-01 管理者アカウント（未確定事項10 → ADR 0007）
+    $routes->post('accounts', 'AccountController::create');
+    $routes->post('accounts/(:num)', 'AccountController::update/$1');
+    $routes->post('accounts/(:num)/password', 'AccountController::resetPassword/$1');
+    $routes->post('accounts/(:num)/delete', 'AccountController::delete/$1');
+    $routes->post('accounts/me/password', 'AccountController::changeOwnPassword');
+
     $routes->get('/', 'DashboardController::index');                     // A-02
     $routes->get('oogiri', 'OogiriController::index');                   // A-03
     $routes->get('oogiri/(:num)', 'OogiriController::show/$1');

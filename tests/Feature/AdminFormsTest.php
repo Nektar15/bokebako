@@ -15,6 +15,12 @@ use Tests\Support\DatabaseTestCase;
  */
 final class AdminFormsTest extends DatabaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->asAdmin(); // 上位管理者でログイン済み（A-01）
+    }
+
     /**
      * @param array<string, mixed> $body
      */
