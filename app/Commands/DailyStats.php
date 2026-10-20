@@ -25,8 +25,9 @@ final class DailyStats extends BaseCommand
      */
     public function run(array $params): void
     {
-        $day = isset($params[0]) ? Time::parse($params[0]) : Time::now()->subDays(1);
-        $row = service('stats')->aggregateDay($day);
-        CLI::write("stats:daily: {$row['date']} を集計しました（PV {$row['pv']}、開催 {$row['oogiris']}、回答 {$row['answers']}）");
+        $day    = isset($params[0]) ? Time::parse($params[0]) : Time::now()->subDays(1);
+        $row    = service('stats')->aggregateDay($day);
+        $pruned = service('stats')->pruneEvents();
+        CLI::write("stats:daily: {$row['date']} を集計しました（PV {$row['pv']}、開催 {$row['oogiris']}、回答 {$row['answers']}）。古い生ログ {$pruned} 件を削除");
     }
 }

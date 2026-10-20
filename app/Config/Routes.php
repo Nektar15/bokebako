@@ -55,7 +55,7 @@ $routes->group('host', ['namespace' => 'App\Controllers\Host'], static function 
 // ---------------------------------------------------------------
 // API（JSON）
 // ---------------------------------------------------------------
-$routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1'], static function (RouteCollection $routes): void {
+$routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => 'ajaxOnly'], static function (RouteCollection $routes): void {
     $routes->get('o/(:segment)/status', 'StatusController::show/$1');   // 残り時間・回答数・状態
     $routes->post('events', 'EventController::create');                 // 計測（S-06）
     $routes->post('reports', 'ReportController::create');               // 通報（S-04）

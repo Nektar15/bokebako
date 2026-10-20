@@ -21,10 +21,16 @@ Options -Indexes
 	RewriteCond %{REQUEST_URI} (.+)/$
 	RewriteRule ^ %1 [L,R=301]
 
-	# Rewrite "www.example.com -> example.com"
+	# HTTP → HTTPS（SPEC 3.4）。Xserver は HTTPS を終端するので %{HTTPS} で判定できる。
+	# ローカル（localhost）だけは http のまま通す
 	RewriteCond %{HTTPS} !=on
+	RewriteCond %{HTTP_HOST} !^localhost(:[0-9]+)?$ [NC]
+	RewriteCond %{HTTP_HOST} !^127\.0\.0\.1(:[0-9]+)?$
+	RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+	# "www.example.com -> example.com"
 	RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
-	RewriteRule ^ http://%1%{REQUEST_URI} [R=301,L]
+	RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
 
 	# Checks to see if the user is attempting to access a valid file,
 	# such as an image or css document, if this isn't true it sends the
@@ -43,6 +49,26 @@ Options -Indexes
 	# can be sent to index.php, and everything works as normal.
 	ErrorDocument 404 index.php
 </IfModule>
+
+# 静的資産は長期キャッシュ（SPEC 4.1。URL に ?v= のバージョンが付くので上書きしても古いものは使われない）
+<IfModule mod_expires.c>
+	ExpiresActive On
+	<FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$">
+		ExpiresDefault "access plus 1 year"
+		Header set Cache-Control "public, max-age=31536000, immutable"
+	</FilesMatch>
+</IfModule>
+
+# gzip（Xserver は mod_deflate が使える）
+<IfModule mod_deflate.c>
+	AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# .env や writable/ は public/ の外にあるので、ここからは見えない（README「Xserver へ置く」）。
+# 念のため、万一コピーされた隠しファイルは返さない
+<FilesMatch "^\.">
+	Require all denied
+</FilesMatch>
 
 # Disable server signature start
 ServerSignature Off

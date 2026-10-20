@@ -20,7 +20,6 @@ $admin = service('currentAdmin');
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="csrf-token" content="<?= csrf_hash() ?>">
 <meta name="robots" content="noindex, nofollow">
 <title><?= esc($title) ?>｜ぼけばこ管理</title>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">

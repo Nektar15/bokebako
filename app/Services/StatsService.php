@@ -30,6 +30,11 @@ use CodeIgniter\I18n\Time;
  */
 final class StatsService
 {
+    /**
+     * 生ログ（events）を残す日数。日次集計のあとはダッシュボードが daily_stats だけを見るので、転換率の計算に要る分だけ残す
+     */
+    public const EVENT_KEEP_DAYS = 90;
+
     public function __construct(
         private readonly DisplayService $display,
         private readonly DailyStatModel $daily,
@@ -254,6 +259,19 @@ final class StatsService
         }
 
         return $row;
+    }
+
+    /**
+     * 集計済みの古い生ログを消す（events の肥大化対策：SPEC 4.1「ログ集約→cronで集計」。stats:daily の後に呼ぶ）
+     *
+     * @return int 消した件数
+     */
+    public function pruneEvents(?Time $now = null): int
+    {
+        $before = ($now ?? Time::now())->subDays(self::EVENT_KEEP_DAYS)->toDateTimeString();
+        $this->events->where('created_at <', $before)->delete();
+
+        return $this->events->db->affectedRows();
     }
 
     /**

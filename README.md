@@ -23,6 +23,7 @@ php spark serve                 # http://localhost:8080
 - 開発用データの開催者ページは、`/host/{slug}` に Cookie `bk_host_{slug}=dev-token-{slug}` を付けるか、合言葉「ぼけばこ」で復旧して開く。スラッグと状態は `app/Database/Seeds/DevSeeder.php` の先頭にある。
 - OGP 画像（S-07）を作るには日本語フォントが要る。`writable/fonts/NotoSansJP-Bold.ttf` を置くか、`.env` の `ogp.font` にフォントのパスを書く（例：`/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc`）。なければ既定の画像で代用する。
 - CAPTCHA（Cloudflare Turnstile）・AI判定（OpenAI）・管理者への通知メールは、`.env` の `captcha.*`・`openai.apiKey`・`app.adminEmail` が空なら動かない（開発ではそのままでよい）。
+- 本番相当で動かすときは `.env` を `CI_ENVIRONMENT = production` にする（管理画面は 403 になる。`app.hashSecret` が空だと起動時にエラー）。
 - 管理画面は `http://localhost:8080/admin`（パスは `.env` の `app.adminPath`）。development では仮の管理者（上位管理者）でログイン済みとして開く（`docs/CODING_RULES.md` 7-1）。`?role=general` を付けると一般管理者の表示（A-04 の投稿元の列が消える）を確認できる。
 
 ## コマンド
@@ -49,12 +50,15 @@ php spark serve                 # http://localhost:8080
 
 ```
 app/Controllers/{Front,Host,Admin,Api/V1}   入口。Service を呼んで View を返すだけ
-app/Services/                               業務ロジック（Fixtures/ は外側フェーズのダミーデータ）
-app/Models/                                 DB の読み書きだけ
+app/Services/                               業務ロジック（app/Config/Services.php で service('name') に登録）
+app/Libraries/                              外部連携・画像生成（OgpImage, OpenAiClient, Captcha）
+app/Models/                                 DB の読み書きだけ（1テーブル1 Model）
+app/Database/{Migrations,Seeds}             テーブル定義と開発用データ
 app/Views/{layouts,partials,front,admin}    画面
 app/Commands/                               cron から実行する処理（S-01〜S-07）
 public/assets/{css,js}                      静的資産（ビルド工程なし）
-docs/                                       仕様・ルール・デザイン・ADR
+tests/{Feature,Unit,_support,load}          テスト（load/ は k6 の負荷試験）
+docs/                                       仕様・ルール・デザイン・ADR・運用マニュアル（admin-manual.md）・DB 定義（db.md）
 ```
 
 ## Xserver へ置く
@@ -74,6 +78,47 @@ Xserver はドキュメントルートが `public_html` 固定なので、公開
 6. `php spark migrate` を実行する（Xserver の PHP はバージョン付きのパス。例：`/usr/bin/php8.2`）
 
 ステージングは `CI_ENVIRONMENT = staging` とし、`ADMIN_ALLOWED_IPS` に作業者の IP を入れる。
+
+### 本番の `.env` で必ず設定するもの
+
+| キー | 内容 |
+|---|---|
+| `CI_ENVIRONMENT` | `production`（エラー画面を出さない。管理画面は A-01 実装まで 403） |
+| `app.baseURL` | `https://<ドメイン>/` |
+| `app.forceGlobalSecureRequests` | `true`（HSTS を出す） |
+| `app.adminPath` | 推測困難な値 |
+| `app.hashSecret` | 32文字以上のランダム文字列。**一度決めたら変えない**（変えると開催者トークン・ブラウザIDの照合がすべて外れる） |
+| `app.adminEmail` | 通知メールの宛先 |
+| `app.assetVersion` | デプロイごとに変える（例：日付）。CSS/JS のブラウザキャッシュを確実に更新する |
+| `database.default.*` | MariaDB の接続 |
+| `captcha.siteKey` / `captcha.secretKey` | Cloudflare Turnstile。空なら CAPTCHA を出さない |
+| `openai.apiKey` | AI 補助判定。空なら「未判定」のまま |
+| `ogp.font` | 日本語フォントのパス（または `writable/fonts/NotoSansJP-Bold.ttf` を置く） |
+
+### PHP の設定（Xserver のサーバーパネル「php.ini 設定」）
+
+- `opcache.enable = 1`、`opcache.validate_timestamps = 1`、`opcache.revalidate_freq = 60`（SPEC 4.1。デプロイ直後に古いコードが 1 分残ってよい）
+- `memory_limit = 256M`（OGP 画像の生成で GD を使う）
+- `upload_max_filesize = 4M`（広告画像・OGP テンプレート）
+
+### Cloudflare（推奨。SPEC 4.1）
+
+DNS を Cloudflare に向け、「常に HTTPS」を ON。キャッシュルールで `/assets/*` と `/ogp/*` を「すべてキャッシュ、エッジ TTL 1年」にする。HTML はキャッシュしない（既定）。
+
+### バックアップ
+
+- DB：Xserver の自動バックアップ（14日）に加え、`mysqldump` を日次で `writable/backup/` の外（ホーム直下など）に取る
+- ファイル：`public/ogp/`（再生成できるので必須ではない）、`public/assets/ads/`（広告画像。消えると A-07 から登録し直し）、`writable/ogp-templates/`
+
+### リリース前チェック
+
+1. `composer check` が通る
+2. `.env` の上の表がすべて埋まっている。`.env` と `writable/` が `public_html/` の外にある
+3. `php spark migrate` 済み。**本番では `db:seed DevSeeder` を実行しない**（全テーブルを消す）
+4. cron が登録されている（下の表）
+5. `https://<ドメイン>/` が開き、`http://` が `https://` に転送される。レスポンスヘッダーに `Content-Security-Policy` と `Strict-Transport-Security` がある
+6. お題を1つ開催し、別端末で回答し、確定して結果ページが出る。X のカード検証（`https://cards-dev.twitter.com/validator` 相当）で OGP 画像が出る
+7. `docs/load-test.md` の手順でステージングに負荷をかけ、結果を追記する
 
 ## cron（Xserver のサーバーパネルで設定）
 
@@ -98,5 +143,5 @@ Xserver はドキュメントルートが `public_html` 固定なので、公開
 | 2 管理画面の外側 | `feature/admin-views` | 完了 |
 | 3 DB とモデル | `feature/database` | 完了 |
 | 4 中身 | `feature/database`（3と同じブランチ） | 完了 |
-| 5 仕上げ | `feature/release-prep` | |
+| 5 仕上げ | `feature/release-prep` | 完了 |
 | （最終）A-01 ログイン | 別途 | |
