@@ -7,7 +7,7 @@ namespace App\Database\Migrations;
 use CodeIgniter\Database\Migration;
 
 /**
- * 管理者アカウント（SPEC 3.3 admins。A-01 で使う。ログイン試行は admin_login_attempts）
+ * 管理者アカウント（SPEC 3.3 admins。A-01 で使う。ログイン試行回数は failed_count と locked_until）
  *
  * 共通カラム・インデックス・ハッシュ保存は CODING_RULES 6章。文字コードは utf8mb4 / utf8mb4_general_ci（Database.php）。
  */

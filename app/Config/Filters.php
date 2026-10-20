@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Config;
 
 use App\Filters\AdminAuth;
+use App\Filters\AjaxOnly;
 use App\Filters\BrowserId;
+use App\Filters\SecurityHeaders;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -15,7 +17,6 @@ use CodeIgniter\Filters\Honeypot;
 use CodeIgniter\Filters\InvalidChars;
 use CodeIgniter\Filters\PageCache;
 use CodeIgniter\Filters\PerformanceMetrics;
-use CodeIgniter\Filters\SecureHeaders;
 
 class Filters extends BaseFilters
 {
@@ -33,7 +34,8 @@ class Filters extends BaseFilters
         'toolbar'       => DebugToolbar::class,
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
-        'secureheaders' => SecureHeaders::class,
+        'secureheaders' => SecurityHeaders::class,
+        'ajaxOnly'      => AjaxOnly::class,
         'cors'          => Cors::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
@@ -75,7 +77,7 @@ class Filters extends BaseFilters
      */
     public array $globals = [
         'before' => [
-            'csrf' => ['except' => ['api/v1/events']], // 計測は sendBeacon で送るため CSRF の対象外。他の API はヘッダーでトークンを送る
+            'csrf' => ['except' => ['api/v1/*']], // JSON API は CSRF の代わりに ajaxOnly（ADR 0002・0005）
             'invalidchars',
             'browserId',
         ],

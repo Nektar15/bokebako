@@ -1,12 +1,8 @@
 /**
  * サーバーとの通信はこの関数だけを使う（CODING_RULES 9-2）。
- * CSRF トークンの付与とエラー処理をここで担う。レスポンスの形は CODING_RULES 11章。
+ * API（/api/v1/*）は CSRF トークンの代わりに X-Requested-With を見る（ページキャッシュ配信のページでも動くように。ADR 0005）。
+ * レスポンスの形は CODING_RULES 11章。
  */
-
-function csrfToken() {
-  const meta = document.querySelector('meta[name="csrf-token"]');
-  return meta ? meta.content : '';
-}
 
 /**
  * @param {string} path   例: '/api/v1/reports'
@@ -14,10 +10,9 @@ function csrfToken() {
  * @returns {Promise<any>} data。失敗時は {code, message} を持つ Error を投げる
  */
 export async function api(path, { method = 'GET', body } = {}) {
-  const headers = { Accept: 'application/json' };
+  const headers = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
   if (body !== undefined) {
     headers['Content-Type'] = 'application/json';
-    headers['X-CSRF-TOKEN'] = csrfToken();
   }
   const res = await fetch(path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), credentials: 'same-origin' });
   let json = null;

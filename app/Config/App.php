@@ -162,6 +162,28 @@ class App extends BaseConfig
     public bool $forceGlobalSecureRequests = false;
 
     /**
+     * Content-Security-Policy の許可先（App\Filters\SecurityHeaders）
+     *
+     * 自前のスクリプト・CSS だけを許す（CODING_RULES 8-2：インラインの style/script は書かない）。
+     * 例外は Google Fonts、GA4（partials/ga4）、Cloudflare Turnstile（partials/captcha。ADR 0004）。
+     *
+     * @var array<string, list<string>>
+     */
+    public array $cspSources = [
+        'default-src'     => ["'self'"],
+        'script-src'      => ["'self'", 'https://www.googletagmanager.com', 'https://challenges.cloudflare.com'],
+        'style-src'       => ["'self'", 'https://fonts.googleapis.com'],
+        'font-src'        => ["'self'", 'https://fonts.gstatic.com'],
+        'img-src'         => ["'self'", 'data:', 'https://www.googletagmanager.com', 'https://www.google-analytics.com'],
+        'connect-src'     => ["'self'", 'https://www.google-analytics.com', 'https://analytics.google.com', 'https://challenges.cloudflare.com'],
+        'frame-src'       => ['https://challenges.cloudflare.com'],
+        'object-src'      => ["'none'"],
+        'base-uri'        => ["'self'"],
+        'form-action'     => ["'self'", 'https://x.com', 'https://twitter.com'],
+        'frame-ancestors' => ["'none'"],
+    ];
+
+    /**
      * --------------------------------------------------------------------------
      * Reverse Proxy IPs
      * --------------------------------------------------------------------------
