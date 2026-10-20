@@ -14,7 +14,10 @@
 
 ## ローカルで動かす
 
+PHP は本番と同じ 8.2 を使う（8.5 では PHPStan が止まる。HANDOFF「開発ツールの入れ方」）。
+
 ```bash
+composer install                # 開発用ツール（composer.lock で版を固定）
 cp .env.example .env            # 必要なら app.hashSecret などを書き換える
 php spark serve                 # http://localhost:8080
 ```

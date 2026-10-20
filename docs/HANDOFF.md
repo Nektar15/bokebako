@@ -28,7 +28,9 @@ feature/admin-login を develop に取り込んでから、残課題の A-01 二
 工程1〜5の作業環境では packagist.org に接続できなかった。`composer install` が通らないときは、
 GitHub Releases の phar（phpstan 1.12、php-cs-fixer 3.95）と、PHPUnit 10.5 とその依存を GitHub から clone して
 `vendor/bin/{phpstan,php-cs-fixer,phpunit}` に置く薄いラッパーで `composer check` を通した。
-普通の環境では `composer install` だけでよい（`composer.lock` はまだない。初回の `composer install` で作ってコミットすること：CODING_RULES 1章）。
+普通の環境では `composer install` だけでよい。`composer.lock` は 2026-10-20 に追加した（Mac・PHP 8.2.34 で作成。`config.platform.php = 8.2.0` で PHP 8.2 向けに解決する）。
+
+**手元の PHP は 8.2 を使う**。PHP 8.5 で `composer check` を流すと、PHPStan 1.12 が非推奨の警告を大量に出してメモリ不足で止まる（コードの問題ではない）。Mac なら `brew install php@8.2` → `export PATH="/opt/homebrew/opt/php@8.2/bin:$PATH"`。PHPStan 2 へ上げるなら依存の変更なので ADR を書いて別ブランチで。
 
 レビュー修正の作業環境（2026-10-20）も packagist に繋がらず、同じ方法を取った。手順の補足：
 - PHPUnit 10.5.58 と依存（sebastian/*、phpunit/php-*、phar-io/*、theseer/tokenizer、myclabs/deep-copy、nikic/php-parser 5）、codeigniter/coding-standard 1.9.2、nexusphp/cs-config 3.29 を GitHub から `git clone`。リポジトリの外に置き、`classmap`／`psr-4`／`files` を並べた composer.json で `composer dump-autoload` する
