@@ -44,7 +44,8 @@ php spark serve                 # http://localhost:8080
 | `php spark ogp:generate` | 欠けている OGP 画像をまとめて生成（S-07 の取りこぼし対策） |
 | `composer check` | 整形チェック・静的解析・テストをまとめて実行 |
 | `composer fix` | 整形を自動で直す |
-| `vendor/bin/phpunit` | テストだけ実行（DB は SQLite の `:memory:`。MariaDB で流すときは `phpunit.xml.dist` の `database.tests.*` を書き換える） |
+| `vendor/bin/phpunit` | テストだけ実行（DB は SQLite の `:memory:`） |
+| `vendor/bin/phpunit -c phpunit.mariadb.xml.dist` | MariaDB でテストを流す（DB `bokebako_test` を作っておく） |
 
 開発用ツール（php-cs-fixer・PHPStan・PHPUnit）は `composer install` で入る。フレームワーク本体は `system/` にコミットしてあるので、本番サーバーに Composer は不要。
 
@@ -152,4 +153,6 @@ DNS を Cloudflare に向け、「常に HTTPS」を ON。キャッシュルー�
 | 4 中身 | `feature/database`（3と同じブランチ） | 完了 |
 | 5 仕上げ | `feature/release-prep` | 完了 |
 | A-01 ログイン・管理者アカウント | `feature/admin-login` | 完了（二段階認証は最終工程） |
+| レビューの残り・小さな積み残し・確認 | `fix/review-leftovers`・`feature/small-leftovers`・`fix/verification` | 完了 |
+| Vercel 仮置き（触り心地の確認用） | `feature/vercel-staging` | 設定は完了。上げ方は `docs/vercel.md` |
 | （最終）A-01 二段階認証（TOTP） | 別途 | |
