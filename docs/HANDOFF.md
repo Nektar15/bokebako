@@ -33,7 +33,7 @@ develop で `cp .env.example .env && composer install && composer check` を通�
 ### 1. Vercel に上げて触り心地を確かめる（Masato さんの作業）
 
 - 設定と手順はできている：`docs/vercel.md`（Vercel で Import → 環境変数 → Deploy）
-- GitHub は `https://github.com/Nektar15/bokebako`（全ブランチ push 済み。コミットの作者は Claude と lunaticbeat15@gmail.com だけにする決まり）。Vercel は **001d3d@gmail.com のアカウント**で、このリポジトリの `develop` を読み込む
+- GitHub は `https://github.com/Nektar15/bokebako`（全ブランチ push 済み。コミットの作者は Claude と lunaticbeat15@gmail.com だけにする決まり）。Vercel は **lunaticbeat15@gmail.com のアカウント（チーム「Goma's projects」、Hobby）**で、このリポジトリの `develop` を読み込む
 - 環境変数の `devSeeder_adminPassword`（管理画面のパスワード）と `app_hashSecret` は**必ず設定する**
 - 上げたあとに確かめること：Vercel 上で `docs/vercel.md` の「3. 確かめること」が通るか。ローカルでは Vercel と同じ条件を再現して確認済み（ADR 0008）だが、実際の Vercel では未確認
 - 制限：データは数分〜数時間で最初の状態に戻る。OGP 画像は既定の画像。cron はアクセスのついでに動く（ADR 0008）
@@ -44,7 +44,7 @@ develop で `cp .env.example .env && composer install && composer check` を通�
 |---|---|---|
 | 二段階認証（TOTP）を全員必須にするか、上位管理者だけか。登録の流れ、端末をなくしたときの復旧 | 未着手（最終工程） | ADR 0007-6 に足す場所を書いた |
 | 二段階認証が入るまで、本番で管理画面を開けてよいか | 今はパスワードだけで入れる。`ADMIN_ALLOWED_IPS` で IP を絞れる | 本番公開の判断 |
-| レビュー（PR 承認）を誰がするか | CODING_RULES 12章は「もう一人のレビュー承認」が必須。GitHub を使わない指示だったので、マージはすべて手元の git で行った | 001d3d の GitHub に上げたあとは PR で回せる |
+| レビュー（PR 承認）を誰がするか | CODING_RULES 12章は「もう一人のレビュー承認」が必須。GitHub を使わない指示だったので、マージはすべて手元の git で行った | GitHub（Nektar15/bokebako） に上げたあとは PR で回せる |
 
 ### 3. 発注者に確認すること（仮決め）
 
