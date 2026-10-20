@@ -28,6 +28,21 @@ if (! function_exists('asset_url')) {
     }
 }
 
+if (! function_exists('part')) {
+    /**
+     * 部品（partials/）に値を渡して描画する
+     *
+     * view() は渡した値をリクエスト内で保持し、あとの部品にも見えてしまう（saveData）。
+     * 部品ごとに値を閉じるため、必ずこの関数を使う。
+     *
+     * @param array<string, mixed> $data
+     */
+    function part(string $name, array $data = []): string
+    {
+        return view($name, $data, ['saveData' => false]);
+    }
+}
+
 if (! function_exists('admin_url')) {
     /** 管理画面のURL。パスの先頭は .env の app.adminPath */
     function admin_url(string $path = ''): string

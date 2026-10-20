@@ -47,7 +47,8 @@ details > summary::-webkit-details-marker { display: none; }
 .l-footer__copy { font-size: 11px; color: var(--ink-muted); }
 
 @media (min-width: 768px) {
-  .l-header, .l-footer { padding-left: 0; padding-right: 0; max-width: var(--content-max); margin-left: auto; margin-right: auto; border-left: 0; border-right: 0; }
+  .l-header, .l-footer { width: 100%; max-width: var(--content-max); margin-left: auto; margin-right: auto; padding-left: 0; padding-right: 0; }
+  .l-footer { margin-top: auto; }
 }
 
 /* ---------- 共通部品 ---------- */
@@ -114,8 +115,10 @@ details > summary::-webkit-details-marker { display: none; }
 .c-textarea { padding: 12px 14px; resize: none; font-size: 17px; font-weight: 700; line-height: 1.5; }
 .c-input.is-invalid, .c-textarea.is-invalid { border-color: var(--shu-deep); }
 
-.c-progress { height: 12px; border: var(--border); border-radius: var(--radius-pill); background: var(--white); overflow: hidden; }
-.c-progress__bar { height: 100%; background: var(--shu); transition: width .6s ease; }
+.c-progress { display: block; width: 100%; height: 12px; border: var(--border); border-radius: var(--radius-pill); background: var(--white); overflow: hidden; appearance: none; -webkit-appearance: none; }
+.c-progress::-webkit-progress-bar { background: var(--white); }
+.c-progress::-webkit-progress-value { background: var(--shu); border-radius: 0; }
+.c-progress::-moz-progress-bar { background: var(--shu); }
 
 .c-ad { padding: var(--space-2) var(--gutter) 0; display: flex; justify-content: center; }
 .c-ad--bottom { padding-top: 28px; }

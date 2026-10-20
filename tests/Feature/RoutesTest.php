@@ -8,22 +8,11 @@ use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\FeatureTestTrait;
 
 /**
- * 全 GET ルートが 200 を返すこと（CODING_RULES 13章）
- * 工程1・2で View ができたら、表示される View の確認を各テストに足す。
+ * 管理画面と API のルートが応答すること（ユーザー向けは FrontRoutesTest）
  */
 final class RoutesTest extends CIUnitTestCase
 {
     use FeatureTestTrait;
-
-    /** @return list<array{string}> */
-    public static function frontRoutes(): array
-    {
-        return [
-            ['/'], ['/o/demo'], ['/o/demo/created'], ['/o/demo/done'], ['/o/demo/answers'], ['/o/demo/a/1'],
-            ['/about'], ['/terms'], ['/privacy'], ['/guidelines'], ['/contact'], ['/contact/done'],
-            ['/host/demo'],
-        ];
-    }
 
     /** @return list<array{string}> */
     public static function adminRoutes(): array
@@ -32,12 +21,6 @@ final class RoutesTest extends CIUnitTestCase
             ['admin'], ['admin/oogiri'], ['admin/oogiri/1'], ['admin/answers'], ['admin/moderation'],
             ['admin/ng-words'], ['admin/ads'], ['admin/ogp'], ['admin/inquiries'], ['admin/settings'],
         ];
-    }
-
-    /** @dataProvider frontRoutes */
-    public function testFrontRouteResponds(string $path): void
-    {
-        $this->get($path)->assertOK();
     }
 
     /** @dataProvider adminRoutes */

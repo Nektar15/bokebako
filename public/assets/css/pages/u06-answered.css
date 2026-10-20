@@ -1,0 +1,10 @@
+/* U-06 回答完了 */
+.p-answered__hero { align-items: center; text-align: center; gap: 10px; padding-top: 28px; }
+.p-answered__body { font-size: 20px; font-weight: 900; line-height: 1.55; }
+.p-answered__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.p-answered__half { min-height: 52px; height: auto; padding: 8px; font-size: 13.5px; line-height: 1.35; text-align: center; }
+.p-answered__next { background: var(--ink); color: var(--paper); border-radius: 22px; padding: 26px 22px; display: flex; flex-direction: column; gap: 14px; }
+.p-answered__next-label { font-size: 12px; font-weight: 900; letter-spacing: .12em; color: var(--kin); }
+.p-answered__next-title { font-family: var(--font-display); font-weight: 400; font-size: 26px; line-height: 1.4; color: var(--white); }
+.p-answered__next-body { font-size: 13.5px; line-height: 1.7; color: var(--line); }
+.p-answered__next .c-button--primary { border-color: var(--paper); box-shadow: 0 4px 0 var(--paper); }

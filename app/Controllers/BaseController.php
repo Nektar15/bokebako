@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Entities\Oogiri;
+use App\Exceptions\NotFoundException;
 use CodeIgniter\Controller;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
@@ -27,6 +30,16 @@ abstract class BaseController extends Controller
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger): void
     {
         parent::initController($request, $response, $logger);
+    }
+
+    /** 募集URLのスラッグから大喜利を取得する。なければ 404 */
+    protected function findOogiriOrFail(string $slug): Oogiri
+    {
+        try {
+            return service('oogiri')->findBySlug($slug);
+        } catch (NotFoundException) {
+            throw PageNotFoundException::forPageNotFound();
+        }
     }
 
     /**

@@ -5,29 +5,48 @@ declare(strict_types=1);
 namespace App\Controllers\Front;
 
 use App\Controllers\BaseController;
-use CodeIgniter\HTTP\ResponseInterface;
+use App\Exceptions\ValidationException;
+use App\Services\ContactService;
+use CodeIgniter\HTTP\RedirectResponse;
 
-/**
- * U-18 お問い合わせ
- */
+/** U-18 お問い合わせ */
 final class ContactController extends BaseController
 {
-    /** U-18 お問い合わせ */
     public function index(): string
     {
-        return $this->placeholder('U-18', 'お問い合わせ');
+        return view('front/u18_contact', [
+            'types'            => ContactService::TYPES,
+            'urlRequiredTypes' => ContactService::URL_REQUIRED_TYPES,
+            'errors'           => session()->getFlashdata('errors') ?? [],
+            'old'              => [
+                'type'  => (string) (old('type') ?? 'general'),
+                'email' => (string) old('email'),
+                'url'   => (string) old('url'),
+                'body'  => (string) old('body'),
+            ],
+        ]);
     }
 
-    /** U-18 お問い合わせの送信 — TODO(inner): 工程4で本実装 */
-    public function send(): ResponseInterface
+    public function send(): RedirectResponse
     {
+        $input = [
+            'type'  => (string) $this->request->getPost('type'),
+            'email' => (string) $this->request->getPost('email'),
+            'url'   => (string) $this->request->getPost('url'),
+            'body'  => (string) $this->request->getPost('body'),
+        ];
+
+        try {
+            service('contact')->send($input);
+        } catch (ValidationException $e) {
+            return redirect()->back()->withInput()->with('errors', $e->errors);
+        }
+
         return redirect()->to('/contact/done');
     }
 
-    /** U-18 お問い合わせ送信完了 */
     public function done(): string
     {
-        return $this->placeholder('U-18', 'お問い合わせ送信完了');
+        return view('front/u18_contact_done');
     }
-
 }

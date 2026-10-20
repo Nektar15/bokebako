@@ -5,23 +5,96 @@ declare(strict_types=1);
 namespace App\Controllers\Front;
 
 use App\Controllers\BaseController;
-use CodeIgniter\HTTP\ResponseInterface;
+use App\Entities\Oogiri;
+use App\Enums\OogiriStatus;
+use CodeIgniter\HTTP\RedirectResponse;
 
 /**
- * 募集URL /o/{slug}（状態で U-04/U-10/U-11/U-12/U-13 を出し分け）
+ * 募集URL /o/{slug}。状態で U-04 / U-10 / U-11 / U-12 / U-13 を出し分ける（FEATURES 0-4）
  */
 final class OogiriController extends BaseController
 {
-    /** U-04 大喜利回答（状態で出し分け） */
+    use RendersAnswerPage;
+
     public function show(string $slug): string
     {
-        return $this->placeholder('U-04', '大喜利回答（状態で出し分け）');
+        $oogiri = $this->findOogiriOrFail($slug);
+
+        return match ($oogiri->status()) {
+            OogiriStatus::Open              => $this->renderAnswerPage($oogiri),
+            OogiriStatus::AwaitingSelection => $this->closedPage($oogiri),
+            OogiriStatus::Decided           => $this->resultPage($oogiri),
+            OogiriStatus::NoResult          => $this->noResultPage($oogiri),
+            OogiriStatus::Hidden, OogiriStatus::Deleted => $this->hiddenPage($oogiri),
+        };
     }
 
-    /** U-03 開催完了・Xシェア */
-    public function created(string $slug): string
+    /** U-03 開催完了（開催者トークンを持つブラウザだけ。なければ募集URLへ） */
+    public function created(string $slug): string|RedirectResponse
     {
-        return $this->placeholder('U-03', '開催完了・Xシェア');
+        $oogiri = $this->findOogiriOrFail($slug);
+
+        if (! service('host')->isAuthorized($oogiri)) {
+            return redirect()->to('/o/' . $slug);
+        }
+
+        return view('front/u03_created', [
+            'oogiri'    => $oogiri,
+            'endsAt'    => service('display')->datetime($oogiri->ends_at),
+            'shareUrl'  => service('share')->url($oogiri),
+            'intentUrl' => service('share')->recruitIntent($oogiri),
+            'hostUrl'   => site_url('host/' . $slug),
+            'ogpUrl'    => base_url('ogp/recruit/' . $slug . '.png'),
+            'hostToken' => 'fixture-host-token', // TODO(inner): 開催時に発行したトークン（この画面と U-08 からだけ渡す）
+        ]);
     }
 
+    /** U-11 募集終了（結果選択待ち） */
+    private function closedPage(Oogiri $oogiri): string
+    {
+        return view('front/u11_closed', ['oogiri' => $oogiri]);
+    }
+
+    /** U-10 結果発表 */
+    private function resultPage(Oogiri $oogiri): string
+    {
+        $page   = max(1, (int) $this->request->getGet('page'));
+        $ranked = service('answer')->ranked($oogiri);
+        $format = service('display');
+        $share  = service('share');
+
+        return view('front/u10_result', [
+            'oogiri'          => $oogiri,
+            'period'          => $format->period($oogiri->starts_at, $oogiri->ends_at),
+            'ranked'          => $ranked,
+            'answers'         => service('answer')->listVisible($oogiri, $page),
+            'resultIntentUrl' => $share->resultIntent($oogiri, $ranked[0] ?? null),
+            'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
+            'ads'             => service('ads')->slots(),
+        ]);
+    }
+
+    /** U-12 結果未選出 */
+    private function noResultPage(Oogiri $oogiri): string
+    {
+        $page  = max(1, (int) $this->request->getGet('page'));
+        $share = service('share');
+
+        return view('front/u12_no_result', [
+            'oogiri'          => $oogiri,
+            'period'          => service('display')->period($oogiri->starts_at, $oogiri->ends_at),
+            'answers'         => service('answer')->listVisible($oogiri, $page),
+            'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
+            'ads'             => service('ads')->slots(),
+        ]);
+    }
+
+    /** U-13 非表示 */
+    private function hiddenPage(Oogiri $oogiri): string
+    {
+        return view('front/u13_hidden', [
+            'oogiri' => $oogiri,
+            'isHost' => service('host')->isAuthorized($oogiri),
+        ]);
+    }
 }

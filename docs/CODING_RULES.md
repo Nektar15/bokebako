@@ -206,7 +206,7 @@ A-01（管理者ログイン）は最終工程の近くで実装する。それ�
 - **必須**：View で使ってよい PHP は次の範囲に限る。
   - `esc()` での出力
   - `if` / `foreach` の制御構文（`if (): ... endif;` の形）
-  - `$this->extend` / `section` / `include`
+  - `$this->extend` / `section` / `include`（値を渡さない部品は `$this->include`。値を渡す部品は `part('partials/…', [...])`。`$this->include` の第2引数は値ではなくオプションなので使わない）
   - `site_url()` / `base_url()` / `csrf_field()`
   - 表示用ヘルパー（`app/Helpers/view_helper.php` に定義したものだけ）
 - **必須**：View ファイルの先頭に、受け取る変数の一覧をコメントで書く。これを「View 契約」と呼び、外側と中身の受け渡しの取り決めにする。
