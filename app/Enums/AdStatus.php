@@ -7,7 +7,7 @@ namespace App\Enums;
 /**
  * 広告の状態（SPEC A-07）
  *
- * draft / stopped は管理者が決める表示状態。live / scheduled / ended は公開中の広告を掲載期間で振り分けたもの。
+ * DB には draft / published / stopped だけを保存し（Ad::STATUS_*）、published は掲載期間で scheduled / live / ended に分けて表示する。
  */
 enum AdStatus: string
 {

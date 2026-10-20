@@ -21,17 +21,34 @@ use CodeIgniter\I18n\Time;
  * @property string $slot        AdSlot の値
  * @property string $sponsor     スポンサー名
  * @property Time   $starts_at
- * @property string $status      AdStatus の値
+ * @property string $status      保存される表示状態：draft（下書き）/ published（公開）/ stopped（停止）。掲載中・予約・終了は期間から判定する
  * @property string $url         リンク先
  */
 final class Ad extends Entity
 {
+    public const STATUS_DRAFT     = 'draft';
+    public const STATUS_PUBLISHED = 'published';
+    public const STATUS_STOPPED   = 'stopped';
+
     protected $dates = ['starts_at', 'ends_at', 'created_at', 'updated_at'];
     protected $casts = ['id' => 'int', 'impressions' => 'int', 'clicks' => 'int'];
 
-    public function status(): AdStatus
+    /**
+     * 表示用の状態（公開中の広告は掲載期間で 予約 / 掲載中 / 終了 に分かれる）
+     */
+    public function status(?Time $now = null): AdStatus
     {
-        return AdStatus::from($this->attributes['status']);
+        $now ??= Time::now();
+
+        return match ($this->attributes['status']) {
+            self::STATUS_DRAFT   => AdStatus::Draft,
+            self::STATUS_STOPPED => AdStatus::Stopped,
+            default              => match (true) {
+                $now->isBefore($this->starts_at) => AdStatus::Scheduled,
+                $now->isAfter($this->ends_at)    => AdStatus::Ended,
+                default                          => AdStatus::Live,
+            },
+        };
     }
 
     public function slot(): AdSlot

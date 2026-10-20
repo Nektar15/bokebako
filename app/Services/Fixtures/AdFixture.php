@@ -42,7 +42,7 @@ final class AdFixture
                 'url'         => 'https://example.com/campaign/' . $id,
                 'starts_at'   => Time::parse("{$year}-{$from} 00:00:00"),
                 'ends_at'     => Time::parse("{$year}-{$to} 23:59:59"),
-                'status'      => $status,
+                'status'      => $status === 'live' || $status === 'scheduled' || $status === 'ended' ? 'published' : $status,
                 'impressions' => $imp,
                 'clicks'      => $clk,
             ]);
