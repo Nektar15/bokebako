@@ -1,6 +1,6 @@
 # 引き継ぎメモ（新しいセッション・別の開発者向け）
 
-最終更新：2026-10-20　ブランチ：`feature/release-prep`（工程5まで完了、develop 未マージ）
+最終更新：2026-10-20　ブランチ：`develop`（工程0〜5まで取り込み済み）
 
 ## 今どこまでできているか
 
@@ -10,15 +10,15 @@
 | 1 ユーザー向け画面の外側（U-01〜U-18） | 完了・develop に取り込み済み | `feature/front-views` |
 | 2 管理画面の外側（A-02〜A-10） | 完了・develop に取り込み済み | `feature/admin-views` |
 | 3 DB とモデル／4 中身 | 完了・develop に取り込み済み | `feature/database` |
-| 5 仕上げ | 完了・`composer check` 通過（165 テスト）。**develop 未マージ** | `feature/release-prep` |
+| 5 仕上げ | 完了・develop に取り込み済み（`composer check` 通過、165 テスト） | `feature/release-prep` |
 | A-01 ログイン・2FA | **未実装**（下の「残課題」） | |
 
 ## 最初にやること（新しいセッションでそのまま貼る指示）
 
 ```
 docs/PROMPT.md と docs/HANDOFF.md を読んでから進めてください。
-まず feature/release-prep で `cp .env.example .env && composer install && composer check` を通し、
-通ったら develop にマージしてください。次は「残課題」の A-01（管理者ログイン・二段階認証）です。
+まず develop で `cp .env.example .env && composer install && composer check` を通してください。
+次は「残課題」の A-01（管理者ログイン・二段階認証）を feature/admin-login で実装してください。
 ```
 
 ### 開発ツールの入れ方（packagist に接続できない環境向け）
