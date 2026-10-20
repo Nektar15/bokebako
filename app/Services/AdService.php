@@ -6,9 +6,12 @@ namespace App\Services;
 
 use App\Entities\Ad;
 use App\Enums\AdSlot;
+use App\Enums\AdStatus;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
-use App\Services\Fixtures\AdFixture;
+use App\Models\AdModel;
+use CodeIgniter\HTTP\Files\UploadedFile;
+use CodeIgniter\I18n\Time;
 
 /**
  * 広告（A-07）：ユーザー向けの枠への表示と、管理画面の登録・編集
@@ -18,45 +21,93 @@ use App\Services\Fixtures\AdFixture;
  */
 final class AdService
 {
+    public const CACHE_KEY = 'ads_live';
+
     /**
-     * ユーザー向けの枠に出す広告
-     *
-     * TODO(inner): ads テーブルから掲載期間内のものを取得し、複数あればローテーション、表示回数を記録する。
+     * 画像の置き場（public/ からの相対）
+     */
+    public const IMAGE_DIR = 'assets/ads';
+
+    public function __construct(private readonly AdModel $ads)
+    {
+    }
+
+    /**
+     * ユーザー向けの枠に出す広告。掲載期間内の公開中の広告から枠ごとに1本（複数あればローテーション）。表示回数を記録する
      *
      * @return array{top: SlotAd|null, bottom: SlotAd|null}
      */
     public function slots(): array
     {
-        // 外側フェーズ：?ads=1 のときだけ見本の広告を出す
-        if (ENVIRONMENT === 'development' && service('request')->getGet('ads') === '1') {
-            $ad = ['id' => 1, 'image' => base_url('assets/img/ad-sample.svg'), 'alt' => '見本の広告'];
+        $live = cache(self::CACHE_KEY);
 
-            return ['top' => $ad, 'bottom' => $ad];
+        if (! is_array($live)) {
+            $now  = Time::now()->toDateTimeString();
+            $rows = $this->ads->where('status', Ad::STATUS_PUBLISHED)->where('starts_at <=', $now)->where('ends_at >=', $now)->findAll(50);
+            $live = ['top' => [], 'bottom' => []];
+
+            foreach ($rows as $ad) {
+                $live[$ad->slot][] = ['id' => $ad->id, 'image' => base_url($ad->image), 'alt' => $ad->name . '（' . $ad->sponsor . '）'];
+            }
+            cache()->save(self::CACHE_KEY, $live, 300);
+        }
+        $slots = ['top' => null, 'bottom' => null];
+
+        foreach (array_keys($slots) as $slot) {
+            $candidates = $live[$slot] ?? [];
+
+            if ($candidates === []) {
+                continue;
+            }
+            $ad = $candidates[array_rand($candidates)]; // ローテーション
+            $this->ads->increment($ad['id'], 'impressions');
+            $slots[$slot] = $ad;
         }
 
-        return ['top' => null, 'bottom' => null];
+        return $slots;
     }
 
     /**
-     * 管理画面の一覧（掲載中 → 予約 → 下書き → 停止 → 終了の順）
+     * クリック計測つきのリダイレクト先（/ad/{id}/click）。公開中でなければ null
+     */
+    public function click(int $id): ?string
+    {
+        $ad = $this->ads->find($id);
+
+        if ($ad === null || $ad->status() !== AdStatus::Live) {
+            return null;
+        }
+        $this->ads->increment($id, 'clicks');
+
+        return $ad->url;
+    }
+
+    /**
+     * 管理画面の一覧（新しい順）
      *
      * @return list<Ad>
      */
     public function list(): array
     {
-        // TODO(inner): AdModel から取る（LIMIT 必須）
-        return AdFixture::all();
+        return $this->ads->orderBy('starts_at', 'DESC')->orderBy('id', 'DESC')->findAll(100);
     }
 
     /**
-     * 枠ごとの今月の実績
+     * 枠ごとの実績（掲載中の本数と、累計の表示回数・クリック数）
      *
      * @return array<string, array{live: int, impressions: int, clicks: int}> AdSlot の値 => 実績
      */
     public function slotSummary(): array
     {
-        // TODO(inner): 掲載中の本数と、今月の表示回数・クリック数を枠ごとに合算する
-        return AdFixture::slotSummary();
+        $summary = ['top' => ['live' => 0, 'impressions' => 0, 'clicks' => 0], 'bottom' => ['live' => 0, 'impressions' => 0, 'clicks' => 0]];
+
+        foreach ($this->ads->findAll(500) as $ad) {
+            $summary[$ad->slot]['impressions'] += $ad->impressions;
+            $summary[$ad->slot]['clicks'] += $ad->clicks;
+            $summary[$ad->slot]['live'] += $ad->status() === AdStatus::Live ? 1 : 0;
+        }
+
+        return $summary;
     }
 
     /**
@@ -64,13 +115,13 @@ final class AdService
      */
     public function find(int $id): Ad
     {
-        foreach (AdFixture::all() as $ad) {
-            if ($ad->id === $id) {
-                return $ad;
-            }
+        $ad = $this->ads->find($id);
+
+        if ($ad === null) {
+            throw new NotFoundException();
         }
 
-        throw new NotFoundException();
+        return $ad;
     }
 
     /**
@@ -80,10 +131,17 @@ final class AdService
      *
      * @throws ValidationException
      */
-    public function create(array $input): void
+    public function create(array $input, ?UploadedFile $image): void
     {
         $this->validate($input);
-        // TODO(inner): 画像の保存（public/assets/ads/）、ads への保存、操作履歴の記録
+        $path = $this->storeImage($image);
+
+        if ($path === null) {
+            throw new ValidationException(['image' => '広告画像（PNG・JPG）を選んでください']);
+        }
+        $id = $this->ads->insert($this->row($input) + ['image' => $path]);
+        cache()->delete(self::CACHE_KEY);
+        service('adminLog')->record('ad', $id, '広告を登録（' . (($input['action'] ?? '') === 'publish' ? '公開' : '下書き') . '）：' . trim((string) $input['name']));
     }
 
     /**
@@ -93,17 +151,68 @@ final class AdService
      *
      * @throws ValidationException
      */
-    public function update(int $id, array $input): void
+    public function update(int $id, array $input, ?UploadedFile $image): void
     {
         $this->find($id);
         $this->validate($input);
-        // TODO(inner): 画像の差し替え、ads の更新、操作履歴の記録
+        $row  = $this->row($input);
+        $path = $this->storeImage($image);
+
+        if ($path !== null) {
+            $row['image'] = $path;
+        }
+        $this->ads->update($id, $row);
+        cache()->delete(self::CACHE_KEY);
+        service('adminLog')->record('ad', $id, '広告を編集（' . (($input['action'] ?? '') === 'publish' ? '公開' : '停止') . '）：' . trim((string) $input['name']));
     }
 
     public function delete(int $id): void
     {
-        $this->find($id);
-        // TODO(inner): ads から削除（表示回数の記録は残す）、操作履歴の記録
+        $ad = $this->find($id);
+        $this->ads->delete($id);
+        cache()->delete(self::CACHE_KEY);
+        service('adminLog')->record('ad', $id, '広告を削除：' . $ad->name);
+    }
+
+    /**
+     * @param AdInput $input
+     *
+     * @return array<string, string>
+     */
+    private function row(array $input): array
+    {
+        return [
+            'name'    => trim((string) $input['name']),
+            'sponsor' => trim((string) $input['sponsor']),
+            'url'     => trim((string) $input['url']),
+            'slot'    => (string) $input['slot'],
+            'status'  => match ($input['action'] ?? '') {
+                'publish' => Ad::STATUS_PUBLISHED,
+                'draft'   => Ad::STATUS_DRAFT,
+                default   => Ad::STATUS_STOPPED,
+            },
+            'starts_at' => str_replace('T', ' ', (string) $input['starts_at']) . ':00',
+            'ends_at'   => str_replace('T', ' ', (string) $input['ends_at']) . ':00',
+        ];
+    }
+
+    /**
+     * 画像を public/assets/ads/ に保存して相対パスを返す。ファイルがなければ null
+     *
+     * @throws ValidationException PNG・JPG 以外
+     */
+    private function storeImage(?UploadedFile $image): ?string
+    {
+        if ($image === null || ! $image->isValid()) {
+            return null;
+        }
+        if (! in_array($image->getMimeType(), ['image/png', 'image/jpeg'], true)) {
+            throw new ValidationException(['image' => '広告画像は PNG か JPG にしてください']);
+        }
+        $name = $image->getRandomName();
+        $image->move(FCPATH . self::IMAGE_DIR, $name);
+
+        return self::IMAGE_DIR . '/' . $name;
     }
 
     /**

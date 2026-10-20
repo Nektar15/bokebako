@@ -5,19 +5,16 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use CodeIgniter\Exceptions\PageNotFoundException;
-use CodeIgniter\Test\CIUnitTestCase;
-use CodeIgniter\Test\FeatureTestTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Support\DatabaseTestCase;
 
 /**
  * 管理画面と API のルートが応答すること（ユーザー向けは FrontRoutesTest）
  *
  * @internal
  */
-final class RoutesTest extends CIUnitTestCase
+final class RoutesTest extends DatabaseTestCase
 {
-    use FeatureTestTrait;
-
     #[DataProvider('provideAdminRouteRespondsInTesting')]
     public function testAdminRouteRespondsInTesting(string $path): void
     {
@@ -38,7 +35,7 @@ final class RoutesTest extends CIUnitTestCase
 
     public function testStatusApiReturnsEnvelope(): void
     {
-        $result = $this->get('/api/v1/o/demo/status');
+        $result = $this->get('/api/v1/o/k7Qm2xPz/status');
         $result->assertOK();
         $result->assertJSONFragment(['ok' => true]);
     }

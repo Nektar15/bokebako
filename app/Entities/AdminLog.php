@@ -10,7 +10,7 @@ use CodeIgniter\I18n\Time;
 /**
  * 操作履歴の1件（誰が・いつ・何をしたか。CODING_RULES 7-1）
  *
- * TODO(inner): 工程4で admin_logs テーブル（SPEC 3.3 の admins に併設）に保存する。
+ * admin_logs テーブルの1行（AdminLogService::record が積む。actor は NULL なら「自動」扱い）。
  *
  * @property string $actor      操作した人（管理者名、「開催者」、「自動」）
  * @property Time   $created_at

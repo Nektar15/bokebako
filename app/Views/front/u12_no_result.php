@@ -17,6 +17,7 @@
 <meta property="og:title" content="<?= esc($oogiri->odai, 'attr') ?>">
 <meta property="og:image" content="<?= esc(base_url('ogp/recruit/' . $oogiri->slug . '.png'), 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="bk:pv" content="<?= esc($oogiri->slug, 'attr') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>

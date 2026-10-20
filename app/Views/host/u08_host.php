@@ -13,6 +13,7 @@
  * @var string $shareUrl
  * @var string $intentUrl
  * @var array<string, string> $errors
+ * @var string $hostToken 開催者トークン（JS が localStorage に保存し直す）
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -57,7 +58,7 @@
 
 <?php if ($isOpen): ?>
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($intentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="recruit_share" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>Xで再募集する</a>
+<a class="c-button c-button--x" href="<?= esc($intentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_recruit" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>Xで再募集する</a>
 <div class="p-host__url">
 <label class="u-visually-hidden" for="share-url">募集URL</label>
 <input class="c-input u-mono p-host__url-input" id="share-url" type="text" readonly value="<?= esc($shareUrl, 'attr') ?>">
@@ -147,5 +148,6 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
+<script type="application/json" data-js-config="host"><?= json_encode(['slug' => $oogiri->slug, 'token' => $hostToken], JSON_HEX_TAG | JSON_HEX_AMP) ?></script>
 <script type="module" src="<?= asset_url('js/pages/host.js') ?>"></script>
 <?= $this->endSection() ?>

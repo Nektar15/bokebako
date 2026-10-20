@@ -10,6 +10,8 @@
  * @var array{body:string}        $old
  * @var \App\Entities\Answer|null $sharedAnswer    回答シェア用URLで開いたとき、添えて表示する回答
  * @var array{top: array|null, bottom: array|null} $ads
+ * @var string $ogpUrl  OGP 画像の URL（募集用。回答シェア用URLなら回答用）
+ * @var string $captcha CAPTCHA のサイトキー（空なら出さない）
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -19,7 +21,7 @@
 <meta name="description" content="24時間限定の大喜利「<?= esc($oogiri->odai, 'attr') ?>」に、登録なしで匿名回答できます。">
 <meta property="og:title" content="<?= esc($oogiri->odai, 'attr') ?>">
 <meta property="og:description" content="24時間限定 回答募集中。登録なしでボケられます。">
-<meta property="og:image" content="<?= esc($sharedAnswer !== null ? base_url('ogp/answer/' . $sharedAnswer->id . '.png') : base_url('ogp/recruit/' . $oogiri->slug . '.png'), 'attr') ?>">
+<meta property="og:image" content="<?= esc($ogpUrl, 'attr') ?>">
 <meta property="og:url" content="<?= esc(current_url(), 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
 <?= $this->endSection() ?>
@@ -61,6 +63,7 @@
 <?php if (isset($errors['body'])): ?><p class="c-field__error" id="body-error" role="alert"><?= esc($errors['body']) ?></p><?php endif; ?>
 <p class="c-field__help">名前も登録もいりません。匿名で投稿されます。</p>
 </div>
+<?= part('partials/captcha', ['siteKey' => $captcha]) ?>
 <button type="submit" class="c-button c-button--primary" data-js-open-dialog="answer-confirm" data-js-answer-submit>回答する</button>
 <p class="c-field__error u-hidden" data-js-closed-note role="alert">募集は終了しました。結果発表までお待ちください。</p>
 

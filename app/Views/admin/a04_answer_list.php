@@ -72,7 +72,7 @@
 <div class="c-table__cell c-table__cell--num<?= $row['alert'] ? ' c-table__cell--alert' : '' ?>" role="cell"><?= esc((string) $answer->report_count) ?></div>
 <div class="c-table__cell" role="cell"><?= part('partials/admin_badge', ['status' => $answer->status()->value, 'label' => $answer->status()->label()]) ?></div>
 <?php if ($canViewSource): ?>
-<div class="c-table__cell c-table__cell--mono" role="cell">IP <?= esc($answer->ip_hash) ?><br>ID <?= esc($answer->browser_id_hash) ?></div>
+<div class="c-table__cell c-table__cell--mono" role="cell">IP <?= esc($answer->shortIpHash()) ?><br>ID <?= esc($answer->shortBrowserIdHash()) ?></div>
 <?php endif; ?>
 <div class="c-table__cell" role="cell">
 <div class="c-table__actions">

@@ -6,19 +6,34 @@ namespace App\Services;
 
 use App\Entities\Oogiri;
 use App\Enums\ErrorCode;
+use App\Enums\EventName;
+use App\Enums\NgWordAction;
+use App\Enums\OogiriStatus;
+use App\Enums\ReportTarget;
 use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
-use App\Services\Fixtures\FixtureContext;
-use App\Services\Fixtures\OogiriFixture;
+use App\Libraries\Captcha;
+use App\Models\OogiriModel;
+use CodeIgniter\I18n\Time;
 
 /**
  * 大喜利の取得・作成（U-01〜U-03、募集URLの振り分け）
  */
 final class OogiriService
 {
-    public function __construct(private readonly SettingService $settings)
-    {
+    /**
+     * 合言葉の最小文字数（未確定事項2：任意。入れるなら4文字以上を仮置き）
+     */
+    public const PASSPHRASE_MIN = 4;
+
+    public function __construct(
+        private readonly OogiriModel $oogiris,
+        private readonly SettingService $settings,
+        private readonly IdentityService $identity,
+        private readonly NgWordService $ngWords,
+        private readonly RateLimitService $rateLimit,
+    ) {
     }
 
     /**
@@ -28,39 +43,103 @@ final class OogiriService
      */
     public function findBySlug(string $slug): Oogiri
     {
-        // TODO(inner): OogiriModel から取得する。戻り値の形は変えない
-        if ($slug === 'none') {
+        $oogiri = $this->oogiris->where('slug', $slug)->first();
+
+        if ($oogiri === null) {
             throw new NotFoundException();
         }
 
-        return OogiriFixture::oogiri(FixtureContext::name(), $slug);
+        return $oogiri;
     }
 
     /**
      * 大喜利を作成する（U-02「同意して開催する」）
      *
-     * @param array{odai?: string, passphrase?: string, from?: string} $input
+     * @param array{odai?: string, passphrase?: string, from?: string, captcha?: string} $input
+     *
+     * @return array{oogiri: Oogiri, hostToken: string} トークンはこの場でだけ渡す（DB にはハッシュだけ）
      *
      * @throws AppException        レート制限
      * @throws ValidationException 文字数・NGワード
      */
-    public function create(array $input): Oogiri
+    public function create(array $input): array
     {
+        $this->rateLimit->assertAllowed(RateLimitService::ACTION_CREATE);
         $errors = $this->validate($input);
+        $odai   = trim((string) ($input['odai'] ?? ''));
 
-        // TODO(inner): NGワード判定（投稿拒否は即エラー、要確認は通して記録）、レート制限、CAPTCHA
-        match (FixtureContext::error()) {
-            'ngword'    => $errors['odai'] = ErrorCode::NgWord->message(),
-            'ratelimit' => throw new AppException(ErrorCode::RateLimited),
-            default     => null,
-        };
+        if ($errors === []) {
+            $ng = $this->ngWords->check($odai);
 
+            if ($ng['action'] === NgWordAction::Reject) {
+                $errors['odai'] = ErrorCode::NgWord->message();
+            }
+        }
+        if ($errors === [] && $this->rateLimit->needsCaptcha(RateLimitService::ACTION_CREATE) && ! (new Captcha())->verify((string) ($input['captcha'] ?? ''))) {
+            $errors['_'] = 'CAPTCHA の確認に失敗しました。もう一度お試しください';
+        }
         if ($errors !== []) {
             throw new ValidationException($errors);
         }
 
-        // TODO(inner): スラッグ・開催者トークンの発行、合言葉のハッシュ保存、OGP生成、「開催」イベントの記録
-        return OogiriFixture::oogiri('open_empty', 'k7Qm2xPz');
+        $now        = Time::now();
+        $token      = $this->identity->issueHostToken();
+        $passphrase = trim((string) ($input['passphrase'] ?? ''));
+        $parent     = $this->parentIdFromSlug((string) ($input['from'] ?? ''));
+        $id         = $this->oogiris->insert([
+            'slug'             => $this->uniqueSlug(),
+            'odai'             => $odai,
+            'host_token_hash'  => $token['hash'],
+            'passphrase_hash'  => $passphrase === '' ? null : password_hash($passphrase, PASSWORD_DEFAULT),
+            'browser_id_hash'  => $this->identity->browserIdHash(),
+            'ip_hash'          => $this->identity->ipHash(),
+            'status'           => OogiriStatus::Open->value,
+            'starts_at'        => $now->toDateTimeString(),
+            'ends_at'          => $now->addHours($this->settings->int('open_hours'))->toDateTimeString(),
+            'parent_oogiri_id' => $parent,
+        ]);
+        $oogiri = $this->oogiris->find($id);
+
+        if ($parent !== null) {
+            $this->oogiris->increment($parent, 'derived_count');
+        }
+        $this->identity->rememberHostToken($oogiri->slug, $token['token']);
+        service('event')->record(EventName::Create, ['oogiri_id' => $id, 'parent_oogiri_id' => $parent]);
+        service('ogp')->generateRecruit($oogiri);
+        service('adminLog')->record('oogiri', $id, '開催', AdminLogService::ACTOR_HOST);
+
+        // NGワード「要確認」は開催を通したうえで管理画面に記録する（FEATURES 0-3）
+        if (($ng['action'] ?? null) === NgWordAction::Review) {
+            service('moderation')->flag(ReportTarget::Oogiri, $id, 'ng_review', $ng['detail']);
+            service('mail')->notifyAdmin('NGワード「要確認」のお題が開催されました', "お題 #{$id}\n管理画面の「通報・モデレーション」で確認してください。");
+        }
+        if ($this->rateLimit->isBursting(RateLimitService::ACTION_CREATE)) {
+            service('moderation')->flag(ReportTarget::Oogiri, $id, 'abnormal', null, '同一環境から短時間に連続して開催');
+        }
+
+        return ['oogiri' => $oogiri, 'hostToken' => $token['token']];
+    }
+
+    /**
+     * 派生元のスラッグから ID を引く（U-01 の ?from=）。なければ null
+     */
+    private function parentIdFromSlug(string $slug): ?int
+    {
+        if ($slug === '') {
+            return null;
+        }
+        $parent = $this->oogiris->select('id')->where('slug', $slug)->first();
+
+        return $parent?->id;
+    }
+
+    private function uniqueSlug(): string
+    {
+        do {
+            $slug = $this->identity->newSlug();
+        } while ($this->oogiris->where('slug', $slug)->countAllResults() > 0);
+
+        return $slug;
     }
 
     /**
@@ -70,19 +149,22 @@ final class OogiriService
      */
     private function validate(array $input): array
     {
-        $odai = trim((string) ($input['odai'] ?? ''));
-        $max  = $this->settings->int('odai_max');
+        $odai       = trim((string) ($input['odai'] ?? ''));
+        $passphrase = trim((string) ($input['passphrase'] ?? ''));
+        $max        = $this->settings->int('odai_max');
+        $errors     = [];
 
         if ($odai === '') {
-            return ['odai' => 'お題を入力してください'];
+            $errors['odai'] = 'お題を入力してください';
+        } elseif (mb_strlen($odai) > $max) {
+            $errors['odai'] = "お題は{$max}文字以内で入力してください";
+        } elseif (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', $odai) === 1) {
+            $errors['odai'] = '使えない文字が含まれています';
         }
-        if (mb_strlen($odai) > $max) {
-            return ['odai' => "お題は{$max}文字以内で入力してください"];
-        }
-        if (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', $odai) === 1) {
-            return ['odai' => '使えない文字が含まれています'];
+        if ($passphrase !== '' && mb_strlen($passphrase) < self::PASSPHRASE_MIN) {
+            $errors['passphrase'] = '合言葉は' . self::PASSPHRASE_MIN . '文字以上にしてください';
         }
 
-        return [];
+        return $errors;
     }
 }

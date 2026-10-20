@@ -9,12 +9,12 @@ use App\Enums\InquiryStatus;
 use App\Enums\InquiryType;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
-use App\Services\Fixtures\InquiryFixture;
+use App\Models\InquiryModel;
 
 /**
  * お問い合わせ管理（A-09）：一覧・詳細・対応状況・対応メモ
  *
- * 受け付ける側（U-18）は ContactService。
+ * 受け付ける側（U-18）は ContactService。対応メモは admin_logs（target_type = inquiry）に残す。
  *
  * @phpstan-type InquiryFilter array{status: string, type: string, period: string}
  */
@@ -30,6 +30,10 @@ final class InquiryService
         'custom' => '期間指定',
     ];
 
+    public function __construct(private readonly InquiryModel $inquiries)
+    {
+    }
+
     /**
      * 一覧（新しい順。絞り込み）
      *
@@ -39,17 +43,18 @@ final class InquiryService
      */
     public function list(array $filter): array
     {
-        // TODO(inner): InquiryModel から取る（LIMIT 必須）。戻り値の形は変えない
-        $items = InquiryFixture::all();
+        $builder = $this->inquiries->builder();
 
         if ($filter['status'] !== 'all') {
-            $items = array_filter($items, static fn (Inquiry $i) => $i->status()->value === $filter['status']);
+            $builder->where('status', $filter['status']);
         }
         if ($filter['type'] !== 'all') {
-            $items = array_filter($items, static fn (Inquiry $i) => $i->type()->value === $filter['type']);
+            $builder->where('type', $filter['type']);
         }
+        OogiriAdminService::applyPeriod($builder, $filter['period']);
+        $rows = $builder->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->get(100)->getResultArray();
 
-        return array_values($items);
+        return array_map(fn (array $row) => $this->withMemos(new Inquiry($row)), $rows);
     }
 
     /**
@@ -59,8 +64,18 @@ final class InquiryService
      */
     public function counts(): array
     {
-        // TODO(inner): status ごとに COUNT する
-        return InquiryFixture::counts();
+        $counts = ['all' => 0];
+
+        foreach (InquiryStatus::cases() as $case) {
+            $counts[$case->value] = 0;
+        }
+
+        foreach ($this->inquiries->builder()->select('status, COUNT(*) AS n')->groupBy('status')->get()->getResultArray() as $row) {
+            $counts[$row['status']] = (int) $row['n'];
+            $counts['all'] += (int) $row['n'];
+        }
+
+        return $counts;
     }
 
     /**
@@ -68,13 +83,13 @@ final class InquiryService
      */
     public function find(int $id): Inquiry
     {
-        foreach (InquiryFixture::all() as $inquiry) {
-            if ($inquiry->id === $id) {
-                return $inquiry;
-            }
+        $inquiry = $this->inquiries->find($id);
+
+        if ($inquiry === null) {
+            throw new NotFoundException();
         }
 
-        throw new NotFoundException();
+        return $this->withMemos($inquiry);
     }
 
     /**
@@ -86,17 +101,23 @@ final class InquiryService
      */
     public function update(int $id, array $input): void
     {
-        $this->find($id);
-        $status = (string) ($input['status'] ?? '');
-        $memo   = trim((string) ($input['memo'] ?? ''));
+        $inquiry = $this->find($id);
+        $status  = InquiryStatus::tryFrom((string) ($input['status'] ?? ''));
+        $memo    = trim((string) ($input['memo'] ?? ''));
 
-        if ($status !== '' && InquiryStatus::tryFrom($status) === null) {
+        if (($input['status'] ?? '') !== '' && $status === null) {
             throw new ValidationException(['status' => '対応状況を選んでください']);
         }
-        if ($status === '' && $memo === '') {
+        if ($status === null && $memo === '') {
             throw new ValidationException(['memo' => '対応メモを入力してください']);
         }
-        // TODO(inner): status の保存、memo を対応メモ（管理者名・日時つき）として保存、操作履歴の記録
+        if ($status !== null && $status !== $inquiry->status()) {
+            $this->inquiries->update($id, ['status' => $status->value]);
+            service('adminLog')->record('inquiry', $id, '対応状況を「' . $status->label() . '」に変更');
+        }
+        if ($memo !== '') {
+            service('adminLog')->record('inquiry', $id, $memo);
+        }
     }
 
     /**
@@ -107,5 +128,12 @@ final class InquiryService
     public function types(): array
     {
         return InquiryType::options();
+    }
+
+    private function withMemos(Inquiry $inquiry): Inquiry
+    {
+        $inquiry->memos = service('adminLog')->listFor('inquiry', $inquiry->id, 20);
+
+        return $inquiry;
     }
 }

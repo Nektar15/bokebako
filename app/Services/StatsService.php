@@ -4,32 +4,91 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\AnswerStatus;
+use App\Enums\EventName;
+use App\Enums\OogiriStatus;
 use App\Enums\StatsPeriod;
-use App\Services\Fixtures\StatsFixture;
+use App\Models\AiJudgementModel;
+use App\Models\AnswerModel;
+use App\Models\DailyStatModel;
+use App\Models\EventModel;
+use App\Models\InquiryModel;
+use App\Models\OogiriModel;
+use App\Models\ReportModel;
 use CodeIgniter\I18n\Time;
 
 /**
- * ダッシュボード（A-02）の集計値と、管理画面共通の未処理件数
+ * ダッシュボード（A-02）の集計値と、日次集計（S-06）、管理画面共通の未処理件数
  *
- * TODO(inner): 集計テーブル（S-06 の日次集計先）から読む。生ログは直接読まない（SPEC 9）。
+ * ダッシュボードは daily_stats だけを読む（生ログ events は直接集計しない：SPEC 9）。
  *
- * @phpstan-import-type Summary from StatsFixture
+ * @phpstan-type Summary array{
+ *                       pv: int, pvTotal: int, oogiris: int, oogirisTotal: int, answers: int, answersTotal: int, answersPerOogiri: float,
+ *                       shareRecruit: int, shareAnswer: int, shareResult: int, reports: int, hidden: int,
+ *                       answerers: int, converted: int, conversionRate: float, derived: int, derivedCoefficient: float
+ *                       }
  */
 final class StatsService
 {
-    public function __construct(private readonly DisplayService $display)
-    {
+    public function __construct(
+        private readonly DisplayService $display,
+        private readonly DailyStatModel $daily,
+        private readonly EventModel $events,
+        private readonly OogiriModel $oogiris,
+        private readonly AnswerModel $answers,
+        private readonly AiJudgementModel $judgements,
+        private readonly InquiryModel $inquiries,
+    ) {
     }
 
     /**
-     * 期間の集計値
+     * 期間の開始日と終了日（日次集計なので「今日」は前日の集計まで：毎日 4:00 に前日分を集計する）
+     *
+     * @return array{Time, Time}
+     */
+    public function range(StatsPeriod $period): array
+    {
+        $latest = Time::now()->subDays(1)->setTime(0, 0);
+
+        return match ($period) {
+            StatsPeriod::Today                      => [$latest, $latest],
+            StatsPeriod::Yesterday                  => [$latest->subDays(1), $latest->subDays(1)],
+            StatsPeriod::Week                       => [$latest->subDays(6), $latest],
+            StatsPeriod::Month, StatsPeriod::Custom => [$latest->subDays(29), $latest],
+        };
+    }
+
+    /**
+     * 期間の集計値（daily_stats を合算）
      *
      * @return Summary
      */
     public function summary(StatsPeriod $period): array
     {
-        // TODO(inner): 集計テーブルから期間で合算する
-        return StatsFixture::summary($period);
+        [$from, $to] = $this->range($period);
+        $sum         = $this->sumBetween($from, $to);
+        $total       = $this->sumBetween(Time::parse('2000-01-01'), $to);
+        $oogiris     = $sum['oogiris'];
+
+        return [
+            'pv'                 => $sum['pv'],
+            'pvTotal'            => $total['pv'],
+            'oogiris'            => $oogiris,
+            'oogirisTotal'       => $total['oogiris'],
+            'answers'            => $sum['answers'],
+            'answersTotal'       => $total['answers'],
+            'answersPerOogiri'   => $oogiris === 0 ? 0.0 : $sum['answers'] / $oogiris,
+            'shareRecruit'       => $sum['share_recruit'],
+            'shareAnswer'        => $sum['share_answer'],
+            'shareResult'        => $sum['share_result'],
+            'reports'            => $sum['reports'],
+            'hidden'             => $sum['hidden'],
+            'answerers'          => $sum['answerers'],
+            'converted'          => $sum['converted'],
+            'conversionRate'     => $sum['answerers'] === 0 ? 0.0 : $sum['converted'] / $sum['answerers'] * 100,
+            'derived'            => $sum['derived'],
+            'derivedCoefficient' => $oogiris === 0 ? 0.0 : $sum['derived'] / $oogiris,
+        ];
     }
 
     /**
@@ -37,15 +96,9 @@ final class StatsService
      */
     public function rangeLabel(StatsPeriod $period): string
     {
-        // 日次集計なので「今日」は前日の集計まで（毎日 4:00 に前日分を集計する）
-        $latest = Time::now()->subDays(1);
+        [$from, $to] = $this->range($period);
 
-        return match ($period) {
-            StatsPeriod::Today                      => $this->display->date($latest),
-            StatsPeriod::Yesterday                  => $this->display->date($latest->subDays(1)),
-            StatsPeriod::Week                       => $this->display->date($latest->subDays(6)) . '〜' . $this->display->date($latest),
-            StatsPeriod::Month, StatsPeriod::Custom => $this->display->date($latest->subDays(29)) . '〜' . $this->display->date($latest),
-        };
+        return $from->toDateString() === $to->toDateString() ? $this->display->date($to) : $this->display->date($from) . '〜' . $this->display->date($to);
     }
 
     /**
@@ -91,30 +144,32 @@ final class StatsService
     }
 
     /**
-     * 直近14日の日別開催数のグラフ（古い順）
-     *
-     * SVG（viewBox 0 0 140 100）に置く棒の座標まで計算して返す。View では計算しない。
+     * 直近14日の日別開催数のグラフ（古い順）。SVG（viewBox 0 0 140 100）に置く棒の座標まで計算して返す
      *
      * @return array{bars: list<array{label: string, tip: string, x: int, y: int, height: int}>, max: string, mid: string, latest: string}
      */
     public function dailyChart(): array
     {
-        // TODO(inner): 集計テーブルから日別に取る
-        $daily = StatsFixture::dailyOogiris();
-        $max   = max(1, ...array_column($daily, 'count'));
-        $bars  = [];
+        $latest = Time::now()->subDays(1)->setTime(0, 0);
+        $rows   = [];
 
-        foreach ($daily as $i => $day) {
-            $height = (int) round($day['count'] / $max * 100);
-            $bars[] = [
-                'label'  => $day['date']->format('j'),
-                'tip'    => $this->display->date($day['date']) . '：' . $day['count'] . '開催',
-                'x'      => $i * 10 + 1,
-                'y'      => 100 - $height,
-                'height' => $height,
-            ];
+        foreach ($this->daily->where('date >=', $latest->subDays(13)->toDateString())->where('date <=', $latest->toDateString())->findAll() as $row) {
+            $rows[$row->date->toDateString()] = $row->oogiris;
         }
-        $last = $daily[count($daily) - 1];
+        $counts = [];
+
+        for ($i = 13; $i >= 0; $i--) {
+            $day      = $latest->subDays($i);
+            $counts[] = ['date' => $day, 'count' => $rows[$day->toDateString()] ?? 0];
+        }
+        $max  = max(1, ...array_column($counts, 'count'));
+        $bars = [];
+
+        foreach ($counts as $i => $day) {
+            $height = (int) round($day['count'] / $max * 100);
+            $bars[] = ['label' => $day['date']->format('j'), 'tip' => $this->display->date($day['date']) . '：' . $day['count'] . '開催', 'x' => $i * 10 + 1, 'y' => 100 - $height, 'height' => $height];
+        }
+        $last = $counts[13];
 
         return [
             'bars'   => $bars,
@@ -125,14 +180,18 @@ final class StatsService
     }
 
     /**
-     * 「対応が必要なもの」の件数
+     * 「対応が必要なもの」の件数（これは今の値を数える）
      *
      * @return array{moderation: int, ngReview: int, inquiries: int, aiPending: int}
      */
     public function todos(): array
     {
-        // TODO(inner): reports・ng 検知・inquiries・AI判定キューをそれぞれ数える
-        return StatsFixture::todos();
+        return [
+            'moderation' => $this->judgements->where('resolved', 0)->countAllResults(),
+            'ngReview'   => $this->judgements->where('resolved', 0)->where('ng_detail IS NOT NULL')->countAllResults(),
+            'inquiries'  => $this->inquiries->where('status', 'todo')->countAllResults(),
+            'aiPending'  => $this->judgements->where('resolved', 0)->where('queued', 1)->countAllResults(),
+        ];
     }
 
     /**
@@ -145,5 +204,72 @@ final class StatsService
         $todos = $this->todos();
 
         return ['todo' => $todos['moderation'], 'inquiries' => $todos['inquiries']];
+    }
+
+    /**
+     * 1日分を集計して daily_stats に入れる（S-06、cron。既にあれば上書き）。PV のカウンタにも反映する
+     *
+     * @return array<string, int> 集計した値
+     */
+    public function aggregateDay(Time $day): array
+    {
+        $from = $day->setTime(0, 0)->toDateTimeString();
+        $to   = $day->setTime(23, 59, 59)->toDateTimeString();
+        $n    = fn (EventName $name) => $this->events->where('name', $name->value)->where('created_at >=', $from)->where('created_at <=', $to)->countAllResults();
+
+        // 回答者 → 開催者 転換：その日に回答したブラウザのうち、その後（同日〜当日まで）に開催したブラウザ
+        $answerers = $this->events->builder()->select('browser_id_hash')->distinct()
+            ->where('name', EventName::Answer->value)->where('created_at >=', $from)->where('created_at <=', $to)->where('browser_id_hash IS NOT NULL')
+            ->get()->getResultArray();
+        $hashes    = array_column($answerers, 'browser_id_hash');
+        $converted = $hashes === [] ? 0 : (int) $this->events->builder()->select('COUNT(DISTINCT browser_id_hash) AS n')
+            ->where('name', EventName::Create->value)->where('created_at >=', $from)->whereIn('browser_id_hash', $hashes)
+            ->get()->getRowArray()['n'];
+
+        $row = [
+            'date'          => $day->toDateString(),
+            'pv'            => $n(EventName::PageView) + $n(EventName::Visit),
+            'oogiris'       => $this->oogiris->where('created_at >=', $from)->where('created_at <=', $to)->countAllResults(),
+            'answers'       => $this->answers->where('created_at >=', $from)->where('created_at <=', $to)->countAllResults(),
+            'share_recruit' => $n(EventName::ShareRecruit),
+            'share_answer'  => $n(EventName::ShareAnswer),
+            'share_result'  => $n(EventName::ShareResult),
+            'reports'       => (new ReportModel())->where('created_at >=', $from)->where('created_at <=', $to)->countAllResults(),
+            'hidden'        => $this->answers->where('updated_at >=', $from)->where('updated_at <=', $to)->where('status', AnswerStatus::Hidden->value)->countAllResults()
+                + $this->oogiris->where('updated_at >=', $from)->where('updated_at <=', $to)->where('status', OogiriStatus::Hidden->value)->countAllResults(),
+            'answerers' => count($hashes),
+            'converted' => $converted,
+            'derived'   => $this->oogiris->where('created_at >=', $from)->where('created_at <=', $to)->where('parent_oogiri_id IS NOT NULL')->countAllResults(),
+        ];
+        $existing = $this->daily->where('date', $row['date'])->first();
+        $existing === null ? $this->daily->insert($row) : $this->daily->update($existing->id, $row);
+
+        // PV カウンタ（大喜利ごと）に反映：その日の募集URL流入と PV を加算
+        $perOogiri = $this->events->builder()->select('oogiri_id, COUNT(*) AS n')
+            ->whereIn('name', [EventName::PageView->value, EventName::Visit->value])->where('created_at >=', $from)->where('created_at <=', $to)->where('oogiri_id IS NOT NULL')
+            ->groupBy('oogiri_id')->get()->getResultArray();
+
+        foreach ($perOogiri as $p) {
+            $this->oogiris->increment((int) $p['oogiri_id'], 'pv', (int) $p['n']);
+        }
+
+        return $row;
+    }
+
+    /**
+     * @return array{pv: int, oogiris: int, answers: int, share_recruit: int, share_answer: int, share_result: int, reports: int, hidden: int, answerers: int, converted: int, derived: int}
+     */
+    private function sumBetween(Time $from, Time $to): array
+    {
+        $cols = ['pv', 'oogiris', 'answers', 'share_recruit', 'share_answer', 'share_result', 'reports', 'hidden', 'answerers', 'converted', 'derived'];
+        $row  = $this->daily->builder()->select(implode(', ', array_map(static fn (string $c) => "COALESCE(SUM({$c}), 0) AS {$c}", $cols)))
+            ->where('date >=', $from->toDateString())->where('date <=', $to->toDateString())->get()->getRowArray() ?? [];
+        $sum = [];
+
+        foreach ($cols as $c) {
+            $sum[$c] = (int) ($row[$c] ?? 0);
+        }
+
+        return $sum;
     }
 }

@@ -5,10 +5,12 @@
 /writable/session/*
 /writable/uploads/*
 /writable/debugbar/*
-/writable/ogp/*
+/writable/fonts/*.ttf
+/writable/fonts/*.ttc
+/writable/fonts/*.otf
+/writable/ogp-templates/*.png
 !/writable/**/index.html
-/public/ogp/*
-!/public/ogp/.gitkeep
+/public/ogp/**/*.png
 /.phpunit.cache/
 /.php-cs-fixer.cache
 /build/

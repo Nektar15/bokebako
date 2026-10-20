@@ -6,6 +6,7 @@
  * @var list<string>          $urlRequiredTypes 対象URLが必須になる種別
  * @var array<string, string> $errors
  * @var array{type:string, email:string, url:string, body:string} $old
+ * @var string $captcha CAPTCHA のサイトキー（空なら出さない）
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -57,7 +58,7 @@
 <?php if (isset($errors['body'])): ?><p class="c-field__error" role="alert"><?= esc($errors['body']) ?></p><?php endif; ?>
 </div>
 
-<div class="p-contact__captcha">CAPTCHA（サービス選定中：未確定事項3）</div>
+<?= part('partials/captcha', ['siteKey' => $captcha]) ?>
 
 <button type="submit" class="c-button c-button--primary">送信する</button>
 <p class="c-field__help u-center">送信前に<a href="<?= site_url('privacy') ?>">プライバシーポリシー</a>をご確認ください。</p>

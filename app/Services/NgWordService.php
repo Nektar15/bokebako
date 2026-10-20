@@ -9,7 +9,7 @@ use App\Enums\NgWordAction;
 use App\Enums\NgWordMatchType;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
-use App\Services\Fixtures\NgWordFixture;
+use App\Models\NgWordModel;
 
 /**
  * NGワード管理（A-06）：一覧・追加・編集・削除・CSV
@@ -25,12 +25,59 @@ final class NgWordService
     public const CSV_COLUMNS = ['word', 'match_type', 'category', 'action', 'enabled'];
 
     /**
+     * カテゴリーの一覧（固定。未確定事項11、ADR 0003）
+     */
+    public const CATEGORIES = ['誹謗中傷', '個人情報', 'いじめ・学校', '脅迫', '性的', 'スパム', 'その他'];
+
+    public const CACHE_KEY = 'ng_words';
+
+    public function __construct(private readonly NgWordModel $model)
+    {
+    }
+
+    /**
      * @return list<string>
      */
     public function categories(): array
     {
-        // TODO(inner): 未確定事項11（カテゴリーの管理方法）が決まるまで固定
-        return NgWordFixture::CATEGORIES;
+        return self::CATEGORIES;
+    }
+
+    /**
+     * 投稿本文を判定する（FEATURES 0-3）。有効なワードはキャッシュして毎回 DB を引かない
+     *
+     * @return array{action: NgWordAction|null, detail: string} action は最も強い処理（投稿拒否 > 要確認）。一致なしは null
+     */
+    public function check(string $text): array
+    {
+        $words = cache(self::CACHE_KEY);
+
+        if (! is_array($words)) {
+            $words = array_map(static fn (NgWord $w) => ['word' => $w->word, 'match_type' => $w->match_type, 'action' => $w->action], $this->model->where('enabled', 1)->findAll());
+            cache()->save(self::CACHE_KEY, $words, 3600);
+        }
+        $action = null;
+        $hits   = [];
+
+        foreach ($words as $w) {
+            $matched = match (NgWordMatchType::from($w['match_type'])) {
+                NgWordMatchType::Exact   => trim($text) === $w['word'],
+                NgWordMatchType::Partial => mb_stripos($text, $w['word']) !== false,
+                NgWordMatchType::Regex   => $this->isValidRegex($w['word']) && preg_match('/' . str_replace('/', '\\/', $w['word']) . '/u', $text) === 1,
+            };
+
+            if (! $matched) {
+                continue;
+            }
+            $wordAction = NgWordAction::from($w['action']);
+            $hits[]     = '「' . $w['word'] . '」（' . NgWordMatchType::from($w['match_type'])->label() . '・' . $wordAction->label() . '）';
+
+            if ($action === null || $wordAction === NgWordAction::Reject) {
+                $action = $wordAction;
+            }
+        }
+
+        return ['action' => $action, 'detail' => implode('、', $hits)];
     }
 
     /**
@@ -42,8 +89,7 @@ final class NgWordService
      */
     public function list(array $filter): array
     {
-        // TODO(inner): NgWordModel から取る。戻り値の形は変えない
-        $items = NgWordFixture::all();
+        $items = $this->model->orderBy('id', 'ASC')->findAll();
 
         if ($filter['action'] !== 'all') {
             $items = array_filter($items, static fn (NgWord $w) => $w->action()->value === $filter['action']);
@@ -65,9 +111,7 @@ final class NgWordService
      */
     public function counts(): array
     {
-        $all = NgWordFixture::all();
-
-        return ['enabled' => count(array_filter($all, static fn (NgWord $w) => $w->enabled)), 'total' => count($all)];
+        return ['enabled' => $this->model->where('enabled', 1)->countAllResults(), 'total' => $this->model->countAllResults()];
     }
 
     /**
@@ -75,13 +119,13 @@ final class NgWordService
      */
     public function find(int $id): NgWord
     {
-        foreach (NgWordFixture::all() as $word) {
-            if ($word->id === $id) {
-                return $word;
-            }
+        $word = $this->model->find($id);
+
+        if ($word === null) {
+            throw new NotFoundException();
         }
 
-        throw new NotFoundException();
+        return $word;
     }
 
     /**
@@ -94,7 +138,8 @@ final class NgWordService
     public function create(array $input): void
     {
         $this->validate($input);
-        // TODO(inner): 保存、判定用キャッシュの更新、操作履歴の記録
+        $this->save(null, $input);
+        service('adminLog')->record('ng_word', null, 'NGワードを追加：' . trim((string) $input['word']));
     }
 
     /**
@@ -106,15 +151,35 @@ final class NgWordService
      */
     public function update(int $id, array $input): void
     {
-        $this->find($id);
-        $this->validate($input);
-        // TODO(inner): 保存、判定用キャッシュの更新、操作履歴の記録
+        $word = $this->find($id);
+        $this->validate($input, $id);
+        $this->save($id, $input);
+        $enabled = ($input['enabled'] ?? '1') === '1';
+        service('adminLog')->record('ng_word', $id, 'NGワードを' . ($word->enabled !== $enabled ? ($enabled ? '有効' : '無効') : '編集') . '：' . trim((string) $input['word']));
     }
 
     public function delete(int $id): void
     {
-        $this->find($id);
-        // TODO(inner): 削除、判定用キャッシュの更新、操作履歴の記録
+        $word = $this->find($id);
+        $this->model->delete($id);
+        cache()->delete(self::CACHE_KEY);
+        service('adminLog')->record('ng_word', $id, 'NGワードを削除：' . $word->word);
+    }
+
+    /**
+     * @param NgWordInput $input
+     */
+    private function save(?int $id, array $input): void
+    {
+        $row = [
+            'word'       => trim((string) $input['word']),
+            'match_type' => (string) $input['match_type'],
+            'category'   => (string) $input['category'],
+            'action'     => (string) $input['action'],
+            'enabled'    => ($input['enabled'] ?? '1') === '1' ? 1 : 0,
+        ];
+        $id === null ? $this->model->insert($row) : $this->model->update($id, $row);
+        cache()->delete(self::CACHE_KEY);
     }
 
     /**
@@ -124,7 +189,7 @@ final class NgWordService
     {
         $lines = [implode(',', self::CSV_COLUMNS)];
 
-        foreach (NgWordFixture::all() as $word) {
+        foreach ($this->model->orderBy('id', 'ASC')->findAll() as $word) {
             $lines[] = implode(',', array_map(
                 static fn (string $v) => '"' . str_replace('"', '""', $v) . '"',
                 [$word->word, $word->match_type, $word->category, $word->action, $word->enabled ? '1' : '0'],
@@ -148,9 +213,23 @@ final class NgWordService
         if (count($rows) < 2) {
             throw new ValidationException(['csv' => 'CSV にデータ行がありません']);
         }
+        $count = 0;
 
-        // TODO(inner): 各行を validate() にかけて保存、判定用キャッシュの更新、操作履歴の記録
-        return count($rows) - 1;
+        foreach (array_slice(array_values($rows), 1) as $line) {
+            $cols = array_map('trim', str_getcsv($line, ',', '"', '\\'));
+
+            if (count($cols) < 5) {
+                throw new ValidationException(['csv' => '列が足りない行があります：' . mb_substr($line, 0, 40)]);
+            }
+            $input    = array_combine(self::CSV_COLUMNS, array_slice($cols, 0, 5));
+            $existing = $this->model->where('word', $input['word'])->where('match_type', $input['match_type'])->first();
+            $this->validate($input, $existing?->id);
+            $this->save($existing?->id, $input);
+            $count++;
+        }
+        service('adminLog')->record('ng_word', null, "CSV から {$count} 行を取り込み");
+
+        return $count;
     }
 
     /**
@@ -158,7 +237,7 @@ final class NgWordService
      *
      * @throws ValidationException
      */
-    private function validate(array $input): void
+    private function validate(array $input, ?int $id = null): void
     {
         $errors = [];
         $word   = trim((string) ($input['word'] ?? ''));
@@ -177,6 +256,15 @@ final class NgWordService
         }
         if (NgWordAction::tryFrom((string) ($input['action'] ?? '')) === null) {
             $errors['action'] = '一致したときの処理を選んでください';
+        }
+        if ($word !== '' && $match !== null && ! isset($errors['word'])) {
+            $dup = $this->model->where('word', $word)->where('match_type', $match->value);
+            if ($id !== null) {
+                $dup->where('id !=', $id);
+            }
+            if ($dup->countAllResults() > 0) {
+                $errors['word'] = '同じワード・一致方式がすでに登録されています';
+            }
         }
 
         if ($errors !== []) {

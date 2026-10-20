@@ -6,7 +6,9 @@ namespace App\Controllers\Front;
 
 use App\Controllers\BaseController;
 use App\Enums\InquiryType;
+use App\Exceptions\AppException;
 use App\Exceptions\ValidationException;
+use App\Libraries\Captcha;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
@@ -26,22 +28,26 @@ final class ContactController extends BaseController
                 'url'   => (string) old('url'),
                 'body'  => (string) old('body'),
             ],
+            'captcha' => (new Captcha())->siteKey(),
         ]);
     }
 
     public function send(): RedirectResponse
     {
         $input = [
-            'type'  => (string) $this->request->getPost('type'),
-            'email' => (string) $this->request->getPost('email'),
-            'url'   => (string) $this->request->getPost('url'),
-            'body'  => (string) $this->request->getPost('body'),
+            'type'    => (string) $this->request->getPost('type'),
+            'email'   => (string) $this->request->getPost('email'),
+            'url'     => (string) $this->request->getPost('url'),
+            'body'    => (string) $this->request->getPost('body'),
+            'captcha' => (string) $this->request->getPost(Captcha::FIELD),
         ];
 
         try {
             service('contact')->send($input);
         } catch (ValidationException $e) {
             return redirect()->back()->withInput()->with('errors', $e->errors);
+        } catch (AppException $e) {
+            return redirect()->back()->withInput()->with('errors', ['_' => $e->getMessage()]);
         }
 
         return redirect()->to('/contact/done');

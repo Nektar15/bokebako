@@ -19,7 +19,7 @@ $moreUrl ??= current_url() . '?page=' . ($answers['page'] + 1);
 <div class="c-answers__meta">
 <span class="c-answers__time"><?= esc($answer->posted_label ?? '') ?></span>
 <div class="c-answers__actions">
-<a class="c-iconbtn" href="<?= esc($answerIntentUrl($answer), 'attr') ?>" target="_blank" rel="noopener" aria-label="この回答をXでシェア" data-js-track="answer_share" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>" data-js-track-answer="<?= $answer->id ?>"><?= $this->include('partials/icon_share') ?></a>
+<a class="c-iconbtn" href="<?= esc($answerIntentUrl($answer), 'attr') ?>" target="_blank" rel="noopener" aria-label="この回答をXでシェア" data-js-track="share_answer" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>" data-js-track-answer="<?= $answer->id ?>"><?= $this->include('partials/icon_share') ?></a>
 <button type="button" class="c-iconbtn c-iconbtn--muted" aria-label="この回答を通報" data-js-open-dialog="report-dialog" data-js-report-type="answer" data-js-report-id="<?= $answer->id ?>"><?= $this->include('partials/icon_flag') ?></button>
 </div>
 </div>

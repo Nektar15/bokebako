@@ -11,7 +11,7 @@ use CodeIgniter\I18n\Time;
 /**
  * OGP 画像の生成記録の1件（A-08「最近の生成」）
  *
- * TODO(inner): 工程4で ogp_jobs テーブルに保存する（S-07 の実行記録）。
+ * ogp_jobs テーブルの1行（OgpService が生成のたびに積む）。
  *
  * @property string $actor      実行した人（管理者名、または「自動」）
  * @property Time   $created_at

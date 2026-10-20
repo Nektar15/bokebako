@@ -19,8 +19,10 @@ cp .env.example .env            # 必要なら app.hashSecret などを書き換
 php spark serve                 # http://localhost:8080
 ```
 
-- DB を使う工程（工程3以降）では、MariaDB を用意して `.env` の `database.default.*` を設定し、`php spark migrate` を実行する。
-- ダミーデータの状態は `?fixture=` で切り替える（development 限定）。使える名前は `app/Services/Fixtures/OogiriFixture.php` の先頭に書いてある。例：`/o/k7Qm2xPz?fixture=decided`、`/host/k7Qm2xPz?fixture=awaiting`、入力エラーは `/oogiri?fixture=error_ngword` への POST。広告枠の見本は `?ads=1`。
+- MariaDB を用意して `.env` の `database.default.*` を設定し、`php spark migrate` → `php spark db:seed DevSeeder` を実行する。DevSeeder は全テーブルを空にしてから開発用データを入れる（状態ごとの大喜利、回答、通報、NGワード、広告、お問い合わせ、日次集計）。
+- 開発用データの開催者ページは、`/host/{slug}` に Cookie `bk_host_{slug}=dev-token-{slug}` を付けるか、合言葉「ぼけばこ」で復旧して開く。スラッグと状態は `app/Database/Seeds/DevSeeder.php` の先頭にある。
+- OGP 画像（S-07）を作るには日本語フォントが要る。`writable/fonts/NotoSansJP-Bold.ttf` を置くか、`.env` の `ogp.font` にフォントのパスを書く（例：`/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc`）。なければ既定の画像で代用する。
+- CAPTCHA（Cloudflare Turnstile）・AI判定（OpenAI）・管理者への通知メールは、`.env` の `captcha.*`・`openai.apiKey`・`app.adminEmail` が空なら動かない（開発ではそのままでよい）。
 - 管理画面は `http://localhost:8080/admin`（パスは `.env` の `app.adminPath`）。development では仮の管理者（上位管理者）でログイン済みとして開く（`docs/CODING_RULES.md` 7-1）。`?role=general` を付けると一般管理者の表示（A-04 の投稿元の列が消える）を確認できる。
 
 ## コマンド
@@ -30,10 +32,14 @@ php spark serve                 # http://localhost:8080
 | `php spark serve` | 開発サーバー |
 | `php spark routes` | ルート一覧 |
 | `php spark migrate` / `migrate:rollback` | マイグレーション |
-| `php spark db:seed DevSeeder` | 開発用データ（工程3で追加） |
+| `php spark db:seed DevSeeder` | 開発用データ（全テーブルを入れ直す） |
+| `php spark cron:minute` | 1分間隔の自動処理をまとめて実行（S-01・S-02・S-04・S-05） |
+| `php spark oogiri:close` / `oogiri:expire` / `reports:process` / `ai:judge` | 上の個別実行 |
+| `php spark stats:daily [YYYY-MM-DD]` | 日次集計（S-06。日付省略で前日） |
+| `php spark ogp:generate` | 欠けている OGP 画像をまとめて生成（S-07 の取りこぼし対策） |
 | `composer check` | 整形チェック・静的解析・テストをまとめて実行 |
 | `composer fix` | 整形を自動で直す |
-| `vendor/bin/phpunit` | テストだけ実行 |
+| `vendor/bin/phpunit` | テストだけ実行（DB は SQLite の `:memory:`。MariaDB で流すときは `phpunit.xml.dist` の `database.tests.*` を書き換える） |
 
 開発用ツール（php-cs-fixer・PHPStan・PHPUnit）は `composer install` で入る。フレームワーク本体は `system/` にコミットしてあるので、本番サーバーに Composer は不要。
 
@@ -74,13 +80,12 @@ Xserver はドキュメントルートが `public_html` 固定なので、公開
 1分間隔。`php` はフルパスで書く。
 
 ```
-* * * * * cd /home/<account>/bokebako && /usr/bin/php8.2 spark oogiri:close    >> writable/logs/cron.log 2>&1   # S-01 24時間終了
-* * * * * cd /home/<account>/bokebako && /usr/bin/php8.2 spark oogiri:expire   >> writable/logs/cron.log 2>&1   # S-02 72時間結果待ち
-* * * * * cd /home/<account>/bokebako && /usr/bin/php8.2 spark ai:judge        >> writable/logs/cron.log 2>&1   # S-05 AI判定キュー
-0 4 * * * cd /home/<account>/bokebako && /usr/bin/php8.2 spark stats:aggregate >> writable/logs/cron.log 2>&1   # S-06 日次集計
+* * * * *    cd /home/<account>/bokebako && /usr/bin/php8.2 spark cron:minute  >> writable/logs/cron.log 2>&1   # S-01 S-02 S-04 S-05
+0 4 * * *    cd /home/<account>/bokebako && /usr/bin/php8.2 spark stats:daily  >> writable/logs/cron.log 2>&1   # S-06 日次集計（前日分）
+*/10 * * * * cd /home/<account>/bokebako && /usr/bin/php8.2 spark ogp:generate >> writable/logs/cron.log 2>&1   # S-07 OGP の取りこぼし
 ```
 
-コマンド名は工程4で確定する。確定したらこの表を直す。
+`cron:minute` は `oogiri:close` → `oogiri:expire` → `reports:process` → `ai:judge` を順に実行する。1本にまとめているのは Xserver の cron の本数制限のため。
 
 ## 進め方
 
@@ -90,8 +95,8 @@ Xserver はドキュメントルートが `public_html` 固定なので、公開
 |---|---|---|
 | 0 土台 | `feature/setup` | 完了 |
 | 1 ユーザー向け画面の外側 | `feature/front-views` | 完了 |
-| 2 管理画面の外側 | `feature/admin-views` | |
-| 3 DB とモデル | `feature/database` | |
-| 4 中身 | `feature/services` | |
+| 2 管理画面の外側 | `feature/admin-views` | 完了 |
+| 3 DB とモデル | `feature/database` | 完了 |
+| 4 中身 | `feature/database`（3と同じブランチ） | 完了 |
 | 5 仕上げ | `feature/release-prep` | |
 | （最終）A-01 ログイン | 別途 | |

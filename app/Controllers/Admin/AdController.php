@@ -47,7 +47,7 @@ final class AdController extends AdminController
     public function create(): RedirectResponse
     {
         try {
-            service('ads')->create($this->input());
+            service('ads')->create($this->input(), $this->request->getFile('image'));
         } catch (ValidationException $e) {
             return $this->backWithErrors($e->errors);
         }
@@ -61,7 +61,7 @@ final class AdController extends AdminController
     public function update(int $id): RedirectResponse
     {
         try {
-            $this->orFail(fn () => service('ads')->update($id, $this->input()));
+            $this->orFail(fn () => service('ads')->update($id, $this->input(), $this->request->getFile('image')));
         } catch (ValidationException $e) {
             return $this->backWithErrors($e->errors);
         }

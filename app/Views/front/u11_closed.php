@@ -14,6 +14,7 @@
 <meta property="og:description" content="募集は終了しました。主催者がベスト回答を選んでいます。">
 <meta property="og:image" content="<?= esc(base_url('ogp/recruit/' . $oogiri->slug . '.png'), 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="bk:pv" content="<?= esc($oogiri->slug, 'attr') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>
