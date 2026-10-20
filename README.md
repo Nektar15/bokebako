@@ -4,10 +4,11 @@
 
 はじめて触る人は、次の順で読む。
 
-1. `docs/CODING_RULES.md` — 書き方のルール（必読）
-2. `docs/FEATURES.md` — 画面と機能の一覧、URL 表
-3. `docs/spec/SPEC.md` — 開発仕様書の本文
-4. `docs/design/` — 画面デザインの原本
+1. `docs/HANDOFF.md` — 今どこまでできていて、次に何をするか
+2. `docs/CODING_RULES.md` — 書き方のルール（必読）
+3. `docs/FEATURES.md` — 画面と機能の一覧、URL 表
+4. `docs/spec/SPEC.md` — 開発仕様書の本文
+5. `docs/design/` — 画面デザインの原本
 
 前提知識：PHP と CodeIgniter 4 の基本、Git の基本操作。
 
