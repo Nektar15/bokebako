@@ -22,18 +22,26 @@ final class ScreenNavTest extends DatabaseTestCase
     }
 
     /**
-     * 行き先の一覧から、名前で番号を探す
+     * モーダルの一覧から、名前でリンク先を探す
      */
-    private function indexOf(string $label): int
+    private function hrefOf(string $label): string
     {
         foreach (service('screenNav')->groups() as $group) {
             foreach ($group['options'] as $option) {
                 if ($option['label'] === $label) {
-                    return $option['index'];
+                    return $option['href'];
                 }
             }
         }
         $this->fail("{$label} がない");
+    }
+
+    /**
+     * site_url() の絶対 URL から、リクエスト用のパスにする
+     */
+    private function pathOf(string $href): string
+    {
+        return substr($href, strlen(site_url('')));
     }
 
     public function testHiddenByDefault(): void
@@ -50,6 +58,9 @@ final class ScreenNavTest extends DatabaseTestCase
         $result->assertSee('全画面へ移動');
         $result->assertSee('U-12 結果未選出');
         $result->assertSee('A-10 運用設定');
+        // そのまま開ける画面はふつうのリンク、開催者として開く画面は /_screens/go を通る
+        $this->assertSame(site_url('o/Bx2gHj8k'), $this->hrefOf('U-12 結果未選出'));
+        $this->assertStringContainsString('_screens/go?to=', $this->hrefOf('U-03 開催完了'));
         $this->get('/o/q8Lr4nTb')->assertSee('全画面へ移動');
     }
 
@@ -69,7 +80,7 @@ final class ScreenNavTest extends DatabaseTestCase
     public function testJumpAsHostOpensHostPage(): void
     {
         config(ScreenNav::class)->enabled = true;
-        $result                           = $this->get('_screens/go?to=' . $this->indexOf('U-08 開催者（結果選択待ち）'));
+        $result                           = $this->get($this->pathOf($this->hrefOf('U-08 開催者（結果選択待ち）')));
         $result->assertRedirectTo(site_url('host/Zp3cW9aQ'));
         $this->assertTrue($result->response()->hasCookie('bk_host_Zp3cW9aQ'));
     }
@@ -77,7 +88,7 @@ final class ScreenNavTest extends DatabaseTestCase
     public function testJumpAsAnswererPreparesDonePage(): void
     {
         config(ScreenNav::class)->enabled = true;
-        $result                           = $this->get('_screens/go?to=' . $this->indexOf('U-06 回答完了'));
+        $result                           = $this->get($this->pathOf($this->hrefOf('U-06 回答完了')));
         $result->assertRedirectTo(site_url('o/k7Qm2xPz/done'));
         $this->assertTrue($result->response()->hasCookie('bk_bid'));
         $this->assertSame(90412, (int) session('bk_last_answer:k7Qm2xPz'));

@@ -10,7 +10,7 @@ use App\Models\AnswerModel;
 use Config\ScreenNav;
 
 /**
- * 画面一覧ナビ（確認用。ADR 0009）：全画面へのプルダウンと、そのための「開催者として」「回答したブラウザとして」開く準備
+ * 画面一覧ナビ（確認用。ADR 0009）：全画面へのリンク（モーダル）と、そのための「開催者として」「回答したブラウザとして」開く準備
  *
  * 開発用データ（DevSeeder）の開催者トークン・ブラウザIDを使う。screenNav.enabled が false のときは何もしない（ルートもない）。
  */
@@ -34,9 +34,9 @@ final class ScreenNavService
     }
 
     /**
-     * プルダウンの中身（表示用）。番号は go() に渡す値
+     * モーダルに並べる中身（表示用）。href は、そのまま開ける画面なら URL、開催者・回答者として開く画面は /_screens/go?to=番号
      *
-     * @return list<array{label: string, options: list<array{index: int, label: string, note: string}>}>
+     * @return list<array{label: string, options: list<array{label: string, note: string, href: string}>}>
      */
     public function groups(): array
     {
@@ -46,13 +46,24 @@ final class ScreenNavService
         foreach ($this->config->items as $label => $items) {
             $options = [];
 
-            foreach ($items as [$name, , $note]) {
-                $options[] = ['index' => $index++, 'label' => $name, 'note' => $note];
+            foreach ($items as [$name, $target, $note]) {
+                $options[] = ['label' => $name, 'note' => $note, 'href' => $this->href($index++, $target)];
             }
             $groups[] = ['label' => $label, 'options' => $options];
         }
 
         return $groups;
+    }
+
+    private function href(int $index, string $target): string
+    {
+        [$kind, $rest] = explode(':', $target, 2);
+
+        return match ($kind) {
+            'url'   => site_url(ltrim($rest, '/')),
+            'admin' => admin_url(ltrim($rest, '/')),
+            default => site_url('_screens/go') . '?to=' . $index,
+        };
     }
 
     /**

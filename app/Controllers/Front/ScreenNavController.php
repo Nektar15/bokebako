@@ -10,7 +10,7 @@ use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RedirectResponse;
 
 /**
- * 画面一覧ナビ（確認用。ADR 0009）。プルダウンで選んだ画面へ移動する（JS がなくても「移動」ボタンで動く）
+ * 画面一覧ナビ（確認用。ADR 0009）。開催者・回答者として開く画面へ、準備をしてから移動する
  */
 final class ScreenNavController extends BaseController
 {
