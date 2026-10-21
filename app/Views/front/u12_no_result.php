@@ -1,12 +1,17 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+
 /**
  * U-12 結果未選出ページ（72時間経過で自動確定。ページキャッシュの対象）
  *
- * @var \App\Entities\Oogiri $oogiri
- * @var string $period
- * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers
- * @var callable(\App\Entities\Answer): string $answerIntentUrl
- * @var array{top: array|null, bottom: array|null} $ads
+ * @var Oogiri                                               $oogiri
+ * @var string                                               $ogpUrl og:image（結果用。画像がなければ既定の画像）
+ * @var string                                               $period
+ * @var array{items: list<Answer>, hasMore: bool, page: int} $answers
+ * @var callable(Answer): string                             $answerIntentUrl
+ * @var array{top: array|null, bottom: array|null}           $ads
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -15,7 +20,7 @@
 <title>終了：<?= esc($oogiri->odai) ?>｜ぼけばこ</title>
 <meta name="description" content="大喜利「<?= esc($oogiri->odai, 'attr') ?>」は終了しました（全<?= esc((string) $oogiri->answer_count) ?>回答）。">
 <meta property="og:title" content="<?= esc($oogiri->odai, 'attr') ?>">
-<meta property="og:image" content="<?= esc(base_url('ogp/recruit/' . $oogiri->slug . '.png'), 'attr') ?>">
+<meta property="og:image" content="<?= esc($ogpUrl, 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="bk:pv" content="<?= esc($oogiri->slug, 'attr') ?>">
 <?= $this->endSection() ?>

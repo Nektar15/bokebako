@@ -70,7 +70,13 @@ final class RateLimitService
             throw new AppException(ErrorCode::RateLimited);
         }
 
+        // 制限方法が CAPTCHA のときは、ブラウザ単位の連続投稿は CAPTCHA で確かめるので拒否しない（IP 単位の上限だけ残す）
+        $captcha = in_array($action, [self::ACTION_CREATE, self::ACTION_ANSWER], true) && $this->settings->string('limit_method') === 'captcha';
+
         foreach ($this->limits($action, $scope) as $key => $count) {
+            if ($captcha && str_contains($key, '_b_')) {
+                continue;
+            }
             if (service('throttler')->check($key, $count, $this->window($action))) {
                 continue;
             }
@@ -83,7 +89,9 @@ final class RateLimitService
     }
 
     /**
-     * 異常投稿とみなす回数を超えたか（判定だけ。S-03 の「異常投稿候補」）。ブラウザ単位と IP 単位の両方で数える
+     * 異常投稿とみなす回数を超えたか（S-03 の「異常投稿候補」）。ブラウザ単位と IP 単位の両方で数える
+     *
+     * 投稿を受け付けたときに1回だけ呼ぶ（数えるので、表示や判定だけのときは needsCaptcha() を使う）
      */
     public function isBursting(string $action): bool
     {
@@ -97,6 +105,20 @@ final class RateLimitService
         }
 
         return $bursting;
+    }
+
+    /**
+     * 次の投稿が異常投稿の回数を超えるか（数えずに見るだけ）
+     */
+    private function wouldBurst(string $action): bool
+    {
+        foreach ($this->limits($action) as $key => $count) {
+            if ((int) cache($key . '_watch') >= $count) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -131,11 +153,13 @@ final class RateLimitService
     }
 
     /**
-     * 制限方法が CAPTCHA のとき、連続投稿の閾値を超えたら CAPTCHA を要求する（FEATURES 0-3）
+     * 制限方法が CAPTCHA のとき、連続投稿の閾値に達していたら CAPTCHA を要求する（FEATURES 0-3）
+     *
+     * 数えずに見るだけ（画面を開いただけで回数が増え、ふつうの利用者に CAPTCHA が出ないように。監査 2026-10-21）
      */
     public function needsCaptcha(string $action): bool
     {
-        return $this->settings->string('limit_method') === 'captcha' && $this->isBursting($action);
+        return $this->settings->string('limit_method') === 'captcha' && $this->wouldBurst($action);
     }
 
     /**

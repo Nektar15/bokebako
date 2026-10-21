@@ -14,6 +14,7 @@ use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Libraries\Captcha;
+use App\Libraries\Text;
 use App\Models\OogiriModel;
 use CodeIgniter\I18n\Time;
 
@@ -46,7 +47,8 @@ final class OogiriService
     {
         $oogiri = $this->oogiris->where('slug', $slug)->first();
 
-        if ($oogiri === null) {
+        // 大文字・小文字の違うスラッグは別物として扱う（MariaDB の照合順序は区別しないため。別の書き方の URL でページキャッシュをすり抜けさせない）
+        if ($oogiri === null || $oogiri->slug !== $slug) {
             throw new NotFoundException();
         }
 
@@ -67,7 +69,7 @@ final class OogiriService
     {
         $this->rateLimit->assertAllowed(RateLimitService::ACTION_CREATE);
         $errors = $this->validate($input);
-        $odai   = trim((string) ($input['odai'] ?? ''));
+        $odai   = Text::clean((string) ($input['odai'] ?? ''));
 
         if ($errors === []) {
             $ng = $this->ngWords->check($odai);
@@ -85,7 +87,7 @@ final class OogiriService
 
         $now        = Time::now();
         $token      = $this->identity->issueHostToken();
-        $passphrase = trim((string) ($input['passphrase'] ?? ''));
+        $passphrase = Text::clean((string) ($input['passphrase'] ?? ''));
         $parent     = $this->parentIdFromSlug((string) ($input['from'] ?? ''));
         // 開催と派生元の派生開催数の加算は一緒に成功・失敗させる
         $id     = $this->oogiris->transaction(fn (): int => $this->insertOogiri($odai, $token['hash'], $passphrase, $parent, $now));
@@ -161,8 +163,8 @@ final class OogiriService
      */
     private function validate(array $input): array
     {
-        $odai       = trim((string) ($input['odai'] ?? ''));
-        $passphrase = trim((string) ($input['passphrase'] ?? ''));
+        $odai       = Text::clean((string) ($input['odai'] ?? ''));
+        $passphrase = Text::clean((string) ($input['passphrase'] ?? ''));
         $max        = $this->settings->int('odai_max');
         $errors     = [];
 

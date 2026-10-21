@@ -1,16 +1,19 @@
 <?php
+
+use App\Entities\Answer;
+
 /**
  * A-04 回答管理
  *
- * @var string $screenId
- * @var string $title
- * @var array{q: string, oogiri: string, status: string, reports: string, period: string} $filter 絞り込みの現在値
- * @var array<string, string> $statuses      状態の選択肢（値 => 表示名）
- * @var array<string, string> $reportFilters 通報数の選択肢
- * @var array<string, string> $periods       期間の選択肢
- * @var bool $canViewSource 投稿元識別情報の列を出すか（上位管理者だけ true）
- * @var list<array{answer: \App\Entities\Answer, posted: string, alert: bool, visible: bool}> $items 一覧の行
- * @var array{label: string, current: int, links: list<array{page: int, url: string}|null>} $pager
+ * @var string                                                                                                      $screenId
+ * @var string                                                                                                      $title
+ * @var array{q: string, oogiri: string, status: string, reports: string, period: string, from: string, to: string} $filter 絞り込みの現在値
+ * @var array<string, string>                                                                                       $statuses      状態の選択肢（値 => 表示名）
+ * @var array<string, string>                                                                                       $reportFilters 通報数の選択肢
+ * @var array<string, string>                                                                                       $periods       期間の選択肢
+ * @var bool                                                                                                        $canViewSource 投稿元識別情報の列を出すか（上位管理者だけ true）
+ * @var list<array{answer: Answer, posted: string, alert: bool, visible: bool}>                                     $items 一覧の行
+ * @var array{label: string, current: int, links: list<array{page: int, url: string}|null>}                         $pager
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -38,6 +41,7 @@
 <option value="<?= esc($value, 'attr') ?>"<?= $value === $filter['period'] ? ' selected' : '' ?>><?= esc($label) ?></option>
 <?php endforeach; ?>
 </select>
+<?= part('partials/admin_date_range', ['from' => $filter['from'], 'to' => $filter['to']]) ?>
 <button type="submit" class="c-abutton c-abutton--dark">検索</button>
 </form>
 

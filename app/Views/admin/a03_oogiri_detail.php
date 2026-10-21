@@ -1,21 +1,28 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+use App\Enums\AnswerStatus;
+use App\Enums\OogiriStatus;
+
 /**
  * A-03 大喜利管理（詳細）
  *
- * @var string $screenId
- * @var string $title
- * @var \App\Entities\Oogiri $oogiri
- * @var \App\Enums\OogiriStatus $status
- * @var bool   $isHidden   非表示・削除済み（「再公開」を出す）
- * @var string $createdAt  整形済み日時
- * @var string $endsAt
- * @var string $decidedAt  未確定なら「—」
- * @var string $parentId   派生元（例：「#12301」。なければ「—」）
- * @var array<string, string> $stats 見出し => 整形済みの数値（PV・回答・シェア・派生開催・通報）
- * @var array<int, \App\Entities\Answer|null> $ranked 1〜3 => ベスト回答（未選出は null）
- * @var bool   $editing    ベスト回答の代理変更フォームを開いているか（?edit=1）
- * @var list<array{answer: \App\Entities\Answer, posted: string}> $answers 回答の一覧（新しい順、先頭数件）
- * @var list<array{when: string, what: string}> $logs 操作履歴（新しい順）
+ * @var string                                      $screenId
+ * @var string                                      $title
+ * @var Oogiri                                      $oogiri
+ * @var OogiriStatus                                $status
+ * @var bool                                        $isHidden   非表示・削除済み（「再公開」を出す）
+ * @var string                                      $createdAt  整形済み日時
+ * @var string                                      $endsAt
+ * @var string                                      $decidedAt  未確定なら「—」
+ * @var string                                      $parentId   派生元（例：「#12301」。なければ「—」）
+ * @var array<string, string>                       $stats 見出し => 整形済みの数値（PV・回答・シェア・派生開催・通報）
+ * @var array<int, Answer|null>                     $ranked 1〜3 => ベスト回答（未選出は null）
+ * @var bool                                        $editing    ベスト回答の代理変更フォームを開いているか（?edit=1）
+ * @var list<array{answer: Answer, posted: string}> $answers 回答の一覧（新しい順、先頭数件）
+ * @var list<Answer>                                $candidates 順位を選ぶ候補（公開中の回答すべてと今の順位の回答）
+ * @var list<array{when: string, what: string}>     $logs 操作履歴（新しい順）
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -81,8 +88,8 @@
 <span class="p-oogiri-detail__rank-no<?= $rank === 1 ? ' p-oogiri-detail__rank-no--first' : '' ?>"><?= esc((string) $rank) ?>位</span>
 <select class="c-aselect p-oogiri-detail__rank-select" name="ranks[]" aria-label="<?= esc((string) $rank, 'attr') ?>位の回答">
 <option value="0"<?= $current === null ? ' selected' : '' ?>>（なし）</option>
-<?php foreach ($answers as $row): ?>
-<option value="<?= esc((string) $row['answer']->id, 'attr') ?>"<?= $current !== null && $current->id === $row['answer']->id ? ' selected' : '' ?>><?= esc($row['answer']->body) ?></option>
+<?php foreach ($candidates as $candidate): ?>
+<option value="<?= esc((string) $candidate->id, 'attr') ?>"<?= $current !== null && $current->id === $candidate->id ? ' selected' : '' ?>>A-<?= esc((string) $candidate->id) ?> <?= esc($candidate->body) ?></option>
 <?php endforeach; ?>
 </select>
 </li>
@@ -134,7 +141,13 @@
 <div class="c-table__cell c-table__cell--time" role="cell" data-label="投稿日時"><?= esc($row['posted']) ?></div>
 <div class="c-table__cell c-table__cell--num" role="cell" data-label="通報"><?= esc((string) $answer->report_count) ?></div>
 <div class="c-table__cell" role="cell" data-label="状態"><?= part('partials/admin_badge', ['status' => $answer->status()->value, 'label' => $answer->status()->label()]) ?></div>
-<div class="c-table__cell" role="cell"><?= part('partials/admin_action_form', ['action' => admin_url('answers/' . $answer->id . '/hide'), 'label' => '非表示', 'variant' => 'tiny', 'iconOnly' => false, 'confirm' => null, 'id' => '', 'hidden' => []]) ?></div>
+<div class="c-table__cell" role="cell">
+<?php if ($answer->status() === AnswerStatus::Visible): ?>
+<?= part('partials/admin_action_form', ['action' => admin_url('answers/' . $answer->id . '/hide'), 'label' => '非表示', 'variant' => 'tiny', 'iconOnly' => false, 'confirm' => null, 'id' => '', 'hidden' => []]) ?>
+<?php else: ?>
+<?= part('partials/admin_action_form', ['action' => admin_url('answers/' . $answer->id . '/publish'), 'label' => '再公開', 'variant' => 'tiny', 'iconOnly' => false, 'confirm' => null, 'id' => '', 'hidden' => []]) ?>
+<?php endif; ?>
+</div>
 </div>
 <?php endforeach; ?>
 </div>

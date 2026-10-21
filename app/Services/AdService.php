@@ -153,7 +153,7 @@ final class AdService
      */
     public function update(int $id, array $input, ?UploadedFile $image): void
     {
-        $this->find($id);
+        $before = $this->find($id);
         $this->validate($input);
         $row  = $this->row($input);
         $path = $this->storeImage($image);
@@ -162,6 +162,10 @@ final class AdService
             $row['image'] = $path;
         }
         $this->ads->update($id, $row);
+
+        if ($path !== null) {
+            $this->removeImage($before->image); // 差し替えた古い画像を残さない（監査 2026-10-21）
+        }
         cache()->delete(self::CACHE_KEY);
         service('adminLog')->record('ad', $id, '広告を編集（' . (($input['action'] ?? '') === 'publish' ? '公開' : '停止') . '）：' . trim((string) $input['name']));
     }
@@ -170,6 +174,7 @@ final class AdService
     {
         $ad = $this->find($id);
         $this->ads->delete($id);
+        $this->removeImage($ad->image); // 画像も消す（管理画面マニュアル「物理削除」。監査 2026-10-21）
         cache()->delete(self::CACHE_KEY);
         service('adminLog')->record('ad', $id, '広告を削除：' . $ad->name);
     }
@@ -201,6 +206,21 @@ final class AdService
      *
      * @throws ValidationException PNG・JPG 以外
      */
+    /**
+     * 広告画像のファイルを消す（広告画像の置き場所の中だけ）
+     */
+    private function removeImage(string $path): void
+    {
+        if (! str_starts_with($path, self::IMAGE_DIR . '/')) {
+            return;
+        }
+        $file = FCPATH . self::IMAGE_DIR . '/' . basename($path);
+
+        if (is_file($file)) {
+            @unlink($file);
+        }
+    }
+
     private function storeImage(?UploadedFile $image): ?string
     {
         if ($image === null || ! $image->isValid()) {
@@ -236,6 +256,13 @@ final class AdService
         }
         if (AdSlot::tryFrom((string) ($input['slot'] ?? '')) === null) {
             $errors['slot'] = '掲載場所を選んでください';
+        }
+
+        // 日時の形（datetime-local：YYYY-MM-DDTHH:MM）を確かめる。ほかの形を「:00」を足して保存しない（監査 2026-10-21）
+        foreach (['starts_at', 'ends_at'] as $key) {
+            if (($input[$key] ?? '') !== '' && preg_match('/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\z/', (string) $input[$key]) !== 1) {
+                $errors['period'] = '掲載期間の日時を正しく入力してください';
+            }
         }
         if (($input['starts_at'] ?? '') === '' || ($input['ends_at'] ?? '') === '') {
             $errors['period'] = '掲載期間を入力してください';

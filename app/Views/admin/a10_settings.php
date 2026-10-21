@@ -2,16 +2,16 @@
 /**
  * A-10 運用設定
  *
- * @var string $screenId
- * @var string $title
- * @var array<string, bool|string|list<string>> $values   現在の設定値（SettingService のキー。数値は文字列）
- * @var array<string, string> $defaultLabels 「初期値 …」の表示（キー => 整形済み。例：「100文字」）
- * @var array<string, string> $limitMethods 連続投稿の制限方法（値 => 表示名）
- * @var array<string, string> $aiTargets    AI判定の対象（値 => 表示名）
- * @var array<string, bool>   $aiSelected   AI判定の対象の現在値（値 => 選択中か）
- * @var string $aiUsed  AI判定の今月の使用件数（整形済み）
+ * @var string                                  $screenId
+ * @var string                                  $title
+ * @var array<string, bool|list<string>|string> $values   現在の設定値（SettingService のキー。数値は文字列）
+ * @var array<string, string>                   $defaultLabels 「初期値 …」の表示（キー => 整形済み。例：「100文字」）
+ * @var array<string, string>                   $limitMethods 連続投稿の制限方法（値 => 表示名）
+ * @var array<string, string>                   $aiTargets    AI判定の対象（値 => 表示名）
+ * @var array<string, bool>                     $aiSelected   AI判定の対象の現在値（値 => 選択中か）
+ * @var string                                  $aiUsed  AI判定の今月の使用件数（整形済み）
  * @var list<array{when: string, what: string}> $history 変更履歴（新しい順）
- * @var array<string, string> $errors 入力エラー（キー => 文言）
+ * @var array<string, string>                   $errors 入力エラー（キー => 文言）
  */
 ?>
 <?= $this->extend('layouts/admin') ?>

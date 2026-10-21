@@ -1,17 +1,21 @@
 <?php
+
+use App\Entities\OgpJob;
+use App\Enums\OgpKind;
+
 /**
  * A-08 OGP管理
  *
- * @var string $screenId
- * @var string $title
- * @var list<\App\Enums\OgpKind> $kinds  3種類のテンプレート
- * @var array<string, string>    $assets 差し替えられる画像（値 => 表示名：背景・ロゴ）
- * @var array{kind: string, target: string} $form 「個別に再生成する」の初期値
- * @var list<array{job: \App\Entities\OgpJob, time: string, status: string, label: string}> $jobs 最近の生成（新しい順。status は ok / failed）
- * @var array{requestedAt: string, remaining: string}|null $bulk 一括の作り直しの予約（予約日時・残りの大喜利の件数）。なければ null
- * @var array<string, string> $previews 種類ごとのプレビュー画像の URL
+ * @var string                                                                                                           $screenId
+ * @var string                                                                                                           $title
+ * @var list<OgpKind>                                                                                                    $kinds  3種類のテンプレート
+ * @var array<string, string>                                                                                            $assets 差し替えられる画像（値 => 表示名：背景・ロゴ）
+ * @var array{kind: string, target: string}                                                                              $form 「個別に再生成する」の初期値
+ * @var list<array{job: OgpJob, time: string, status: string, label: string}>                                            $jobs 最近の生成（新しい順。status は ok / failed）
+ * @var array{requestedAt: string, remaining: string}|null                                                               $bulk 一括の作り直しの予約（予約日時・残りの大喜利の件数）。なければ null
+ * @var array<string, string>                                                                                            $previews 種類ごとのプレビュー画像の URL
  * @var array{values: array<string, string>, fields: array<string, array{string, int, bool}>, ranks: array<int, string>} $texts 画像に載せる文言と順位（ADR 0012）
- * @var array<string, string> $errors
+ * @var array<string, string>                                                                                            $errors
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -26,7 +30,7 @@
 <section class="c-panel c-panel--tight p-ogp__template">
 <div class="c-panel__head"><h2 class="c-panel__title"><?= esc($kind->label()) ?></h2><span class="c-panel__sub"><?= esc($kind->timing()) ?></span></div>
 <img class="p-ogp__image" src="<?= esc($previews[$kind->value], 'attr') ?>" width="1200" height="630" alt="<?= esc($kind->label()) ?>OGPのプレビュー" loading="lazy">
-<?php if ($kind === \App\Enums\OgpKind::Result): ?>
+<?php if ($kind === OgpKind::Result): ?>
 <div class="c-afield">
 <label class="c-afield__label" for="ogp_result_ranks">載せる順位</label>
 <select class="c-aselect c-aselect--full" id="ogp_result_ranks" name="ogp_result_ranks" form="ogp-texts">

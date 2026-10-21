@@ -2,11 +2,11 @@
 /**
  * U-18 お問い合わせ
  *
- * @var array<string, string> $types            種別の値 => 表示名
- * @var list<string>          $urlRequiredTypes 対象URLが必須になる種別
- * @var array<string, string> $errors
+ * @var array<string, string>                                     $types            種別の値 => 表示名
+ * @var list<string>                                              $urlRequiredTypes 対象URLが必須になる種別
+ * @var array<string, string>                                     $errors
  * @var array{type:string, email:string, url:string, body:string} $old
- * @var string $captcha CAPTCHA のサイトキー（空なら出さない）
+ * @var string                                                    $captcha CAPTCHA のサイトキー（空なら出さない）
  */
 ?>
 <?= $this->extend('layouts/front') ?>

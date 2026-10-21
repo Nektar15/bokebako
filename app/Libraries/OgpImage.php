@@ -188,21 +188,25 @@ final class OgpImage
     }
 
     /**
-     * ロゴとサービス名。writable/ogp-templates/logo.png があればそれを使う
+     * ロゴとサービス名。A-08 で差し替えたロゴ（writable/ogp-templates/logo.png）があればそれ、なければアプリのアイコン
+     * （public/assets/img/logo-ogp.png。元の絵は docs/design/icon.png）
      */
     private function brand(GdImage $img, int $x = 80, int $y = 56): void
     {
-        $logo = WRITEPATH . 'ogp-templates/logo.png';
+        foreach ([WRITEPATH . 'ogp-templates/logo.png', (defined('FCPATH') ? FCPATH : '') . 'assets/img/logo-ogp.png'] as $logo) {
+            if (is_file($logo) && ($png = @imagecreatefrompng($logo)) !== false) {
+                imagealphablending($img, true);
+                imagecopyresampled($img, $png, $x, $y, 0, 0, 52, 52, imagesx($png), imagesy($png));
+                imagedestroy($png);
+                $this->text($img, 'ぼけばこ', $x + 64, $y + 40, 30, self::INK);
 
-        if (is_file($logo) && ($png = imagecreatefrompng($logo)) !== false) {
-            imagecopyresampled($img, $png, $x, $y, 0, 0, 48, 48, imagesx($png), imagesy($png));
-            imagedestroy($png);
-        } else {
-            // 紙が朱色の箱に入るロゴの簡略形
-            imagefilledrectangle($img, $x + 4, $y + 18, $x + 44, $y + 46, $this->color($img, self::SHU));
-            imagerectangle($img, $x + 4, $y + 18, $x + 44, $y + 46, $this->color($img, self::INK));
-            imagefilledrectangle($img, $x + 16, $y + 4, $x + 32, $y + 22, $this->color($img, self::KIN));
+                return;
+            }
         }
+        // 紙が朱色の箱に入るロゴの簡略形（アイコンの画像もないとき）
+        imagefilledrectangle($img, $x + 4, $y + 18, $x + 44, $y + 46, $this->color($img, self::SHU));
+        imagerectangle($img, $x + 4, $y + 18, $x + 44, $y + 46, $this->color($img, self::INK));
+        imagefilledrectangle($img, $x + 16, $y + 4, $x + 32, $y + 22, $this->color($img, self::KIN));
         $this->text($img, 'ぼけばこ', $x + 60, $y + 40, 30, self::INK);
     }
 

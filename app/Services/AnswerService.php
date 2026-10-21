@@ -15,6 +15,7 @@ use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Libraries\Captcha;
+use App\Libraries\Text;
 use App\Models\AnswerModel;
 use App\Models\OogiriModel;
 use CodeIgniter\I18n\Time;
@@ -130,7 +131,7 @@ final class AnswerService
         }
         $this->rateLimit->assertAllowed(RateLimitService::ACTION_ANSWER);
         $errors = $this->validate($input);
-        $body   = trim((string) ($input['body'] ?? ''));
+        $body   = Text::clean((string) ($input['body'] ?? ''));
         $ng     = ['action' => null, 'detail' => ''];
 
         if ($errors === []) {
@@ -180,7 +181,7 @@ final class AnswerService
      */
     private function validate(array $input): array
     {
-        $body = trim((string) ($input['body'] ?? ''));
+        $body = Text::clean((string) ($input['body'] ?? ''));
         $max  = $this->settings->int('answer_max');
 
         if ($body === '') {

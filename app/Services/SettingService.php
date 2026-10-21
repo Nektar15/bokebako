@@ -91,6 +91,31 @@ final class SettingService
     ];
 
     /**
+     * 変更履歴に出す項目名（A-10 の画面の表記。キー名のまま出さない。監査 2026-10-21）
+     */
+    private const LABELS = [
+        'odai_max'          => 'お題の最大文字数',
+        'answer_max'        => '回答の最大文字数',
+        'open_hours'        => '募集時間',
+        'select_hours'      => '結果選出の期限',
+        'burst_count'       => '連続投稿の回数',
+        'burst_window_sec'  => '連続投稿の判定時間（秒）',
+        'limit_method'      => '制限の方法',
+        'ban_minutes'       => '停止する時間（分）',
+        'report_count'      => '非表示にする通報数',
+        'report_window_min' => '通報を数える時間（分）',
+        'surge_count'       => '急増の通知',
+        'ai_enabled'        => 'AI補助判定',
+        'ai_targets'        => '判定する投稿',
+        'ai_monthly_limit'  => '月間の上限件数',
+        'ai_auto_hide'      => 'AIの判定だけで非表示にする',
+        'hashtag'           => 'ハッシュタグ',
+        'tpl_recruit'       => '募集シェアの投稿文',
+        'tpl_answer'        => '回答シェアの投稿文',
+        'tpl_result'        => '結果シェアの投稿文',
+    ];
+
+    /**
      * OGP 画像の文言（A-08 で編集する。A-10 の保存では触らない）。キー => [表示名, 最大文字数, 空でもよいか]
      */
     public const OGP_TEXTS = [
@@ -286,7 +311,7 @@ final class SettingService
             $row === null ? $model->insert(['name' => $key, 'value' => $raw]) : $model->update($row['id'], ['value' => $raw]);
 
             if ($before[$key] !== $value) {
-                $changes[] = $key . ' ' . $this->describe($before[$key]) . ' → ' . $this->describe($value);
+                $changes[] = (self::LABELS[$key] ?? $key) . '「' . $this->describe($before[$key]) . '」→「' . $this->describe($value) . '」';
             }
         }
         $this->clearCache();

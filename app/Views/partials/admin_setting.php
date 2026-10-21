@@ -2,20 +2,20 @@
 /**
  * 運用設定（A-10）の1行：左に項目名と説明、右に入力欄
  *
- * @var string $type    入力の種類：number（数値1つ）/ pair（数値2つ）/ select / switch / checks / textarea / text
- * @var string $name    項目名
- * @var string $desc    説明
- * @var string $default 「初期値 …」の表示（例：「100文字」）
+ * @var string                                                               $type    入力の種類：number（数値1つ）/ pair（数値2つ）/ select / switch / checks / textarea / text
+ * @var string                                                               $name    項目名
+ * @var string                                                               $desc    説明
+ * @var string                                                               $default 「初期値 …」の表示（例：「100文字」）
  * @var list<array{key: string, value: string, unit: string, width: string}> $inputs number / pair の入力欄（unit は後ろに出す単位、width は 'sm' | 'md' | 'lg'）
- * @var string $key     select / switch / checks / textarea / text の name 属性
- * @var string $value   select / textarea / text の現在値
- * @var bool   $checked switch の現在値
- * @var array<string, string> $options select / checks の選択肢（値 => 表示名）
- * @var array<string, bool>    $selected checks の現在値（値 => チェックされているか）
- * @var string $onLabel  switch が ON のときの表示（例：「ON」）
- * @var string $offLabel switch が OFF のときの表示
- * @var string $extra    入力欄の横に添える補足（例：「今月 1,284件 使用」）。なければ空
- * @var string $error    入力エラーの文言。なければ空（inputs / extra / error も省略不可。部品の値は呼び出し間で残るため、毎回すべて渡す）
+ * @var string                                                               $key     select / switch / checks / textarea / text の name 属性
+ * @var string                                                               $value   select / textarea / text の現在値
+ * @var bool                                                                 $checked switch の現在値
+ * @var array<string, string>                                                $options select / checks の選択肢（値 => 表示名）
+ * @var array<string, bool>                                                  $selected checks の現在値（値 => チェックされているか）
+ * @var string                                                               $onLabel  switch が ON のときの表示（例：「ON」）
+ * @var string                                                               $offLabel switch が OFF のときの表示
+ * @var string                                                               $extra    入力欄の横に添える補足（例：「今月 1,284件 使用」）。なければ空
+ * @var string                                                               $error    入力エラーの文言。なければ空（inputs / extra / error も省略不可。部品の値は呼び出し間で残るため、毎回すべて渡す）
  */
 ?>
 <div class="c-setting">

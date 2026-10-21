@@ -125,4 +125,10 @@ if ($lock !== false && flock($lock, LOCK_EX)) {
     flock($lock, LOCK_UN);
 }
 
+// CodeIgniter は URL から入口のフォルダ（SCRIPT_NAME のフォルダ）を取り除いてルートを探す。入口が /api/index.php のままだと、
+// /api/v1/... の「/api」が取り除かれて API がすべて 404 になる。本来の入口 /index.php から来たことにする（2026-10-21）
+$_SERVER['SCRIPT_NAME']     = '/index.php';
+$_SERVER['PHP_SELF']        = '/index.php';
+$_SERVER['SCRIPT_FILENAME'] = $root . '/public/index.php';
+
 require $root . '/public/index.php';

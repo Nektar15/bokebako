@@ -1,19 +1,24 @@
 <?php
+
+use App\Entities\NgWord;
+use App\Enums\NgWordAction;
+use App\Enums\NgWordMatchType;
+
 /**
  * A-06 NGワード管理
  *
- * @var string $screenId
- * @var string $title
- * @var array{q: string, action: string, category: string} $filter 絞り込みの現在値
- * @var array<string, string> $actions    処理の選択肢（'all' を含む。値 => 表示名）
- * @var list<string>          $categories カテゴリーの一覧
- * @var array{enabled: int, total: int} $counts 有効な件数と全件数
- * @var list<\App\Enums\NgWordMatchType> $matchTypes
- * @var list<\App\Enums\NgWordAction>    $actionCases
- * @var list<array{word: \App\Entities\NgWord, updated: string}> $items 一覧の行
- * @var \App\Entities\NgWord|null $editing 編集中のワード（追加なら null）
+ * @var string                                                                    $screenId
+ * @var string                                                                    $title
+ * @var array{q: string, action: string, category: string}                        $filter 絞り込みの現在値
+ * @var array<string, string>                                                     $actions    処理の選択肢（'all' を含む。値 => 表示名）
+ * @var list<string>                                                              $categories カテゴリーの一覧
+ * @var array{enabled: int, total: int}                                           $counts 有効な件数と全件数
+ * @var list<NgWordMatchType>                                                     $matchTypes
+ * @var list<NgWordAction>                                                        $actionCases
+ * @var list<array{word: NgWord, updated: string}>                                $items 一覧の行
+ * @var NgWord|null                                                               $editing 編集中のワード（追加なら null）
  * @var array{word: string, match_type: string, category: string, action: string} $form フォームの初期値
- * @var string $csvColumns CSV の列名（表示用）
+ * @var string                                                                    $csvColumns CSV の列名（表示用）
  */
 ?>
 <?= $this->extend('layouts/admin') ?>

@@ -1,17 +1,20 @@
 <?php
+
+use App\Entities\ModerationItem;
+
 /**
  * A-05 通報・モデレーション
  *
- * @var string $screenId
- * @var string $title
- * @var list<array{label: string, count: string|null, url: string, active: bool}> $tabs 絞り込み
- * @var list<array{item: \App\Entities\ModerationItem, url: string, active: bool, time: string, flags: list<array{value: string, label: string}>, stateLabel: string}> $queue 左の一覧（優先度順）
- * @var \App\Entities\ModerationItem|null $selected   右側に出す1件。一覧が空なら null
- * @var string                            $selectedAt 対象の投稿日時（整形済み）
- * @var list<array{when: string, what: string}> $history 対応履歴（新しい順）
- * @var array<string, string> $restrictHours 投稿元を制限する期間の選択肢（値 => 表示名）
- * @var bool   $hasOverflow 古すぎて一覧に読み込めなかった未処理があるか
- * @var string $overflow    その件数（整形済み）
+ * @var string                                                                                                                                           $screenId
+ * @var string                                                                                                                                           $title
+ * @var list<array{label: string, count: string|null, url: string, active: bool}>                                                                        $tabs 絞り込み
+ * @var list<array{item: ModerationItem, url: string, active: bool, time: string, flags: list<array{value: string, label: string}>, stateLabel: string}> $queue 左の一覧（優先度順）
+ * @var ModerationItem|null                                                                                                                              $selected   右側に出す1件。一覧が空なら null
+ * @var string                                                                                                                                           $selectedAt 対象の投稿日時（整形済み）
+ * @var list<array{when: string, what: string}>                                                                                                          $history 対応履歴（新しい順）
+ * @var array<string, string>                                                                                                                            $restrictHours 投稿元を制限する期間の選択肢（値 => 表示名）
+ * @var bool                                                                                                                                             $hasOverflow 古すぎて一覧に読み込めなかった未処理があるか
+ * @var string                                                                                                                                           $overflow    その件数（整形済み）
  */
 ?>
 <?= $this->extend('layouts/admin') ?>

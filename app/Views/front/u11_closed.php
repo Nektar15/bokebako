@@ -1,9 +1,13 @@
 <?php
+
+use App\Entities\Oogiri;
+
 /**
  * U-11 募集終了ページ（結果選択待ち）
  * 結果確定済みは URL の振り分けで U-10 に直接行くため、ここは「主催者が選んでいます」だけを出す（未確定事項6）
  *
- * @var \App\Entities\Oogiri $oogiri
+ * @var Oogiri $oogiri
+ * @var string $ogpUrl og:image（画像がなければ既定の画像）
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -12,7 +16,7 @@
 <title>募集は終了しました：<?= esc($oogiri->odai) ?>｜ぼけばこ</title>
 <meta property="og:title" content="<?= esc($oogiri->odai, 'attr') ?>">
 <meta property="og:description" content="募集は終了しました。主催者がベスト回答を選んでいます。">
-<meta property="og:image" content="<?= esc(base_url('ogp/recruit/' . $oogiri->slug . '.png'), 'attr') ?>">
+<meta property="og:image" content="<?= esc($ogpUrl, 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="bk:pv" content="<?= esc($oogiri->slug, 'attr') ?>">
 <?= $this->endSection() ?>
@@ -40,5 +44,9 @@
 <section class="l-section p-closed__cta">
 <p class="p-closed__cta-text">待っている間に、あなたも1本どうですか。</p>
 <?= part('partials/host_cta', ['slug' => $oogiri->slug, 'from' => 'U-11']) ?>
+</section>
+
+<section class="l-section">
+<?= part('partials/host_entry', ['slug' => $oogiri->slug]) ?>
 </section>
 <?= $this->endSection() ?>

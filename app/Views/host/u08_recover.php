@@ -1,8 +1,11 @@
 <?php
+
+use App\Entities\Oogiri;
+
 /**
  * U-08 開催者の本人確認（別端末からの復旧：募集URL＋合言葉）
  *
- * @var \App\Entities\Oogiri $oogiri
+ * @var Oogiri                $oogiri
  * @var array<string, string> $errors
  */
 ?>

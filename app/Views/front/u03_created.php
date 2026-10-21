@@ -1,8 +1,11 @@
 <?php
+
+use App\Entities\Oogiri;
+
 /**
  * U-03 開催完了・Xシェア画面
  *
- * @var \App\Entities\Oogiri $oogiri
+ * @var Oogiri $oogiri
  * @var string $endsAt     募集終了日時の表示（例：「9月17日 22:15」）
  * @var string $shareUrl   募集URL
  * @var string $intentUrl  X の Web Intent URL

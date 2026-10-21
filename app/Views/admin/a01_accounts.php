@@ -1,15 +1,19 @@
 <?php
+
+use App\Entities\AdminAccount;
+use App\Enums\AdminRole;
+
 /**
  * A-01 管理者アカウント（追加・権限設定・パスワード。未確定事項10 → ADR 0007-4）
  *
- * @var string $screenId
- * @var string $title
- * @var bool   $isSuper  上位管理者か（false なら自分のパスワード変更だけを出す）
- * @var list<array{account: \App\Entities\AdminAccount, role: string, lastLogin: string, locked: bool, isSelf: bool}> $rows 一覧の行（上位管理者のときだけ）
- * @var list<\App\Enums\AdminRole> $roles
- * @var \App\Entities\AdminAccount|null $editing 編集中のアカウント（追加なら null）
- * @var array{login_id: string, name: string, role: string} $form フォームの初期値
- * @var int    $passwordMin パスワードの最小文字数
+ * @var string                                                                                          $screenId
+ * @var string                                                                                          $title
+ * @var bool                                                                                            $isSuper  上位管理者か（false なら自分のパスワード変更だけを出す）
+ * @var list<array{account: AdminAccount, role: string, lastLogin: string, locked: bool, isSelf: bool}> $rows 一覧の行（上位管理者のときだけ）
+ * @var list<AdminRole>                                                                                 $roles
+ * @var AdminAccount|null                                                                               $editing 編集中のアカウント（追加なら null）
+ * @var array{login_id: string, name: string, role: string}                                             $form フォームの初期値
+ * @var int                                                                                             $passwordMin パスワードの最小文字数
  */
 ?>
 <?= $this->extend('layouts/admin') ?>

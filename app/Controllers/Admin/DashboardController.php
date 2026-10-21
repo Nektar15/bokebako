@@ -16,8 +16,13 @@ final class DashboardController extends AdminController
      */
     public function index(): string
     {
-        $period  = StatsPeriod::tryFrom((string) $this->request->getGet('period')) ?? StatsPeriod::Today;
-        $stats   = service('stats');
+        $range  = $this->periodFilter(['custom' => '']);
+        $period = $range['period'] === 'custom' ? StatsPeriod::Custom : (StatsPeriod::tryFrom((string) $this->request->getGet('period')) ?? StatsPeriod::Today);
+        $stats  = service('stats');
+
+        if ($period === StatsPeriod::Custom) {
+            $stats->useCustomRange($range['from'], $range['to']);
+        }
         $display = service('display');
         $todos   = $stats->todos();
         $periods = [];
@@ -31,6 +36,7 @@ final class DashboardController extends AdminController
             'title'      => 'ダッシュボード',
             'periods'    => $periods,
             'rangeLabel' => $stats->rangeLabel($period),
+            'custom'     => ['active' => $period === StatsPeriod::Custom, 'from' => $range['from'], 'to' => $range['to']],
             'kpi'        => $stats->kpi($period),
             'tiles'      => $stats->tiles($period),
             'chart'      => $stats->dailyChart(),

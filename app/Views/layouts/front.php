@@ -17,7 +17,8 @@ $ads ??= [];
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<?= $this->renderSection('meta') ?: '<title>ぼけばこ｜登録不要・24時間限定の匿名大喜利</title>' . "\n" . '<meta name="description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">' ?>
+<?= $this->include('partials/app_icons') ?>
+<?= $this->renderSection('meta') ?: "<title>ぼけばこ｜登録不要・24時間限定の匿名大喜利</title>\n" . '<meta name="description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">' ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -31,9 +32,9 @@ $ads ??= [];
 <?= $this->include('partials/screen_nav') ?>
 <?= $this->include('partials/header') ?>
 <main class="l-main">
-<?= part('partials/ad_slot', ['ad' => $ads['top'] ?? null, 'position' => 'top']) ?>
+<?= part('partials/ad_slot', ['ad' => $ads['top'] ?? null, 'position' => 'top', 'deferred' => $ads['deferred'] ?? false]) ?>
 <?= $this->renderSection('content') ?>
-<?= part('partials/ad_slot', ['ad' => $ads['bottom'] ?? null, 'position' => 'bottom']) ?>
+<?= part('partials/ad_slot', ['ad' => $ads['bottom'] ?? null, 'position' => 'bottom', 'deferred' => $ads['deferred'] ?? false]) ?>
 </main>
 <?= $this->include('partials/footer') ?>
 <?= $this->include('partials/toast') ?>

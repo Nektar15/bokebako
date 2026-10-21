@@ -2,13 +2,13 @@
 /**
  * U-01 トップ・大喜利開催画面（U-02 開催確認モーダルを含む）
  *
- * @var list<string>          $templates お題テンプレート
- * @var string                $fromSlug  派生元の大喜利スラッグ（なければ空）
- * @var int                   $odaiMax   お題の最大文字数
- * @var array<string, string> $errors    項目名 => 文言。'_' は項目に属さないエラー
+ * @var list<string>                                       $templates お題テンプレート
+ * @var string                                             $fromSlug  派生元の大喜利スラッグ（なければ空）
+ * @var int                                                $odaiMax   お題の最大文字数
+ * @var array<string, string>                              $errors    項目名 => 文言。'_' は項目に属さないエラー
  * @var array{odai:string, passphrase:string, from:string} $old 前回の入力
- * @var array{top: array|null, bottom: array|null} $ads
- * @var string $captcha CAPTCHA のサイトキー（連続投稿の制限方法が CAPTCHA のときだけ。空なら出さない）
+ * @var array{top: array|null, bottom: array|null}         $ads
+ * @var string                                             $captcha CAPTCHA のサイトキー（連続投稿の制限方法が CAPTCHA のときだけ。空なら出さない）
  */
 ?>
 <?= $this->extend('layouts/front') ?>

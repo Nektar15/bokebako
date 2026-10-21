@@ -35,6 +35,13 @@ final class StatsService
      */
     public const EVENT_KEEP_DAYS = 90;
 
+    /**
+     * 「期間指定」の範囲（useCustomRange()）。なければ直近30日
+     *
+     * @var array{Time, Time}|null
+     */
+    private ?array $custom = null;
+
     public function __construct(
         private readonly DisplayService $display,
         private readonly DailyStatModel $daily,
@@ -56,11 +63,31 @@ final class StatsService
         $latest = Time::now()->subDays(1)->setTime(0, 0);
 
         return match ($period) {
-            StatsPeriod::Today                      => [$latest, $latest],
-            StatsPeriod::Yesterday                  => [$latest->subDays(1), $latest->subDays(1)],
-            StatsPeriod::Week                       => [$latest->subDays(6), $latest],
-            StatsPeriod::Month, StatsPeriod::Custom => [$latest->subDays(29), $latest],
+            StatsPeriod::Today     => [$latest, $latest],
+            StatsPeriod::Yesterday => [$latest->subDays(1), $latest->subDays(1)],
+            StatsPeriod::Week      => [$latest->subDays(6), $latest],
+            StatsPeriod::Month     => [$latest->subDays(29), $latest],
+            StatsPeriod::Custom    => $this->custom ?? [$latest->subDays(29), $latest],
         };
+    }
+
+    /**
+     * 「期間指定」の日付（A-02。YYYY-MM-DD）。集計済みの最新日（前日）より後は前日にし、最長366日にする（監査 2026-10-21）
+     */
+    public function useCustomRange(string $from, string $to): void
+    {
+        $latest = Time::now()->subDays(1)->setTime(0, 0);
+        $end    = $to !== '' ? Time::parse($to)->setTime(0, 0) : $latest;
+        $end    = $end->isAfter($latest) ? $latest : $end;
+        $start  = $from !== '' ? Time::parse($from)->setTime(0, 0) : $end->subDays(29);
+
+        if ($start->isAfter($end)) {
+            $start = $end;
+        }
+        if ($start->isBefore($end->subDays(365))) {
+            $start = $end->subDays(365);
+        }
+        $this->custom = [$start, $end];
     }
 
     /**
@@ -248,6 +275,11 @@ final class StatsService
         ];
         $existing = $this->daily->where('date', $row['date'])->first();
         $existing === null ? $this->daily->insert($row) : $this->daily->update($existing->id, $row);
+
+        // 同じ日を2回集計したときは、大喜利ごとの PV を足さない（二重に増えるため。監査 2026-10-21）
+        if ($existing !== null) {
+            return $row;
+        }
 
         // PV カウンタ（大喜利ごと）に反映：その日の募集URL流入と PV を加算
         $perOogiri = $this->events->builder()->select('oogiri_id, COUNT(*) AS n')

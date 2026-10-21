@@ -20,12 +20,18 @@ final class EventController extends BaseController
      */
     public function create(): ResponseInterface
     {
-        $json = $this->request->getJSON(true);
-        $body = is_array($json) ? $json : (array) $this->request->getPost();
+        $body = $this->apiBody();
         $name = EventName::tryFrom((string) ($body['name'] ?? ''));
 
         if ($name === null || ! $name->allowedFromBrowser()) {
             return $this->response->setStatusCode(400)->setJSON(['ok' => false, 'error' => ['code' => ErrorCode::ValidationFailed->value, 'message' => ErrorCode::ValidationFailed->message()]]);
+        }
+        $identity = service('identity');
+        $ip       = substr($identity->ipHash(), 0, 16);
+
+        // 水増しを防ぐ：同じ IP からは1分に120件まで。超えた分は記録せずに ok を返す（監査 2026-10-21）
+        if (! service('throttler')->check('ev_' . $ip, 120, 60)) {
+            return $this->response->setJSON(['ok' => true, 'data' => null]);
         }
         $oogiriId = $this->oogiriId((string) ($body['slug'] ?? ''));
         service('event')->record($name, [
@@ -34,7 +40,9 @@ final class EventController extends BaseController
             'parent_oogiri_id' => $name === EventName::ClickCreate ? $oogiriId : $this->oogiriId((string) ($body['from'] ?? '')),
         ]);
 
-        if (in_array($name, [EventName::ShareRecruit, EventName::ShareAnswer, EventName::ShareResult], true) && $oogiriId !== null) {
+        // シェア数は、同じブラウザ・同じ IP・同じ大喜利・同じ種類につき1時間に1回だけ数える
+        if (in_array($name, [EventName::ShareRecruit, EventName::ShareAnswer, EventName::ShareResult], true) && $oogiriId !== null
+            && service('throttler')->check('evs_' . substr($identity->browserIdHash(), 0, 12) . '_' . $ip . '_' . $oogiriId . '_' . $name->value, 1, 3600)) {
             (new OogiriModel())->increment($oogiriId, 'share_count');
         }
 

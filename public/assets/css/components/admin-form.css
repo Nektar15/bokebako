@@ -96,3 +96,12 @@
   .c-segment--fit { display: grid; width: 100%; grid-auto-columns: minmax(0, 1fr); }
   .c-segment--fit .c-segment__label { min-width: 0; padding: 0 8px; }
 }
+
+/* 期間指定の開始日・終了日（partials/admin_date_range） */
+.c-date-range { display: inline-flex; align-items: center; gap: 6px; }
+.c-date-range__input { width: 150px; }
+.c-date-range__sep { font-size: 13px; color: var(--ink-sub); }
+@media (max-width: 767.98px) {
+  .c-filterbar > .c-date-range, .p-inq__selects > .c-date-range { flex-basis: 100%; }
+  .c-date-range__input { flex: 1 1 0; width: auto; }
+}

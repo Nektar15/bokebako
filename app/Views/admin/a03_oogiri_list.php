@@ -1,15 +1,18 @@
 <?php
+
+use App\Entities\Oogiri;
+
 /**
  * A-03 大喜利管理（一覧）
  *
- * @var string $screenId
- * @var string $title
- * @var array{q: string, period: string, sort: string, status: string} $filter 絞り込みの現在値
- * @var array<string, string> $periods 期間の選択肢（値 => 表示名）
- * @var array<string, string> $sorts   並び替えの選択肢（値 => 表示名）
- * @var list<array{label: string, count: string|null, url: string, active: bool}> $tabs 状態タブ
- * @var list<array{oogiri: \App\Entities\Oogiri, created: string, ends: string, pv: string, alert: bool, canPublish: bool}> $items 一覧の行（日時・数値は整形済み。alert は通報が多い行、canPublish は再公開できる状態）
- * @var array{label: string, current: int, links: list<array{page: int, url: string}|null>} $pager
+ * @var string                                                                                                $screenId
+ * @var string                                                                                                $title
+ * @var array{q: string, period: string, from: string, to: string, sort: string, status: string}              $filter 絞り込みの現在値
+ * @var array<string, string>                                                                                 $periods 期間の選択肢（値 => 表示名）
+ * @var array<string, string>                                                                                 $sorts   並び替えの選択肢（値 => 表示名）
+ * @var list<array{label: string, count: string|null, url: string, active: bool}>                             $tabs 状態タブ
+ * @var list<array{oogiri: Oogiri, created: string, ends: string, pv: string, alert: bool, canPublish: bool}> $items 一覧の行（日時・数値は整形済み。alert は通報が多い行、canPublish は再公開できる状態）
+ * @var array{label: string, current: int, links: list<array{page: int, url: string}|null>}                   $pager
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -27,6 +30,7 @@
 <option value="<?= esc($value, 'attr') ?>"<?= $value === $filter['period'] ? ' selected' : '' ?>><?= esc($label) ?></option>
 <?php endforeach; ?>
 </select>
+<?= part('partials/admin_date_range', ['from' => $filter['from'], 'to' => $filter['to']]) ?>
 <select class="c-aselect p-oogiri__select" name="sort" aria-label="並び替え">
 <?php foreach ($sorts as $value => $label): ?>
 <option value="<?= esc($value, 'attr') ?>"<?= $value === $filter['sort'] ? ' selected' : '' ?>><?= esc($label) ?></option>

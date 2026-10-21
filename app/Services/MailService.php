@@ -65,11 +65,28 @@ final class MailService
 
         try {
             $email = service('email');
+            $from  = (string) env('email.fromEmail', '');
+
+            if ($from === '' && (string) $email->fromEmail === '') {
+                // 差出人がないと CodeIgniter は送らずに false を返すだけなので、ログに残す（監査 2026-10-21）
+                log_message('error', '管理者メールを送れません：.env の email.fromEmail（差出人）が空です');
+
+                return false;
+            }
+            if ($from !== '') {
+                $email->setFrom($from, (string) env('email.fromName', 'ぼけばこ'));
+            }
             $email->setTo($to);
             $email->setSubject($subject);
             $email->setMessage($body);
 
-            return $email->send();
+            if (! $email->send(false)) {
+                log_message('error', '管理者メールの送信に失敗しました（メールサーバーの設定 email.* を確認）');
+
+                return false;
+            }
+
+            return true;
         } catch (Throwable $e) {
             log_message('error', '管理者メールの送信に失敗: ' . $e->getMessage());
 

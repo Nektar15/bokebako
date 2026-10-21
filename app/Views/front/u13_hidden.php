@@ -1,10 +1,14 @@
 <?php
+
+use App\Entities\Oogiri;
+use App\Enums\OogiriStatus;
+
 /**
  * U-13 非表示ページ（通報・NGワード・管理者判断で公開停止）
  * 検閲のロジックや通報件数は表示しない。
  *
- * @var \App\Entities\Oogiri $oogiri  fixable が true なら修正して再募集できる
- * @var bool $isHost                   開催者のブラウザか
+ * @var Oogiri $oogiri  fixable が true なら修正して再募集できる
+ * @var bool   $isHost                   開催者のブラウザか
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -32,6 +36,15 @@
 
 <?php if (! $isHost): ?>
 <section class="l-section p-closed__cta">
+<a class="c-button c-button--primary" href="<?= site_url('/') ?>">新しく大喜利を開催する</a>
+</section>
+<?php elseif ($oogiri->status() === OogiriStatus::Deleted): ?>
+<section class="l-section">
+<div class="c-card p-hidden__box">
+<span class="c-tag">開催者の方へ</span>
+<p class="p-hidden__box-title">この大喜利は削除されています。</p>
+<p class="c-field__help">新しいお題で、もう一度大喜利を開催できます。</p>
+</div>
 <a class="c-button c-button--primary" href="<?= site_url('/') ?>">新しく大喜利を開催する</a>
 </section>
 <?php elseif ($oogiri->fixable): ?>

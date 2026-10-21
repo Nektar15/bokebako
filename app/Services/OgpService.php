@@ -359,10 +359,18 @@ final class OgpService
                 if ($answer === null || $oogiri === null) {
                     throw new NotFoundException();
                 }
+                // 非表示・削除中のものは作らない（公開ディレクトリに画像を戻さない。ADR 0006-7、監査 2026-10-21）
+                if ($answer->status() !== AnswerStatus::Visible || ! in_array($oogiri->status()->value, self::PUBLIC_STATUSES, true)) {
+                    throw new ValidationException(['target' => '非表示・削除中の回答の画像は作れません']);
+                }
                 $ok = $this->run($kind, $answer->id, (string) $answer->id, 'A-' . $answer->id, $actor, fn () => $this->image->answer($oogiri->odai, $answer->body, service('settings')->ogpTexts()));
             } else {
                 $oogiri = $this->findOogiri($target);
-                $ok     = $kind === OgpKind::Recruit
+
+                if (! in_array($oogiri->status()->value, self::PUBLIC_STATUSES, true)) {
+                    throw new ValidationException(['target' => '非表示・削除中の大喜利の画像は作れません']);
+                }
+                $ok = $kind === OgpKind::Recruit
                     ? $this->generateRecruit($oogiri, $actor)
                     : $this->generateResult($oogiri, $actor);
             }
@@ -399,7 +407,18 @@ final class OgpService
         if (! is_dir($dir)) {
             mkdir($dir, 0775, true);
         }
-        $file->move($dir, $name, true);
+        // 生成は PNG として読むので、JPG は PNG に変換して置く（JPG のまま置くと、その種類の生成がすべて失敗する。監査 2026-10-21）
+        if ($file->getMimeType() === 'image/jpeg') {
+            $image = function_exists('imagecreatefromstring') ? @imagecreatefromstring((string) file_get_contents($file->getTempName())) : false;
+
+            if ($image === false) {
+                throw new ValidationException(['file' => 'この画像は読み込めません。PNG で選んでください']);
+            }
+            imagepng($image, $dir . '/' . $name);
+            imagedestroy($image);
+        } else {
+            $file->move($dir, $name, true);
+        }
         service('adminLog')->record('ogp', null, $kind->label() . 'の' . self::ASSETS[$asset] . 'を差し替え');
     }
 

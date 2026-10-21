@@ -30,7 +30,7 @@ final class AnswerController extends AdminController
             'oogiri'  => $this->text('oogiri'),
             'status'  => $this->choice('status', $statuses, 'all'),
             'reports' => $this->choice('reports', AnswerAdminService::REPORT_FILTERS, 'all'),
-            'period'  => $this->choice('period', OogiriAdminService::PERIODS, 'all'),
+            ...$this->periodFilter(OogiriAdminService::PERIODS),
         ];
         $display = service('display');
         $page    = service('answerAdmin')->list($filter, $this->page());

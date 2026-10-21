@@ -4,12 +4,12 @@
  *
  * confirm を渡すと確認ダイアログを挟む（JS が動かなければそのまま送信される）。
  *
- * @var string      $action   POST 先の URL
- * @var string      $label    ボタンの文字（アイコンだけのときは aria-label になる）
- * @var string      $variant  ボタンの見た目：'outline' | 'dark' | 'danger' | 'small' | 'icon' | 'icon-tiny'（icon はゴミ箱だけのボタン）
- * @var bool        $iconOnly 文字を出さずゴミ箱アイコンだけにする（variant が icon のとき true）
- * @var string|null $confirm  確認ダイアログの文言。null なら確認なし（省略不可。部品の値は呼び出し間で残るため、毎回すべて渡す）
- * @var string      $id       確認ダイアログの id（confirm を渡すとき必須。画面内で一意）
+ * @var string                $action   POST 先の URL
+ * @var string                $label    ボタンの文字（アイコンだけのときは aria-label になる）
+ * @var string                $variant  ボタンの見た目：'outline' | 'dark' | 'danger' | 'small' | 'icon' | 'icon-tiny'（icon はゴミ箱だけのボタン）
+ * @var bool                  $iconOnly 文字を出さずゴミ箱アイコンだけにする（variant が icon のとき true）
+ * @var string|null           $confirm  確認ダイアログの文言。null なら確認なし（省略不可。部品の値は呼び出し間で残るため、毎回すべて渡す）
+ * @var string                $id       確認ダイアログの id（confirm を渡すとき必須。画面内で一意）
  * @var array<string, string> $hidden 一緒に送る hidden 項目（名前 => 値）
  */
 ?>

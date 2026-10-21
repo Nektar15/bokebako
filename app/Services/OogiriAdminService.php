@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Entities\AdminLog;
 use App\Entities\Answer;
 use App\Entities\Oogiri;
+use App\Enums\AnswerStatus;
 use App\Enums\ErrorCode;
 use App\Enums\OogiriStatus;
 use App\Exceptions\AppException;
@@ -14,17 +15,23 @@ use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Models\AnswerModel;
 use App\Models\OogiriModel;
+use App\Models\ReportModel;
 use CodeIgniter\Database\BaseBuilder;
 use CodeIgniter\I18n\Time;
 
 /**
  * 大喜利管理（A-03）：一覧・詳細の取得と、管理者による操作
  *
- * @phpstan-type OogiriFilter array{q: string, period: string, sort: string, status: string}
+ * @phpstan-type OogiriFilter array{q: string, period: string, from?: string, to?: string, sort: string, status: string}
  * @phpstan-type OogiriPage   array{items: list<Oogiri>, total: int, page: int, perPage: int, pages: int}
  */
 final class OogiriAdminService
 {
+    /**
+     * 代理でベスト回答を変えるときの候補の上限
+     */
+    public const RANK_CANDIDATES_MAX = 1000;
+
     public const PER_PAGE = 20;
 
     /**
@@ -94,7 +101,7 @@ final class OogiriAdminService
             }
             $builder->orWhere('slug', $q)->groupEnd();
         }
-        self::applyPeriod($builder, $filter['period']);
+        self::applyPeriod($builder, $filter['period'], 'created_at', $filter['from'] ?? '', $filter['to'] ?? '');
         $total = $builder->countAllResults(false);
         $builder->orderBy(match ($filter['sort']) {
             'pv'      => 'pv',
@@ -114,8 +121,19 @@ final class OogiriAdminService
      *
      * @param BaseBuilder $builder
      */
-    public static function applyPeriod($builder, string $period, string $column = 'created_at'): void
+    public static function applyPeriod($builder, string $period, string $column = 'created_at', string $customFrom = '', string $customTo = ''): void
     {
+        // 期間指定：開始日の 0:00 から終了日の 23:59:59 まで（どちらかだけでもよい）
+        if ($period === 'custom') {
+            if ($customFrom !== '') {
+                $builder->where($column . ' >=', $customFrom . ' 00:00:00');
+            }
+            if ($customTo !== '') {
+                $builder->where($column . ' <=', $customTo . ' 23:59:59');
+            }
+
+            return;
+        }
         $from = match ($period) {
             'today' => Time::now()->setTime(0, 0),
             '7d'    => Time::now()->subDays(7),
@@ -170,6 +188,27 @@ final class OogiriAdminService
     public function answers(Oogiri $oogiri, int $limit = 20): array
     {
         return $this->answers->where('oogiri_id', $oogiri->id)->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->findAll($limit);
+    }
+
+    /**
+     * 代理でベスト回答を変えるときの候補：公開中の回答すべて（新しい順、RANK_CANDIDATES_MAX 件まで）と、今の順位の回答
+     * （一覧の先頭20件だけだと、古い回答を選べず、今の1位が候補から外れて保存で消える。監査 2026-10-21）
+     *
+     * @return list<Answer>
+     */
+    public function rankCandidates(Oogiri $oogiri): array
+    {
+        $rows = $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)
+            ->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->findAll(self::RANK_CANDIDATES_MAX);
+        $ids = array_map(static fn (Answer $a): int => $a->id, $rows);
+
+        foreach ($this->ranked($oogiri) as $answer) {
+            if (! in_array($answer->id, $ids, true) && $answer->status() === AnswerStatus::Visible) {
+                $rows[] = $answer;
+            }
+        }
+
+        return $rows;
     }
 
     /**
@@ -240,6 +279,8 @@ final class OogiriAdminService
         }
         service('pageCache')->purgeOogiri($oogiri->slug);
         service('ogp')->restoreOogiri($this->find($id));
+        // 再公開した時点までの通報は処理済みにする（残すと次の集計でまた自動で非表示になる。監査 2026-10-21）
+        model(ReportModel::class)->where('target_type', 'oogiri')->where('target_id', $id)->where('resolved', 0)->set(['resolved' => 1])->update();
         service('adminLog')->record('oogiri', $id, '再公開（' . $status->label() . '）');
     }
 

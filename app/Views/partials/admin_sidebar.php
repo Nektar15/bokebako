@@ -2,7 +2,7 @@
 /**
  * 管理画面の左メニュー（1024px 未満では引き出し。layouts/admin の「メニュー」で開く）
  *
- * @var string $screenId  選択中の画面ID
+ * @var string                         $screenId  選択中の画面ID
  * @var array{todo:int, inquiries:int} $badges
  */
 $menu = [

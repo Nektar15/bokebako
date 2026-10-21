@@ -3,11 +3,11 @@
  * 規約類（U-15 / U-16）の共通の組み方：見出し・目次・本文
  * 本文は別の View（$articlesView）に書き、ここで include する。
  *
- * @var string $title
- * @var string $updatedAt  最終更新日の表示（例：「2026年10月20日」）
+ * @var string                               $title
+ * @var string                               $updatedAt  最終更新日の表示（例：「2026年10月20日」）
  * @var list<array{id:string, title:string}> $toc
- * @var string $articlesView 本文の View 名（例：front/u15_terms_body）
- * @var bool   $showDraftNote 本文 View に渡す
+ * @var string                               $articlesView 本文の View 名（例：front/u15_terms_body）
+ * @var bool                                 $showDraftNote 本文 View に渡す
  */
 ?>
 <section class="l-section p-doc__head">

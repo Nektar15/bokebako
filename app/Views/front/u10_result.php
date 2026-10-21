@@ -1,15 +1,19 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+
 /**
  * U-10 結果発表ページ（ページキャッシュの対象）
  *
- * @var \App\Entities\Oogiri $oogiri
- * @var string $ogpUrl 結果用 OGP 画像の URL
- * @var string $period                    募集期間の表示（例：「9月16日 22:15〜9月17日 22:15」）
- * @var list<\App\Entities\Answer> $ranked 1位から順のベスト回答（1〜3件）
- * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers 全回答（新着順）
- * @var string $resultIntentUrl
- * @var callable(\App\Entities\Answer): string $answerIntentUrl
- * @var array{top: array|null, bottom: array|null} $ads
+ * @var Oogiri                                               $oogiri
+ * @var string                                               $ogpUrl 結果用 OGP 画像の URL
+ * @var string                                               $period                    募集期間の表示（例：「9月16日 22:15〜9月17日 22:15」）
+ * @var list<Answer>                                         $ranked 1位から順のベスト回答（1〜3件）
+ * @var array{items: list<Answer>, hasMore: bool, page: int} $answers 全回答（新着順）
+ * @var string                                               $resultIntentUrl
+ * @var callable(Answer): string                             $answerIntentUrl
+ * @var array{top: array|null, bottom: array|null}           $ads
  */
 $first = $ranked[0] ?? null;
 ?>
@@ -44,10 +48,10 @@ $first = $ranked[0] ?? null;
 <section class="l-section">
 <?php foreach ($ranked as $i => $answer): ?>
 <?php if ($i === 0): ?>
-<div class="p-result__first"><span class="p-result__rank p-result__rank--first">1位</span><p class="p-result__first-body"><?= nl2br_esc($answer->body) ?></p></div>
+<div class="p-result__first"><span class="p-result__rank p-result__rank--first"><?= esc((string) $answer->rank) ?>位</span><p class="p-result__first-body"><?= nl2br_esc($answer->body) ?></p></div>
 <?php if (count($ranked) > 1): ?><div class="p-result__others"><?php endif; ?>
 <?php else: ?>
-<div class="p-result__other"><span class="p-result__rank"><?= $answer->rank ?>位</span><p class="p-result__other-body"><?= nl2br_esc($answer->body) ?></p></div>
+<div class="p-result__other"><span class="p-result__rank"><?= esc((string) $answer->rank) ?>位</span><p class="p-result__other-body"><?= nl2br_esc($answer->body) ?></p></div>
 <?php endif; ?>
 <?php endforeach; ?>
 <?php if (count($ranked) > 1): ?></div><?php endif; ?>

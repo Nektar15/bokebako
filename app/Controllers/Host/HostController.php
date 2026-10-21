@@ -29,14 +29,15 @@ final class HostController extends BaseController
             ]);
         }
 
-        if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
+        // 確定済み・結果未選出・非表示・削除済みは、選ぶ画面を出さずに募集URL（U-10・U-12・U-13）へ（監査 2026-10-21）
+        if (! in_array($oogiri->status(), [OogiriStatus::Open, OogiriStatus::AwaitingSelection], true)) {
             return redirect()->to('/o/' . $slug);
         }
 
         $format  = service('display');
         $share   = service('share');
         $host    = service('host');
-        $page    = max(1, (int) $this->request->getGet('page'));
+        $page    = min(10000, max(1, (int) $this->request->getGet('page'))); // 巨大な値で offset が溢れないように上限
         $picking = ! $oogiri->isOpen();
 
         return view('host/u08_host', [
@@ -89,7 +90,11 @@ final class HostController extends BaseController
 
     public function favorite(string $slug, int $answerId): RedirectResponse
     {
-        service('host')->toggleFavorite($this->findOogiriOrFail($slug), $answerId);
+        try {
+            service('host')->toggleFavorite($this->findOogiriOrFail($slug), $answerId);
+        } catch (AppException) {
+            // 開催者でない（Cookie が切れた）ときは開催者画面へ戻す（合言葉の入力が出る）
+        }
 
         return redirect()->to('/host/' . $slug);
     }

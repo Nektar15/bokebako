@@ -1,2 +1,2 @@
-<?php /* ロゴマーク（紙が朱色の箱に入る形）。色は tokens.css と同じ値 */ ?>
-<svg class="c-logo" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M11 15 L12.5 3.5 L22 4.8 L20.5 15" fill="#F2C230" stroke="#1D1A16" stroke-width="2.2" stroke-linejoin="round"></path><rect x="3" y="12" width="26" height="17" rx="3" fill="#D6401E" stroke="#1D1A16" stroke-width="2.2"></rect><path d="M10 17 H22" stroke="#1D1A16" stroke-width="2.6" stroke-linecap="round"></path></svg>
+<?php /* ロゴマーク（アプリのアイコン。紙が箱に入る絵）。元の絵は docs/design/icon.png */ ?>
+<img class="c-logo" src="<?= asset_url('img/logo-mark.png') ?>" width="30" height="30" alt="" aria-hidden="true">

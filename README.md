@@ -97,6 +97,7 @@ Xserver はドキュメントルートが `public_html` 固定なので、公開
 | `ADMIN_ALLOWED_IPS` | 管理画面に入れる IP（任意。カンマ区切り。空なら制限しない） |
 | `app.hashSecret` | 32文字以上のランダム文字列。**一度決めたら変えない**（変えると開催者トークン・ブラウザIDの照合がすべて外れる） |
 | `app.adminEmail` | 通知メールの宛先 |
+| `email.fromEmail` | 通知メールの差出人（**必須**。空だと送られない。送れないときは `writable/logs` に記録） |
 | `app.assetVersion` | デプロイごとに変える（例：日付）。CSS/JS のブラウザキャッシュを確実に更新する |
 | `database.default.*` | MariaDB の接続 |
 | `captcha.siteKey` / `captcha.secretKey` | Cloudflare Turnstile。空なら CAPTCHA を出さない |

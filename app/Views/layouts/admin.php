@@ -6,12 +6,12 @@
  *
  * セクション：meta（任意）/ content（必須）/ styles / scripts
  *
- * @var string $screenId   画面ID（例：A-02）。ヘッダーとメニューの選択状態に使う
- * @var string $title      画面名
+ * @var string                         $screenId   画面ID（例：A-02）。ヘッダーとメニューの選択状態に使う
+ * @var string                         $title      画面名
  * @var array{todo:int, inquiries:int} $badges 左メニューに出す未処理件数（AdminController::render() が渡す。なければ 0）
- * @var string|null           $notice 操作後の通知（同上）
- * @var array<string, string> $errors 入力エラー（同上）
- * @var bool                  $guest  ログイン前の画面（A-01 ログイン）。左メニューと見出しを出さない
+ * @var string|null                    $notice 操作後の通知（同上）
+ * @var array<string, string>          $errors 入力エラー（同上）
+ * @var bool                           $guest  ログイン前の画面（A-01 ログイン）。左メニューと見出しを出さない
  */
 $guest ??= false;
 $badges ??= ['todo' => 0, 'inquiries' => 0];
@@ -23,6 +23,7 @@ $errors ??= [];
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<?= $this->include('partials/app_icons') ?>
 <meta name="robots" content="noindex, nofollow">
 <title><?= esc($title) ?>｜ぼけばこ管理</title>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">

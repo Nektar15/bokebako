@@ -1,12 +1,16 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+
 /**
  * 回答一覧（U-07 / U-10 / U-12）
  *
- * @var \App\Entities\Oogiri       $oogiri
- * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers
- * @var callable(\App\Entities\Answer): string $answerIntentUrl  回答シェア用の Web Intent URL
- * @var string $variant  card（U-07：カード）| row（U-10・U-12：罫線）。省略時 row
- * @var string $moreUrl  「もっと見る」のリンク先（ページング）。省略時は現在のURLに page を足す
+ * @var Oogiri                                               $oogiri
+ * @var array{items: list<Answer>, hasMore: bool, page: int} $answers
+ * @var callable(Answer): string                             $answerIntentUrl  回答シェア用の Web Intent URL
+ * @var string                                               $variant  card（U-07：カード）| row（U-10・U-12：罫線）。省略時 row
+ * @var string                                               $moreUrl  「もっと見る」のリンク先（ページング）。省略時は現在のURLに page を足す
  */
 $variant ??= 'row';
 $moreUrl ??= current_url() . '?page=' . ($answers['page'] + 1);
