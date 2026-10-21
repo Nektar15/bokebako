@@ -4,8 +4,18 @@
  * Vercel の PHP には GD がなく画像を作れないので、中身を PHP（/api/v1/ogp/{kind}/{key}）から受け取り、
  * resources/og/render.cjs（app/Libraries/OgpImage.php と同じ配置）で描く。本番（Xserver）では使わない。
  */
-const { ImageResponse } = require('@vercel/og');
-const { build } = require('../resources/og/render.cjs');
+// 読み込みに失敗しても関数ごと落とさず、原因を返す（Vercel のログを見なくても分かるように）
+let loaded = null;
+function load() {
+  if (loaded === null) {
+    try {
+      loaded = { ImageResponse: require('@vercel/og').ImageResponse, build: require('../resources/og/render.cjs').build };
+    } catch (e) {
+      loaded = { error: e };
+    }
+  }
+  return loaded;
+}
 
 const KINDS = ['recruit', 'answer', 'result'];
 
@@ -23,6 +33,14 @@ module.exports = async (req, res) => {
   };
 
   if (!KINDS.includes(kind) || !/^[A-Za-z0-9]{1,32}$/.test(key)) return fallback();
+  const { ImageResponse, build, error } = load();
+  if (error) {
+    console.error('OGP の生成の準備に失敗', error);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.end('OGP renderer failed to load: ' + String(error && error.message || error));
+    return;
+  }
 
   try {
     const api = await fetch(`${origin}/api/v1/ogp/${kind}/${key}`, { headers: { Accept: 'application/json' } });
@@ -39,6 +57,12 @@ module.exports = async (req, res) => {
     res.end(body);
   } catch (e) {
     console.error('OGP の生成に失敗', e);
+    if (url.searchParams.get('debug') === '1') {
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.end('OGP render failed: ' + String(e && e.stack || e));
+      return;
+    }
     fallback();
   }
 };
