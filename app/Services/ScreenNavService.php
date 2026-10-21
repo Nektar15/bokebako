@@ -36,7 +36,7 @@ final class ScreenNavService
     /**
      * モーダルに並べる中身（表示用）。href は、そのまま開ける画面なら URL、開催者・回答者として開く画面は /_screens/go?to=番号
      *
-     * @return list<array{label: string, options: list<array{label: string, note: string, href: string}>}>
+     * @return list<array{label: string, options: list<array{label: string, id: string, name: string, note: string, href: string}>}>
      */
     public function groups(): array
     {
@@ -47,7 +47,9 @@ final class ScreenNavService
             $options = [];
 
             foreach ($items as [$name, $target, $note]) {
-                $options[] = ['label' => $name, 'note' => $note, 'href' => $this->href($index++, $target)];
+                // 「U-01 トップ・開催」→ 画面 ID「U-01」と名前「トップ・開催」に分けて表示する（ID がない項目は名前だけ）
+                $parts     = preg_match('/\A([UA]-\d+) (.+)\z/u', $name, $m) === 1 ? [$m[1], $m[2]] : ['', $name];
+                $options[] = ['label' => $name, 'id' => $parts[0], 'name' => $parts[1], 'note' => $note, 'href' => $this->href($index++, $target)];
             }
             $groups[] = ['label' => $label, 'options' => $options];
         }

@@ -1,21 +1,39 @@
-/* 画面一覧ナビ（確認用。ADR 0009）。本番では出ない。<details> で開け閉めするモーダル */
-.c-screen-nav { position: fixed; right: 12px; bottom: 12px; z-index: 1000; font-family: var(--font-body); }
-.c-screen-nav__open { display: flex; align-items: center; gap: 8px; min-height: var(--tap-min); padding: 0 14px; border: var(--border); border-radius: var(--radius-pill); background: var(--ink); color: var(--white); font-weight: 900; font-size: 14px; box-shadow: var(--shadow-press); cursor: pointer; list-style: none; position: relative; z-index: 3; }
-.c-screen-nav__open::-webkit-details-marker { display: none; }
+/* 画面一覧ナビ（確認用。ADR 0009）。本番では出ない。<details> で開け閉めするモーダル（スマホは下から出るシート） */
+.c-screen-nav { --nav-top: 10vh; font-family: var(--font-body); }
+html:has(.c-screen-nav[open]) { overflow: hidden; }
+
+/* 右下のボタン。開いている間はパネル右上の「×」になる */
+.c-screen-nav__toggle { position: fixed; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 1003; list-style: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.c-screen-nav__toggle::-webkit-details-marker { display: none; }
+.c-screen-nav__open { display: flex; align-items: center; gap: 8px; min-height: var(--tap-min); padding: 0 16px 0 10px; border: var(--border); border-radius: var(--radius-pill); background: var(--ink); color: var(--white); font-weight: 900; font-size: 14px; box-shadow: var(--shadow-press); }
 .c-screen-nav__tag { padding: 1px 6px; border: 1.5px dashed var(--kin); border-radius: 6px; color: var(--kin); font-size: 11px; }
-.c-screen-nav__backdrop { position: fixed; inset: 0; z-index: 1; background: rgba(29, 26, 22, .55); }
-.c-screen-nav__panel { position: fixed; inset: 4vh 12px auto; z-index: 2; max-width: 640px; max-height: calc(100vh - 4vh - 80px); margin: 0 auto; display: flex; flex-direction: column; border: var(--border); border-radius: var(--radius-card); background: var(--card); color: var(--ink); box-shadow: var(--shadow-press-lg); }
-.c-screen-nav__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) var(--space-3) var(--space-2); border-bottom: 1.5px solid var(--line); }
-.c-screen-nav__title { margin: 0; font-weight: 900; font-size: 18px; display: flex; flex-direction: column; gap: 2px; }
-.c-screen-nav__sub { font-weight: 500; font-size: 12px; color: var(--ink-sub); }
-.c-screen-nav__close { width: var(--tap-min); height: var(--tap-min); flex-shrink: 0; border: var(--border); border-radius: 50%; background: var(--paper); font-size: 20px; line-height: 1; cursor: pointer; }
-.c-screen-nav__body { overflow-y: auto; padding: var(--space-2) var(--space-3) var(--space-3); display: flex; flex-direction: column; gap: var(--space-3); }
-.c-screen-nav__group-title { margin: 0 0 6px; font-size: 13px; font-weight: 900; color: var(--ink-sub); }
-.c-screen-nav__list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
-.c-screen-nav__link { display: flex; flex-direction: column; gap: 2px; min-height: var(--tap-min); justify-content: center; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: var(--radius-input); color: var(--ink); text-decoration: none; }
-.c-screen-nav__link:hover, .c-screen-nav__link:focus-visible { border-color: var(--ink); background: var(--kin-pale); }
-.c-screen-nav__label { font-weight: 700; font-size: 14px; }
-.c-screen-nav__note { font-size: 12px; color: var(--ink-sub); }
+.c-screen-nav__close { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; border: var(--border); border-radius: 50%; background: var(--paper); color: var(--ink); font-size: 20px; line-height: 1; }
+.c-screen-nav[open] .c-screen-nav__toggle { top: calc(var(--nav-top) + 12px); right: 12px; bottom: auto; }
+.c-screen-nav[open] .c-screen-nav__open { display: none; }
+.c-screen-nav[open] .c-screen-nav__close { display: flex; }
+
+.c-screen-nav__backdrop { position: fixed; inset: 0; z-index: 1001; background: rgba(29, 26, 22, .6); }
+.c-screen-nav__panel { position: fixed; left: 0; right: 0; top: var(--nav-top); bottom: 0; z-index: 1002; display: flex; flex-direction: column; border: var(--border); border-bottom: 0; border-radius: 20px 20px 0 0; background: var(--paper); color: var(--ink); box-shadow: 0 -4px 0 rgba(29, 26, 22, .15); overflow: hidden; }
+.c-screen-nav__head { padding: 18px 64px 12px 18px; border-bottom: 1.5px solid var(--line); background: var(--card); }
+.c-screen-nav__title { margin: 0; font-weight: 900; font-size: 18px; line-height: 1.3; }
+.c-screen-nav__sub { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink-sub); }
+.c-screen-nav__body { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; padding: 4px 14px calc(24px + env(safe-area-inset-bottom)); }
+
+.c-screen-nav__group-title { position: sticky; top: 0; z-index: 1; margin: 0; padding: 14px 4px 8px; background: var(--paper); font-size: 12px; font-weight: 900; letter-spacing: .04em; color: var(--ink-sub); }
+.c-screen-nav__list { margin: 0; padding: 0; list-style: none; border: 1.5px solid var(--line); border-radius: 12px; background: var(--card); overflow: hidden; }
+.c-screen-nav__list > li + li { border-top: 1px solid var(--line); }
+.c-screen-nav__link { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 36px 10px 12px; position: relative; color: var(--ink); text-decoration: none; }
+.c-screen-nav__link::after { content: ""; position: absolute; right: 16px; top: 50%; width: 7px; height: 7px; border-top: 2px solid var(--ink-sub); border-right: 2px solid var(--ink-sub); transform: translateY(-50%) rotate(45deg); }
+.c-screen-nav__link:hover, .c-screen-nav__link:focus-visible, .c-screen-nav__link:active { background: var(--kin-pale); color: var(--ink); }
+.c-screen-nav__id { flex: 0 0 auto; min-width: 46px; padding: 3px 0; border-radius: 6px; background: var(--ink); color: var(--white); font-size: 11px; font-weight: 900; text-align: center; font-variant-numeric: tabular-nums; }
+.c-screen-nav__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.c-screen-nav__label { font-weight: 700; font-size: 15px; line-height: 1.35; }
+.c-screen-nav__note { font-size: 12px; line-height: 1.45; color: var(--ink-sub); }
+
+/* PC：画面の中央に浮かぶモーダル */
 @media (min-width: 768px) {
-  .c-screen-nav__body { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+  .c-screen-nav { --nav-top: 6vh; }
+  .c-screen-nav__panel { left: 50%; right: auto; bottom: auto; width: min(760px, calc(100vw - 48px)); max-height: 88vh; transform: translateX(-50%); border-bottom: var(--border); border-radius: 20px; box-shadow: var(--shadow-press-lg); }
+  .c-screen-nav[open] .c-screen-nav__toggle { right: calc(50% - min(380px, calc(50vw - 24px)) + 12px); }
+  .c-screen-nav__body { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; align-items: start; padding-bottom: 20px; }
 }
