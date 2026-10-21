@@ -26,6 +26,7 @@ $errors ??= [];
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset_url('css/tokens.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('css/base.css') ?>">
+<?php if (screen_nav() !== null): ?><link rel="stylesheet" href="<?= asset_url('css/components/screen-nav.css') ?>"><?php endif; ?>
 <link rel="stylesheet" href="<?= asset_url('css/admin.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('css/components/admin-button.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('css/components/admin-panel.css') ?>">
@@ -39,12 +40,14 @@ $errors ??= [];
 </head>
 <?php if ($guest): ?>
 <body class="l-admin l-admin--guest">
+<?= $this->include('partials/screen_nav') ?>
 <main class="l-admin__guest">
 <?= part('partials/admin_notice', ['notice' => $notice, 'errors' => $errors]) ?>
 <?= $this->renderSection('content') ?>
 </main>
 <?php else: ?>
 <body class="l-admin">
+<?= $this->include('partials/screen_nav') ?>
 <?= $this->include('partials/admin_sidebar') ?>
 <main class="l-admin__main">
 <header class="l-admin__header">

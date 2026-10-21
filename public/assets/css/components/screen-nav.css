@@ -1,0 +1,7 @@
+/* 画面一覧ナビ（確認用。ADR 0009）。本番では出ない */
+.c-screen-nav { position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; gap: var(--space-1); padding: 6px var(--space-2); background: var(--ink); color: var(--white); font-size: 13px; }
+.c-screen-nav__tag { flex-shrink: 0; padding: 2px 8px; border: 1.5px dashed var(--kin); border-radius: 6px; color: var(--kin); font-weight: 900; font-size: 11px; }
+.c-screen-nav__select { flex: 1 1 auto; min-width: 0; max-width: 560px; min-height: 36px; padding: 0 8px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); font: inherit; }
+.c-screen-nav__go { flex-shrink: 0; min-height: 36px; padding: 0 12px; border: 1.5px solid var(--kin); border-radius: 8px; background: var(--kin); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.l-admin:has(.c-screen-nav) { flex-wrap: wrap; }
+.l-admin > .c-screen-nav { flex: 0 0 100%; }

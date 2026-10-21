@@ -21,11 +21,17 @@ declare(strict_types=1);
 $childEnv = getenv(); // spark に渡す環境変数（getenv() の一覧には putenv() で足したものが入らないので、ここに足していく）
 
 foreach (getenv() as $name => $value) {
-    if (preg_match('/\A(app|database|cookie|devSeeder|ogp|captcha|openai|mail)_[A-Za-z_]+\z/', $name) === 1) {
+    if (preg_match('/\A(app|database|cookie|devSeeder|screennav|ogp|captcha|openai|mail)_[A-Za-z_]+\z/', $name) === 1) {
         $dotted = str_replace('_', '.', $name);
         putenv($dotted . '=' . $value);
         $_ENV[$dotted] = $_SERVER[$dotted] = $childEnv[$dotted] = $value;
     }
+}
+
+// 画面一覧ナビ（確認用のプルダウン。ADR 0009）は、Vercel の仮置きでは既定でオン（環境変数 screennav_enabled=false で消せる）
+if (! isset($childEnv['screennav.enabled'])) {
+    putenv('screennav.enabled=true');
+    $_ENV['screennav.enabled'] = $_SERVER['screennav.enabled'] = $childEnv['screennav.enabled'] = 'true';
 }
 
 $root     = dirname(__DIR__);

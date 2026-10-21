@@ -42,6 +42,7 @@ use App\Services\OogiriService;
 use App\Services\PageCacheService;
 use App\Services\RateLimitService;
 use App\Services\ReportService;
+use App\Services\ScreenNavService;
 use App\Services\SettingService;
 use App\Services\ShareService;
 use App\Services\StatsService;
@@ -59,6 +60,11 @@ class Services extends BaseService
     public static function currentAdmin(bool $getShared = true): CurrentAdminService
     {
         return $getShared ? static::getSharedInstance('currentAdmin') : new CurrentAdminService();
+    }
+
+    public static function screenNav(bool $getShared = true): ScreenNavService
+    {
+        return $getShared ? static::getSharedInstance('screenNav') : new ScreenNavService(config(ScreenNav::class), new AnswerModel(), static::identity());
     }
 
     public static function adminAuth(bool $getShared = true): AdminAuthService

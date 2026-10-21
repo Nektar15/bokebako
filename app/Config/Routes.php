@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use CodeIgniter\Router\RouteCollection;
+use Config\ScreenNav;
 
 /**
  * ルート定義（FEATURES.md 1章「URLと画面の対応」が正）
@@ -51,6 +52,11 @@ $routes->group('host', ['namespace' => 'App\Controllers\Host'], static function 
     $routes->post('(:segment)/result', 'HostController::decide/$1');              // U-09 同意後の確定
     $routes->post('(:segment)/delete', 'HostController::delete/$1');
 });
+
+// 画面一覧ナビ（確認用。screenNav.enabled のときだけ。ADR 0009）
+if (config(ScreenNav::class)->enabled) {
+    $routes->get('_screens/go', 'Front\ScreenNavController::go');
+}
 
 // ---------------------------------------------------------------
 // API（JSON）

@@ -23,10 +23,12 @@ $ads ??= [];
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= asset_url('css/tokens.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('css/base.css') ?>">
+<?php if (screen_nav() !== null): ?><link rel="stylesheet" href="<?= asset_url('css/components/screen-nav.css') ?>"><?php endif; ?>
 <?= $this->renderSection('styles') ?>
 <?= $this->include('partials/ga4') ?>
 </head>
 <body class="l-body">
+<?= $this->include('partials/screen_nav') ?>
 <?= $this->include('partials/header') ?>
 <main class="l-main">
 <?= part('partials/ad_slot', ['ad' => $ads['top'] ?? null, 'position' => 'top']) ?>

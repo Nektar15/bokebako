@@ -9,6 +9,7 @@ import { initConfirmDialog } from './components/confirm-dialog.js';
 import { initTracking } from './components/tracking.js';
 import { initReport } from './components/report.js';
 import { initAutosubmit } from './components/autosubmit.js';
+import { initScreenNav } from './components/screen-nav.js';
 
 const root = document;
 
@@ -19,3 +20,4 @@ initConfirmDialog(root);
 initTracking(root);
 initReport(root);
 initAutosubmit(root);
+initScreenNav(root);

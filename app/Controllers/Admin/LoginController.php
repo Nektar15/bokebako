@@ -43,9 +43,10 @@ final class LoginController extends BaseController
         } catch (AppException $e) {
             return redirect()->to(admin_url('login'))->withInput()->with('errors', ['login' => $e->getMessage()]);
         }
+        $returnUrl = $auth->pullReturnUrl();
         $auth->startSession($account);
 
-        return redirect()->to(admin_url());
+        return redirect()->to($returnUrl);
     }
 
     public function logout(): RedirectResponse
