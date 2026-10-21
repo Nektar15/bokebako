@@ -80,7 +80,7 @@ final class OogiriController extends BaseController
             'ogpUrl'          => service('ogp')->url(OgpKind::Result, $oogiri->slug),
             'ranked'          => $ranked,
             'answers'         => service('answer')->listVisible($oogiri, $page, false), // 共有キャッシュに個人の情報を載せない
-            'resultIntentUrl' => $share->resultIntent($oogiri, $ranked[0] ?? null),
+            'resultIntentUrl' => $share->resultIntent($oogiri, $ranked),
             'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
             'ads'             => service('ads')->slots(),
         ]);

@@ -1,0 +1,1 @@
+<svg class="c-icon-heart" width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5 C6 16.4 2.8 13.2 2.8 9.1 C2.8 6.3 5 4.2 7.6 4.2 C9.4 4.2 11 5.2 12 6.8 C13 5.2 14.6 4.2 16.4 4.2 C19 4.2 21.2 6.3 21.2 9.1 C21.2 13.2 18 16.4 12 20.5 Z"></path></svg>

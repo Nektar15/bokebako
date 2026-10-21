@@ -9,9 +9,9 @@
  * @var string $remaining           募集の残り時間（募集中のみ意味を持つ）
  * @var string $selectionRemaining  結果選出の残り時間（選択待ちのみ）
  * @var string $pv                  表示用に整形したPV
- * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers 回答一覧（新着順、100件ずつ。結果選択待ちではお気に入りを除く）
- * @var list<\App\Entities\Answer> $favorites  お気に入り（結果選択待ちの1ページ目だけ。上にまとめて出す）
- * @var int    $favoriteCount お気に入りの件数
+ * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers 回答一覧（新着順、100件ずつ。結果選択待ちではいいねを除く）
+ * @var list<\App\Entities\Answer> $favorites  いいねした回答（結果選択待ちの1ページ目だけ。上にまとめて出す）
+ * @var int    $favoriteCount いいねした件数
  * @var string $moreUrl       「もっと見る」の行き先（次のページ）
  * @var string $shareUrl
  * @var string $intentUrl
@@ -53,7 +53,7 @@
 <?php if ($isOpen): ?>
 <div class="p-host__stat"><dt>残り</dt><dd class="p-host__stat--small"><?= esc($remaining) ?></dd></div>
 <?php else: ?>
-<div class="p-host__stat"><dt>お気に入り</dt><dd><?= esc((string) $favoriteCount) ?></dd></div>
+<div class="p-host__stat"><dt>いいね</dt><dd><?= esc((string) $favoriteCount) ?></dd></div>
 <?php endif; ?>
 </dl>
 <p class="u-sub">募集期間：<?= esc($startsAt) ?>〜<?= esc($endsAt) ?></p>
@@ -88,7 +88,7 @@
 
 <?php if ($favorites !== []): ?>
 <section class="l-section p-host__answers">
-<div class="p-host__title"><h2 class="p-host__h2">お気に入り（<?= esc((string) count($favorites)) ?>）</h2><span class="u-sub">募集中に★を付けた回答</span></div>
+<div class="p-host__title"><h2 class="p-host__h2">いいねした回答（<?= esc((string) count($favorites)) ?>）</h2><span class="u-sub">募集中に「いいね」を押した回答</span></div>
 <ul class="p-host__list">
 <?php foreach ($favorites as $answer): ?>
 <?= part('partials/host_answer_item', ['answer' => $answer, 'isOpen' => $isOpen, 'slug' => $oogiri->slug]) ?>

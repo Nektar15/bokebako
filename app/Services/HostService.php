@@ -33,7 +33,7 @@ final class HostService
     public const PER_PAGE = 100;
 
     /**
-     * 結果選択待ちで上にまとめて出すお気に入りの上限
+     * 結果選択待ちで上にまとめて出すいいねの上限
      */
     public const FAVORITES_MAX = 100;
 
@@ -132,11 +132,11 @@ final class HostService
         if (! in_array($oogiri->status(), self::DECIDABLE_BY_HOST, true)) {
             throw new AppException(ErrorCode::Forbidden);
         }
-        $ids    = self::normalizeIds($answerIds);
-        $first  = $this->saveRanks($oogiri, $ids, self::DECIDABLE_BY_HOST);
+        $ids = self::normalizeIds($answerIds);
+        $this->saveRanks($oogiri, $ids, self::DECIDABLE_BY_HOST);
         $oogiri = $this->oogiris->find($oogiri->id);
         service('event')->record(EventName::Decide, ['oogiri_id' => $oogiri->id]);
-        service('ogp')->generateResult($oogiri, $first);
+        service('ogp')->generateResult($oogiri);
         service('adminLog')->record('oogiri', $oogiri->id, '結果を確定（' . count($ids) . '件）', AdminLogService::ACTOR_HOST);
     }
 
@@ -246,7 +246,7 @@ final class HostService
      * 開催者画面の回答（新しい順、PER_PAGE 件ずつ）
      *
      * 回答が多い大喜利でも古い回答まで選べるよう、ページで区切って続きを読めるようにする（レビュー「取得上限」）。
-     * 結果選択待ちではお気に入りを favorites() で上にまとめて出すので、ここからは外す
+     * 結果選択待ちではいいねを favorites() で上にまとめて出すので、ここからは外す
      *
      * @return array{items: list<Answer>, hasMore: bool, page: int}
      */
@@ -264,7 +264,7 @@ final class HostService
     }
 
     /**
-     * お気に入りにした回答（新しい順、FAVORITES_MAX 件まで）。結果選択待ちで上にまとめて出す
+     * いいねにした回答（新しい順、FAVORITES_MAX 件まで）。結果選択待ちで上にまとめて出す
      *
      * @return list<Answer>
      */

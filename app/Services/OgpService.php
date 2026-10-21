@@ -70,6 +70,40 @@ final class OgpService
         return is_file($path) ? base_url('ogp/' . $kind->value . '/' . $key . '.png') . '?v=' . filemtime($path) : base_url('assets/img/ogp-default.png');
     }
 
+    /**
+     * A-08 のプレビュー：見本のお題・回答と今の文言・背景・ロゴで描いた PNG。作れない環境（GD・フォントなし）なら null
+     */
+    public function preview(OgpKind $kind): ?string
+    {
+        if (! $this->image->isAvailable()) {
+            return null;
+        }
+        $texts  = service('settings')->ogpTexts();
+        $ranked = array_slice([
+            ['rank' => 1, 'body' => 'うまい棒・味なし'],
+            ['rank' => 2, 'body' => 'チロルチョコ 1,980円'],
+            ['rank' => 3, 'body' => 'よっちゃんイカ・本人'],
+        ], 0, $texts['result_ranks']);
+        $img = match ($kind) {
+            OgpKind::Recruit => $this->image->recruit('こんなコンビニ店員は嫌だ', $texts),
+            OgpKind::Answer  => $this->image->answer('こんなコンビニ店員は嫌だ', '「袋いりますか？」のあとに、10秒の沈黙を置いてくる', $texts),
+            OgpKind::Result  => $this->image->result('絶対に売れない駄菓子の商品名とは？', $ranked, 412, $texts),
+        };
+        ob_start();
+        imagepng($img, null, 6);
+        imagedestroy($img);
+
+        return (string) ob_get_clean();
+    }
+
+    /**
+     * プレビューを作れない環境（Vercel など）で代わりに見せる見本画像（初期の文言で描いたもの）
+     */
+    public static function sampleUrl(OgpKind $kind): string
+    {
+        return base_url('assets/img/ogp-sample-' . $kind->value . '.png');
+    }
+
     public function path(OgpKind $kind, string $key): string
     {
         return FCPATH . 'ogp/' . $kind->value . '/' . basename($key) . '.png';
@@ -85,15 +119,18 @@ final class OgpService
      */
     public function generateRecruit(Oogiri $oogiri, string $actor = AdminLogService::ACTOR_AUTO): bool
     {
-        return $this->run(OgpKind::Recruit, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->recruit($oogiri->odai));
+        return $this->run(OgpKind::Recruit, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->recruit($oogiri->odai, service('settings')->ogpTexts()));
     }
 
     /**
-     * 結果用（確定時）
+     * 結果用（確定時）。1〜3位を載せる（ADR 0011）
      */
-    public function generateResult(Oogiri $oogiri, ?Answer $first, string $actor = AdminLogService::ACTOR_AUTO): bool
+    public function generateResult(Oogiri $oogiri, string $actor = AdminLogService::ACTOR_AUTO): bool
     {
-        return $this->run(OgpKind::Result, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->result($oogiri->odai, $first?->body ?? '（選出なし）', $oogiri->answer_count));
+        $texts  = service('settings')->ogpTexts();
+        $ranked = array_map(static fn (Answer $a): array => ['rank' => (int) $a->rank, 'body' => $a->body], array_slice($this->ranked($oogiri), 0, $texts['result_ranks']));
+
+        return $this->run(OgpKind::Result, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->result($oogiri->odai, $ranked, $oogiri->answer_count, $texts));
     }
 
     /**
@@ -105,7 +142,7 @@ final class OgpService
             return true;
         }
 
-        return $this->run(OgpKind::Answer, $answer->id, (string) $answer->id, 'A-' . $answer->id, AdminLogService::ACTOR_AUTO, fn () => $this->image->answer($oogiri->odai, $answer->body));
+        return $this->run(OgpKind::Answer, $answer->id, (string) $answer->id, 'A-' . $answer->id, AdminLogService::ACTOR_AUTO, fn () => $this->image->answer($oogiri->odai, $answer->body, service('settings')->ogpTexts()));
     }
 
     /**
@@ -113,7 +150,17 @@ final class OgpService
      */
     public function firstRanked(Oogiri $oogiri): ?Answer
     {
-        return $this->answers->where('oogiri_id', $oogiri->id)->where('rank IS NOT NULL')->where('status', AnswerStatus::Visible->value)->orderBy('rank', 'ASC')->first();
+        return $this->ranked($oogiri)[0] ?? null;
+    }
+
+    /**
+     * 結果画像・結果シェアに載せる1〜3位：順位のついた公開中の回答（順位の若い順。U-10 の表示と同じ）
+     *
+     * @return list<Answer>
+     */
+    public function ranked(Oogiri $oogiri): array
+    {
+        return $this->answers->where('oogiri_id', $oogiri->id)->where('rank IS NOT NULL')->where('status', AnswerStatus::Visible->value)->orderBy('rank', 'ASC')->findAll(3);
     }
 
     /**
@@ -154,7 +201,7 @@ final class OgpService
         $this->generateRecruit($oogiri);
 
         if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
-            $this->generateResult($oogiri, $this->firstRanked($oogiri));
+            $this->generateResult($oogiri);
         }
     }
 
@@ -166,7 +213,7 @@ final class OgpService
         $this->remove(OgpKind::Answer, (string) $answer->id);
 
         if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
-            $this->generateResult($oogiri, $this->firstRanked($oogiri));
+            $this->generateResult($oogiri);
         }
     }
 
@@ -312,12 +359,12 @@ final class OgpService
                 if ($answer === null || $oogiri === null) {
                     throw new NotFoundException();
                 }
-                $ok = $this->run($kind, $answer->id, (string) $answer->id, 'A-' . $answer->id, $actor, fn () => $this->image->answer($oogiri->odai, $answer->body));
+                $ok = $this->run($kind, $answer->id, (string) $answer->id, 'A-' . $answer->id, $actor, fn () => $this->image->answer($oogiri->odai, $answer->body, service('settings')->ogpTexts()));
             } else {
                 $oogiri = $this->findOogiri($target);
                 $ok     = $kind === OgpKind::Recruit
                     ? $this->generateRecruit($oogiri, $actor)
-                    : $this->generateResult($oogiri, $this->firstRanked($oogiri), $actor);
+                    : $this->generateResult($oogiri, $actor);
             }
         } catch (NotFoundException) {
             throw new ValidationException(['target' => '対象が見つかりません']);

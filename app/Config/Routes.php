@@ -48,7 +48,7 @@ $routes->group('host', ['namespace' => 'App\Controllers\Host'], static function 
     $routes->get('(:segment)', 'HostController::show/$1');                        // U-08
     $routes->post('(:segment)/recover', 'HostController::recover/$1');            // 合言葉で本人確認
     $routes->post('(:segment)/restore', 'HostController::restore/$1');            // localStorage のトークンで Cookie を復元（JS から。ADR 0004）
-    $routes->post('(:segment)/favorites/(:num)', 'HostController::favorite/$1/$2');
+    $routes->post('(:segment)/likes/(:num)', 'HostController::favorite/$1/$2'); // いいね（開催者だけ。ADR 0011）
     $routes->post('(:segment)/result', 'HostController::decide/$1');              // U-09 同意後の確定
     $routes->post('(:segment)/delete', 'HostController::delete/$1');
 });
@@ -125,6 +125,8 @@ $routes->group($adminPath, ['namespace' => 'App\Controllers\Admin', 'filter' => 
     $routes->post('ogp/regenerate', 'OgpController::regenerate');
     $routes->post('ogp/regenerate-all', 'OgpController::regenerateAll');   // 公開中の画像をすべて作り直す予約
     $routes->post('ogp/template', 'OgpController::updateTemplate');
+    $routes->post('ogp/texts', 'OgpController::updateTexts');             // 画像に載せる文言と順位（ADR 0012）
+    $routes->get('ogp/preview/(:segment)', 'OgpController::preview/$1');
 
     $routes->get('inquiries', 'InquiryController::index');               // A-09
     $routes->post('inquiries/(:num)', 'InquiryController::update/$1');
