@@ -9,6 +9,9 @@
  * @var array{kind: string, target: string} $form 「個別に再生成する」の初期値
  * @var list<array{job: \App\Entities\OgpJob, time: string, status: string, label: string}> $jobs 最近の生成（新しい順。status は ok / failed）
  * @var array{requestedAt: string, remaining: string}|null $bulk 一括の作り直しの予約（予約日時・残りの大喜利の件数）。なければ null
+ * @var array<string, string> $previews 種類ごとのプレビュー画像の URL
+ * @var array{values: array<string, string>, fields: array<string, array{string, int, bool}>, ranks: array<int, string>} $texts 画像に載せる文言と順位（ADR 0012）
+ * @var array<string, string> $errors
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -22,25 +25,26 @@
 <?php foreach ($kinds as $kind): ?>
 <section class="c-panel c-panel--tight p-ogp__template">
 <div class="c-panel__head"><h2 class="c-panel__title"><?= esc($kind->label()) ?></h2><span class="c-panel__sub"><?= esc($kind->timing()) ?></span></div>
-<?php if ($kind === \App\Enums\OgpKind::Recruit): ?>
-<div class="p-ogp__preview p-ogp__preview--recruit" role="img" aria-label="募集用OGPの見本">
-<div class="p-ogp__preview-head"><span class="p-ogp__brand"><?= $this->include('partials/logo') ?>ぼけばこ</span><span class="p-ogp__pill">24時間限定 回答募集中</span></div>
-<span class="p-ogp__preview-odai">こんなコンビニ店員は嫌だ</span>
-</div>
-<?php elseif ($kind === \App\Enums\OgpKind::Answer): ?>
-<div class="p-ogp__preview" role="img" aria-label="回答シェア用OGPの見本">
-<span class="p-ogp__preview-label">お題：こんなコンビニ店員は嫌だ</span>
-<span class="p-ogp__preview-answer">「袋いりますか？」のあとに、10秒の沈黙を置いてくる</span>
-<span class="p-ogp__brand p-ogp__brand--end"><?= $this->include('partials/logo') ?>ぼけばこ</span>
-</div>
-<?php else: ?>
-<div class="p-ogp__preview" role="img" aria-label="結果用OGPの見本">
-<div class="p-ogp__preview-head"><span class="p-ogp__brand"><?= $this->include('partials/logo') ?>ぼけばこ</span><span class="p-ogp__stamp">結果<br>発表</span></div>
-<span class="p-ogp__preview-label">お題：絶対に売れない駄菓子の商品名とは？</span>
-<span class="p-ogp__preview-first"><span class="p-ogp__rank">1位</span>うまい棒・味なし</span>
-<span class="p-ogp__preview-count">全412回答</span>
+<img class="p-ogp__image" src="<?= esc($previews[$kind->value], 'attr') ?>" width="1200" height="630" alt="<?= esc($kind->label()) ?>OGPのプレビュー" loading="lazy">
+<?php if ($kind === \App\Enums\OgpKind::Result): ?>
+<div class="c-afield">
+<label class="c-afield__label" for="ogp_result_ranks">載せる順位</label>
+<select class="c-aselect c-aselect--full" id="ogp_result_ranks" name="ogp_result_ranks" form="ogp-texts">
+<?php foreach ($texts['ranks'] as $value => $label): ?>
+<option value="<?= esc((string) $value, 'attr') ?>"<?= (string) $value === $texts['values']['ogp_result_ranks'] ? ' selected' : '' ?>><?= esc($label) ?></option>
+<?php endforeach; ?>
+</select>
 </div>
 <?php endif; ?>
+<?php foreach ($texts['fields'] as $key => [$label, $max, $optional]): ?>
+<?php if (str_starts_with($key, 'ogp_' . $kind->value . '_')): ?>
+<div class="c-afield">
+<label class="c-afield__label" for="<?= esc($key, 'attr') ?>"><?= esc($label) ?></label>
+<input class="c-ainput c-ainput--full<?= isset($errors[$key]) ? ' is-invalid' : '' ?>" id="<?= esc($key, 'attr') ?>" name="<?= esc($key, 'attr') ?>" type="text" maxlength="<?= esc((string) $max, 'attr') ?>" value="<?= esc($texts['values'][$key], 'attr') ?>" form="ogp-texts"<?= $optional ? '' : ' required' ?>>
+<span class="c-afield__help"><?= esc((string) $max) ?>文字まで<?= $optional ? '（空にすると載せない）' : '' ?></span>
+</div>
+<?php endif; ?>
+<?php endforeach; ?>
 <p class="c-panel__note">入る要素：<?= esc($kind->elements()) ?></p>
 <div class="p-ogp__assets">
 <?php foreach ($assets as $asset => $assetLabel): ?>
@@ -56,14 +60,22 @@
 </section>
 <?php endforeach; ?>
 </div>
-<p class="c-panel__note">画像は1200×630px。文字数に合わせて自動で折り返し、文字の大きさを調整します。フォントはサーバーに置いたものを使います。</p>
+<form id="ogp-texts" class="c-panel c-panel--raised p-ogp__texts" method="post" action="<?= admin_url('ogp/texts') ?>" data-js-once>
+<?= csrf_field() ?>
+<div>
+<h2 class="c-panel__title">画像の文言と順位を保存する</h2>
+<p class="c-panel__note">上の各カードで変えた文言と「載せる順位」を保存します。保存するとプレビューが変わります。作成済みの画像に反映するには、下の「作り直しを予約する」を押してください。</p>
+</div>
+<button type="submit" class="c-abutton c-abutton--primary">保存する</button>
+</form>
+<p class="c-panel__note">画像は1200×630px。文字数に合わせて自動で折り返し、文字の大きさを調整します。フォントはサーバーに置いたものを使います。プレビューは見本のお題・回答で描いています（画像を作れない環境では、初期の文言で描いた見本を表示します）。</p>
 
 <section class="c-panel p-ogp__bulk">
 <h2 class="c-panel__title">公開中の画像をまとめて作り直す</h2>
 <?php if ($bulk !== null): ?>
 <p><?= esc($bulk['requestedAt']) ?> に予約。残り <?= esc($bulk['remaining']) ?> 件の大喜利（10分ごとに少しずつ進みます）</p>
 <?php else: ?>
-<p class="c-panel__note">背景・ロゴを差し替えたあとに使います。差し替えただけでは、作成済みの画像は変わりません。件数が多いので予約して、自動処理で少しずつ作り直します。</p>
+<p class="c-panel__note">背景・ロゴ・文言を変えたあとに使います。差し替えただけでは、作成済みの画像は変わりません。件数が多いので予約して、自動処理で少しずつ作り直します。</p>
 <?= part('partials/admin_action_form', ['action' => admin_url('ogp/regenerate-all'), 'label' => '作り直しを予約する', 'variant' => 'dark', 'iconOnly' => false, 'confirm' => '公開中のOGP画像をすべて作り直しますか？', 'id' => 'ogp-bulk-dialog', 'hidden' => []]) ?>
 <?php endif; ?>
 </section>

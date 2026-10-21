@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Entities\AdminLog;
+use App\Enums\OgpKind;
 use App\Exceptions\ValidationException;
 use App\Models\AdminLogModel;
 use App\Models\AiJudgementModel;
@@ -80,7 +81,30 @@ final class SettingService
         'tpl_recruit'       => "24時間だけ大喜利やります！\nお題：{odai}\n{url}",
         'tpl_answer'        => "お題：{odai}\n俺の回答：{answer}\n{url}",
         'tpl_result'        => "結果発表！\nお題：{odai}\n{ranks}\n{url}",
+        // OGP 画像に載せる文言と順位（A-08 で編集。ADR 0012）
+        'ogp_recruit_pill'  => '24時間限定 回答募集中',
+        'ogp_answer_prefix' => 'お題：',
+        'ogp_result_stamp'  => '結果発表',
+        'ogp_result_prefix' => 'お題：',
+        'ogp_result_count'  => '全{count}回答',
+        'ogp_result_ranks'  => 3,
     ];
+
+    /**
+     * OGP 画像の文言（A-08 で編集する。A-10 の保存では触らない）。キー => [表示名, 最大文字数, 空でもよいか]
+     */
+    public const OGP_TEXTS = [
+        'ogp_recruit_pill'  => ['右上の札', 16, false],
+        'ogp_answer_prefix' => ['お題の前につける言葉', 8, true],
+        'ogp_result_stamp'  => ['判子', 6, false],
+        'ogp_result_prefix' => ['お題の前につける言葉', 8, true],
+        'ogp_result_count'  => ['回答数（{count} が数になる）', 16, true],
+    ];
+
+    /**
+     * 結果用 OGP に載せる順位（値 => 表示名）
+     */
+    public const OGP_RESULT_RANKS = [1 => '1位だけ', 2 => '1〜2位', 3 => '1〜3位'];
 
     /**
      * お題テンプレート（未確定事項9：固定か運用設定かは未決。当面は固定）
@@ -244,6 +268,9 @@ final class SettingService
         $changes = [];
 
         foreach (self::DEFAULTS as $key => $default) {
+            if (str_starts_with($key, 'ogp_')) {
+                continue; // OGP の文言は A-08（updateOgp）で保存する
+            }
             $value = match (true) {
                 is_bool($default)  => ($input[$key] ?? '') === '1',
                 is_int($default)   => (int) $input[$key],
@@ -267,6 +294,78 @@ final class SettingService
         if ($changes !== []) {
             service('adminLog')->record('setting', null, implode('、', $changes));
         }
+    }
+
+    /**
+     * OGP 画像の文言と載せる順位を保存する（A-08。ADR 0012）
+     *
+     * @param array<string, mixed> $input
+     *
+     * @throws ValidationException
+     */
+    public function updateOgp(array $input): void
+    {
+        $errors = [];
+        $values = [];
+
+        foreach (self::OGP_TEXTS as $key => [$label, $max, $optional]) {
+            $value = $input[$key] ?? '';
+            $value = is_string($value) ? trim((string) preg_replace('/[\r\n\t]+/u', ' ', $value)) : '';
+
+            if ($value === '' && ! $optional) {
+                $errors[$key] = '入力してください';
+            } elseif (mb_strlen($value) > $max) {
+                $errors[$key] = "{$max}文字以内で入力してください";
+            }
+            $values[$key] = $value;
+        }
+        $ranks = $input['ogp_result_ranks'] ?? '';
+
+        if (! is_string($ranks) || ! isset(self::OGP_RESULT_RANKS[(int) $ranks]) || ! ctype_digit($ranks)) {
+            $errors['ogp_result_ranks'] = '載せる順位を選んでください';
+        }
+        if ($errors !== []) {
+            throw new ValidationException($errors);
+        }
+        $values['ogp_result_ranks'] = (int) $ranks;
+        $before                     = $this->all();
+        $model                      = new SettingModel();
+        $changes                    = [];
+
+        foreach ($values as $key => $value) {
+            $row = $model->where('name', $key)->first();
+            $row === null ? $model->insert(['name' => $key, 'value' => (string) $value]) : $model->update($row['id'], ['value' => (string) $value]);
+
+            if ($before[$key] !== $value) {
+                $kind      = OgpKind::from(explode('_', $key)[1]);
+                $label     = $kind->label() . '：' . ($key === 'ogp_result_ranks' ? '載せる順位' : self::OGP_TEXTS[$key][0]);
+                $changes[] = 'OGP ' . $label . '「' . $this->describe($before[$key]) . '」→「' . $this->describe($value) . '」';
+            }
+        }
+        $this->clearCache();
+
+        if ($changes !== []) {
+            service('adminLog')->record('setting', null, implode('、', $changes));
+        }
+    }
+
+    /**
+     * OGP 画像に載せる文言（OgpImage に渡す形）
+     *
+     * @return array{recruit_pill: string, answer_prefix: string, result_stamp: string, result_prefix: string, result_count: string, result_ranks: int}
+     */
+    public function ogpTexts(): array
+    {
+        $all = $this->all();
+
+        return [
+            'recruit_pill'  => (string) $all['ogp_recruit_pill'],
+            'answer_prefix' => (string) $all['ogp_answer_prefix'],
+            'result_stamp'  => (string) $all['ogp_result_stamp'],
+            'result_prefix' => (string) $all['ogp_result_prefix'],
+            'result_count'  => (string) $all['ogp_result_count'],
+            'result_ranks'  => max(1, min(3, (int) $all['ogp_result_ranks'])),
+        ];
     }
 
     /**

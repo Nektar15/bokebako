@@ -40,9 +40,9 @@ enum OgpKind: string
     public function elements(): string
     {
         return match ($this) {
-            self::Recruit => 'ロゴ、お題、「24時間限定」',
-            self::Answer  => 'お題、回答、ロゴ',
-            self::Result  => 'お題、1位の回答、回答数、ロゴ',
+            self::Recruit => '中央にお題、背景にぼかした回答カード、ロゴ、右上の札',
+            self::Answer  => '中央に回答、上にお題、背景にぼかした回答カード、ロゴ',
+            self::Result  => '中央に1位、下の左に2位・右に3位、お題、判子、回答数、ロゴ',
         };
     }
 }

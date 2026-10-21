@@ -125,6 +125,8 @@ $routes->group($adminPath, ['namespace' => 'App\Controllers\Admin', 'filter' => 
     $routes->post('ogp/regenerate', 'OgpController::regenerate');
     $routes->post('ogp/regenerate-all', 'OgpController::regenerateAll');   // 公開中の画像をすべて作り直す予約
     $routes->post('ogp/template', 'OgpController::updateTemplate');
+    $routes->post('ogp/texts', 'OgpController::updateTexts');             // 画像に載せる文言と順位（ADR 0012）
+    $routes->get('ogp/preview/(:segment)', 'OgpController::preview/$1');
 
     $routes->get('inquiries', 'InquiryController::index');               // A-09
     $routes->post('inquiries/(:num)', 'InquiryController::update/$1');
