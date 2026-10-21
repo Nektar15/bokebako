@@ -99,11 +99,11 @@
 <?php foreach ($jobs as $row): ?>
 <?php $job = $row['job']; ?>
 <div class="c-table__row" role="row">
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['time']) ?></div>
-<div class="c-table__cell c-table__cell--sub" role="cell"><?= esc($job->kind()->label()) ?></div>
-<div class="c-table__cell c-table__cell--sub c-table__cell--clip" role="cell"><?= esc($job->target) ?></div>
-<div class="c-table__cell c-table__cell--sub" role="cell"><?= esc($job->actor) ?></div>
-<div class="c-table__cell" role="cell"><?= part('partials/admin_badge', ['status' => $row['status'], 'label' => $row['label']]) ?></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="日時"><?= esc($row['time']) ?></div>
+<div class="c-table__cell c-table__cell--sub" role="cell" data-label="種類"><?= esc($job->kind()->label()) ?></div>
+<div class="c-table__cell c-table__cell--sub c-table__cell--clip" role="cell" data-label="対象"><?= esc($job->target) ?></div>
+<div class="c-table__cell c-table__cell--sub" role="cell" data-label="実行"><?= esc($job->actor) ?></div>
+<div class="c-table__cell" role="cell" data-label="状態"><?= part('partials/admin_badge', ['status' => $row['status'], 'label' => $row['label']]) ?></div>
 <div class="c-table__cell" role="cell">
 <?php if (! $job->succeeded): ?>
 <?= part('partials/admin_action_form', ['action' => admin_url('ogp/regenerate'), 'label' => '再試行', 'variant' => 'tiny', 'hidden' => ['kind' => $job->kind()->value, 'target' => (string) $job->target_id], 'iconOnly' => false, 'confirm' => null, 'id' => '']) ?>

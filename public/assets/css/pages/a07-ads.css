@@ -8,3 +8,13 @@
 .p-ads__side { display: flex; flex-direction: column; gap: 14px; }
 .p-ads__form { padding: 18px; gap: 14px; }
 .p-ads__delete { display: flex; justify-content: flex-end; }
+
+/* スマホ・タブレット（ADR 0010） */
+@media (max-width: 1199.98px) {
+  .p-ads__slots { grid-template-columns: minmax(0, 1fr); }
+  .p-ads { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767.98px) {
+  .p-ads__slot { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .p-ads__slot > :first-child { grid-column: 1 / -1; }
+}

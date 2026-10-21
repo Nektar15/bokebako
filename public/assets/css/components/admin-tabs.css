@@ -9,3 +9,11 @@
 .c-pills__item.is-active { background: var(--kin); }
 .c-pills__count { font-weight: 700; color: var(--ink-sub); }
 .c-pills__note { margin-left: auto; font-size: 12.5px; color: var(--ink-sub); }
+
+/* スマホ：折り返さずに横へスクロールする */
+@media (max-width: 767.98px) {
+  .c-pills { flex-wrap: nowrap; overflow-x: auto; margin: 0 -16px; padding: 2px 16px 4px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .c-pills::-webkit-scrollbar { display: none; }
+  .c-pills__item { flex-shrink: 0; height: 40px; }
+  .c-pills__note { flex-shrink: 0; margin-left: 8px; white-space: nowrap; }
+}

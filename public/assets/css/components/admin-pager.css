@@ -10,3 +10,9 @@
 .c-pager__page:hover { background: var(--paper); color: var(--ink); }
 .c-pager__page.is-active { background: var(--kin); }
 .c-pager__gap { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 900; color: var(--ink-sub); }
+
+@media (max-width: 767.98px) {
+  .c-pager { flex-direction: column; align-items: stretch; }
+  .c-pager__pages { flex-wrap: wrap; justify-content: center; }
+  .c-pager__page, .c-pager__gap { width: 44px; height: 44px; }
+}

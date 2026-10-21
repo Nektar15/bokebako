@@ -58,16 +58,16 @@
 <?php foreach ($items as $row): ?>
 <?php $oogiri = $row['oogiri']; ?>
 <div class="c-table__row" role="row">
-<div class="c-table__cell c-table__cell--id" role="cell">#<?= esc((string) $oogiri->id) ?></div>
-<div class="c-table__cell c-table__cell--strong c-table__cell--clip" role="cell"><a class="p-oogiri__odai" href="<?= admin_url('oogiri/' . $oogiri->id) ?>"><?= esc($oogiri->odai) ?></a></div>
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['created']) ?></div>
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['ends']) ?></div>
-<div class="c-table__cell" role="cell"><?= part('partials/admin_badge', ['status' => $oogiri->status()->value, 'label' => $oogiri->status()->label()]) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc($row['pv']) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc((string) $oogiri->answer_count) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc((string) $oogiri->share_count) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc((string) $oogiri->derived_count) ?></div>
-<div class="c-table__cell c-table__cell--num<?= $row['alert'] ? ' c-table__cell--alert' : '' ?>" role="cell"><?= esc((string) $oogiri->report_count) ?></div>
+<div class="c-table__cell c-table__cell--id" role="cell" data-label="ID">#<?= esc((string) $oogiri->id) ?></div>
+<div class="c-table__cell c-table__cell--strong c-table__cell--clip" role="cell" data-label="お題"><a class="p-oogiri__odai" href="<?= admin_url('oogiri/' . $oogiri->id) ?>"><?= esc($oogiri->odai) ?></a></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="作成"><?= esc($row['created']) ?></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="終了"><?= esc($row['ends']) ?></div>
+<div class="c-table__cell" role="cell" data-label="状態"><?= part('partials/admin_badge', ['status' => $oogiri->status()->value, 'label' => $oogiri->status()->label()]) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="PV"><?= esc($row['pv']) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="回答"><?= esc((string) $oogiri->answer_count) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="シェア"><?= esc((string) $oogiri->share_count) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="派生"><?= esc((string) $oogiri->derived_count) ?></div>
+<div class="c-table__cell c-table__cell--num<?= $row['alert'] ? ' c-table__cell--alert' : '' ?>" role="cell" data-label="通報"><?= esc((string) $oogiri->report_count) ?></div>
 <div class="c-table__cell" role="cell">
 <div class="c-table__actions">
 <a class="c-abutton c-abutton--text" href="<?= admin_url('oogiri/' . $oogiri->id) ?>">詳細</a>

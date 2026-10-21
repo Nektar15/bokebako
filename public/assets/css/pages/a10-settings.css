@@ -16,3 +16,20 @@
 .p-settings__save { padding: 18px; gap: 12px; }
 .p-settings__dirty { font-size: 14px; font-weight: 900; }
 .p-settings__dirty.is-dirty { color: var(--shu-deep); }
+
+/* スマホ・タブレット（ADR 0010）：右の列をやめ、保存ボタンを画面の下に貼りつける */
+@media (max-width: 1199.98px) {
+  .p-settings { grid-template-columns: minmax(0, 1fr); }
+  .p-settings__side { display: contents; }
+  .p-settings__save {
+    position: sticky; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 5;
+    flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 14px;
+  }
+  .p-settings__save .c-panel__note { display: none; }
+  .p-settings__dirty { flex: 1 1 100%; font-size: 13px; }
+  .p-settings__save .c-abutton--primary { flex: 1 1 auto; }
+}
+@media (max-width: 767.98px) {
+  .p-settings__section { padding: 16px 16px 6px; }
+  .p-settings__select, .p-settings__text { width: 100%; }
+}

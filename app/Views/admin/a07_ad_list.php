@@ -48,13 +48,13 @@
 <?php foreach ($items as $row): ?>
 <?php $ad = $row['ad']; ?>
 <div class="c-table__row" role="row">
-<div class="c-table__cell" role="cell"><div class="c-table__stack"><span class="p-ads__name"><?= esc($ad->name) ?></span><span class="c-table__cell--sub"><?= esc($ad->sponsor) ?></span></div></div>
-<div class="c-table__cell c-table__cell--sub" role="cell"><?= esc($ad->slot()->label()) ?></div>
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['period']) ?></div>
-<div class="c-table__cell" role="cell"><?= part('partials/admin_badge', ['status' => $ad->status()->value, 'label' => $ad->status()->label()]) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc($row['impressions']) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc($row['clicks']) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc($row['ctr']) ?></div>
+<div class="c-table__cell" role="cell" data-label="広告名 ／ スポンサー"><div class="c-table__stack"><span class="p-ads__name"><?= esc($ad->name) ?></span><span class="c-table__cell--sub"><?= esc($ad->sponsor) ?></span></div></div>
+<div class="c-table__cell c-table__cell--sub" role="cell" data-label="枠"><?= esc($ad->slot()->label()) ?></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="掲載期間"><?= esc($row['period']) ?></div>
+<div class="c-table__cell" role="cell" data-label="状態"><?= part('partials/admin_badge', ['status' => $ad->status()->value, 'label' => $ad->status()->label()]) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="表示"><?= esc($row['impressions']) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="クリック"><?= esc($row['clicks']) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="CTR"><?= esc($row['ctr']) ?></div>
 <div class="c-table__cell" role="cell"><a class="c-abutton c-abutton--tiny" href="<?= admin_url('ads?edit=' . $ad->id) ?>">編集</a></div>
 </div>
 <?php endforeach; ?>

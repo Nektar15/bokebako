@@ -389,7 +389,7 @@ public function findOpenBySlug(string $slug): array
 
 - [ ] FEATURES.md の該当項目がすべて実装されている
 - [ ] View 契約のコメントと、実際に渡している値が一致している
-- [ ] スマホ幅（390px）とPC幅（1280px）で表示が崩れない
+- [ ] スマホ幅（390px）とPC幅（1280px）で表示が崩れない（管理画面は iPad 縦 820px・iPad 横 1180px も。ADR 0010）
 - [ ] キーボード操作だけで主要な操作ができる
 - [ ] JS を切っても送信系の操作ができる
 - [ ] php-cs-fixer、PHPStan、PHPUnit がすべて通る

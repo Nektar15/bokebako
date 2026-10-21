@@ -69,11 +69,11 @@
 <?php foreach ($items as $row): ?>
 <?php $word = $row['word']; ?>
 <div class="c-table__row<?= $word->enabled ? '' : ' c-table__row--muted' ?>" role="row">
-<div class="c-table__cell c-table__cell--break" role="cell"><?= esc($word->word) ?></div>
-<div class="c-table__cell c-table__cell--sub" role="cell"><?= esc($word->matchType()->label()) ?></div>
-<div class="c-table__cell c-table__cell--sub" role="cell"><?= esc($word->category) ?></div>
-<div class="c-table__cell" role="cell"><?= part('partials/admin_badge', ['status' => $word->action()->value, 'label' => $word->action()->label()]) ?></div>
-<div class="c-table__cell" role="cell">
+<div class="c-table__cell c-table__cell--break" role="cell" data-label="ワード"><?= esc($word->word) ?></div>
+<div class="c-table__cell c-table__cell--sub" role="cell" data-label="一致方式"><?= esc($word->matchType()->label()) ?></div>
+<div class="c-table__cell c-table__cell--sub" role="cell" data-label="カテゴリー"><?= esc($word->category) ?></div>
+<div class="c-table__cell" role="cell" data-label="処理"><?= part('partials/admin_badge', ['status' => $word->action()->value, 'label' => $word->action()->label()]) ?></div>
+<div class="c-table__cell" role="cell" data-label="有効">
 <form class="c-action" method="post" action="<?= admin_url('ng-words/' . $word->id) ?>" data-js-once>
 <?= csrf_field() ?>
 <input type="hidden" name="word" value="<?= esc($word->word, 'attr') ?>">
@@ -84,7 +84,7 @@
 <button type="submit" class="c-switch c-switch--small c-switch--button" role="switch" aria-checked="<?= $word->enabled ? 'true' : 'false' ?>" aria-label="有効"><span class="c-switch__track"></span></button>
 </form>
 </div>
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['updated']) ?></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="更新日"><?= esc($row['updated']) ?></div>
 <div class="c-table__cell" role="cell">
 <div class="c-table__actions">
 <a class="c-abutton c-abutton--tiny" href="<?= admin_url('ng-words?edit=' . $word->id) ?>">編集</a>

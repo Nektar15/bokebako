@@ -28,3 +28,17 @@
 .p-inq__meta-url { font-size: 12.5px; word-break: break-all; }
 .p-inq__body { background: var(--paper); border-radius: 12px; padding: 14px 16px; font-size: 14px; line-height: 1.8; }
 .p-inq__form { display: flex; flex-direction: column; gap: 14px; }
+
+/* スマホ・タブレット（ADR 0010）：一覧の下に詳細。一覧のカードを押すと詳細の位置まで進む（#detail） */
+.p-inq__detail { scroll-margin-top: 72px; }
+@media (max-width: 1199.98px) {
+  .p-inq { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767.98px) {
+  .p-inq__selects { margin-left: 0; flex-basis: 100%; }
+  .p-inq__selects > * { flex: 1 1 0; width: auto; min-width: 0; }
+  .p-inq__detail { padding: 16px; }
+  .p-inq__meta { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+  .p-inq__meta dd { margin-bottom: 10px; }
+  .p-inq__meta-mail { flex-wrap: wrap; }
+}

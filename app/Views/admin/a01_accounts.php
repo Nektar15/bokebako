@@ -35,10 +35,10 @@
 <?php foreach ($rows as $row): ?>
 <?php $account = $row['account']; ?>
 <div class="c-table__row" role="row">
-<div class="c-table__cell c-table__cell--break" role="cell"><?= esc($account->login_id) ?><?php if ($row['isSelf']): ?>（自分）<?php endif; ?></div>
-<div class="c-table__cell c-table__cell--break" role="cell"><?= esc($account->name) ?></div>
-<div class="c-table__cell c-table__cell--sub" role="cell"><?= esc($row['role']) ?></div>
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['lastLogin']) ?><?php if ($row['locked']): ?> <?= part('partials/admin_badge', ['status' => 'failed', 'label' => '一時ロック中']) ?><?php endif; ?></div>
+<div class="c-table__cell c-table__cell--break" role="cell" data-label="ID"><?= esc($account->login_id) ?><?php if ($row['isSelf']): ?>（自分）<?php endif; ?></div>
+<div class="c-table__cell c-table__cell--break" role="cell" data-label="表示名"><?= esc($account->name) ?></div>
+<div class="c-table__cell c-table__cell--sub" role="cell" data-label="権限"><?= esc($row['role']) ?></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="最終ログイン"><?= esc($row['lastLogin']) ?><?php if ($row['locked']): ?> <?= part('partials/admin_badge', ['status' => 'failed', 'label' => '一時ロック中']) ?><?php endif; ?></div>
 <div class="c-table__cell" role="cell">
 <div class="c-table__actions">
 <a class="c-abutton c-abutton--tiny" href="<?= admin_url('accounts?edit=' . $account->id) ?>">編集</a>

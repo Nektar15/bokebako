@@ -13,3 +13,8 @@
 .c-history--inline .c-history__body { flex-direction: row; gap: 10px; }
 .c-history--inline .c-history__when { width: 150px; flex-shrink: 0; font-size: 12.5px; }
 .c-history--inline .c-history__what { font-size: 12.5px; }
+
+@media (max-width: 767.98px) {
+  .c-history--inline .c-history__body { flex-direction: column; gap: 2px; }
+  .c-history--inline .c-history__when { width: auto; }
+}

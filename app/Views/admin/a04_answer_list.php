@@ -65,14 +65,14 @@
 <?php foreach ($items as $row): ?>
 <?php $answer = $row['answer']; ?>
 <div class="c-table__row" role="row">
-<div class="c-table__cell c-table__cell--id" role="cell">A-<?= esc((string) $answer->id) ?></div>
-<div class="c-table__cell c-table__cell--strong" role="cell"><?= nl2br_esc($answer->body) ?></div>
-<div class="c-table__cell c-table__cell--sub c-table__cell--clip" role="cell"><a class="p-answers__odai" href="<?= admin_url('oogiri/' . $answer->oogiri_id) ?>"><?= esc($answer->odai) ?></a></div>
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['posted']) ?></div>
-<div class="c-table__cell c-table__cell--num<?= $row['alert'] ? ' c-table__cell--alert' : '' ?>" role="cell"><?= esc((string) $answer->report_count) ?></div>
-<div class="c-table__cell" role="cell"><?= part('partials/admin_badge', ['status' => $answer->status()->value, 'label' => $answer->status()->label()]) ?></div>
+<div class="c-table__cell c-table__cell--id" role="cell" data-label="ID">A-<?= esc((string) $answer->id) ?></div>
+<div class="c-table__cell c-table__cell--strong" role="cell" data-label="本文"><?= nl2br_esc($answer->body) ?></div>
+<div class="c-table__cell c-table__cell--sub c-table__cell--clip" role="cell" data-label="お題"><a class="p-answers__odai" href="<?= admin_url('oogiri/' . $answer->oogiri_id) ?>"><?= esc($answer->odai) ?></a></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="投稿日時"><?= esc($row['posted']) ?></div>
+<div class="c-table__cell c-table__cell--num<?= $row['alert'] ? ' c-table__cell--alert' : '' ?>" role="cell" data-label="通報"><?= esc((string) $answer->report_count) ?></div>
+<div class="c-table__cell" role="cell" data-label="状態"><?= part('partials/admin_badge', ['status' => $answer->status()->value, 'label' => $answer->status()->label()]) ?></div>
 <?php if ($canViewSource): ?>
-<div class="c-table__cell c-table__cell--mono" role="cell">IP <?= esc($answer->shortIpHash()) ?><br>ID <?= esc($answer->shortBrowserIdHash()) ?></div>
+<div class="c-table__cell c-table__cell--mono" role="cell" data-label="投稿元">IP <?= esc($answer->shortIpHash()) ?><br>ID <?= esc($answer->shortBrowserIdHash()) ?></div>
 <?php endif; ?>
 <div class="c-table__cell" role="cell">
 <div class="c-table__actions">

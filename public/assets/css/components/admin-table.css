@@ -20,3 +20,40 @@
 .c-table__actions { display: flex; gap: 4px; align-items: center; }
 .c-table__stack { display: flex; flex-direction: column; gap: 2px; }
 .c-table__empty { padding: 28px 10px; text-align: center; font-size: 13px; color: var(--ink-sub); }
+
+/*
+ * 狭いとき（スマホ・タブレット）は、表の行をカードにする（ADR 0010）
+ * 画面の幅ではなく、表が入っている枠（c-panel--table）の幅で切り替える。各セルの見出しは data-label
+ * 列の多い表（大喜利・回答の一覧）は、広めの幅からカードにする
+ */
+.c-panel--table { container-type: inline-size; }
+@container (max-width: 720px) {
+  .c-table .c-table__row.c-table__row--head { display: none; }
+  .c-table .c-table__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 14px 4px; }
+  .c-table .c-table__cell { flex: 0 1 auto; padding: 0; }
+  .c-table .c-table__cell[data-label]::before { content: attr(data-label); margin-right: 6px; font-size: 11px; font-weight: 700; color: var(--ink-sub); }
+  .c-table .c-table__cell--strong, .c-table .c-table__cell--clip, .c-table .c-table__cell--break { flex-basis: 100%; }
+  .c-table .c-table__cell--strong { font-size: 14.5px; }
+  .c-table .c-table__cell--clip { overflow: visible; white-space: normal; }
+  .c-table .c-table__cell--strong[data-label]::before, .c-table .c-table__cell--id[data-label]::before { content: none; }
+  .c-table .c-table__cell:has(> .c-table__stack) { flex-basis: 100%; }
+  .c-table .c-table__cell:has(> .c-table__stack)::before { content: none; }
+  .c-table .c-table__cell--num { text-align: left; }
+  .c-table .c-table__cell:last-child:not([data-label]) { flex-basis: 100%; margin-top: 4px; }
+  .c-table .c-table__actions { flex-wrap: wrap; gap: 8px; }
+}
+@container (max-width: 1000px) {
+  :is(.p-oogiri__table, .p-answers__table) .c-table__row.c-table__row--head { display: none; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 14px 4px; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell { flex: 0 1 auto; padding: 0; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell[data-label]::before { content: attr(data-label); margin-right: 6px; font-size: 11px; font-weight: 700; color: var(--ink-sub); }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell--strong, :is(.p-oogiri__table, .p-answers__table) .c-table__cell--clip, :is(.p-oogiri__table, .p-answers__table) .c-table__cell--break { flex-basis: 100%; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell--strong { font-size: 14.5px; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell--clip { overflow: visible; white-space: normal; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell--strong[data-label]::before, :is(.p-oogiri__table, .p-answers__table) .c-table__cell--id[data-label]::before { content: none; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell:has(> .c-table__stack) { flex-basis: 100%; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell:has(> .c-table__stack)::before { content: none; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell--num { text-align: left; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__cell:last-child:not([data-label]) { flex-basis: 100%; margin-top: 4px; }
+  :is(.p-oogiri__table, .p-answers__table) .c-table__actions { flex-wrap: wrap; gap: 8px; }
+}

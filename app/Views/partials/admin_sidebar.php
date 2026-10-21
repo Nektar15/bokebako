@@ -1,6 +1,6 @@
 <?php
 /**
- * 管理画面の左メニュー
+ * 管理画面の左メニュー（1024px 未満では引き出し。layouts/admin の「メニュー」で開く）
  *
  * @var string $screenId  選択中の画面ID
  * @var array{todo:int, inquiries:int} $badges
@@ -19,7 +19,8 @@ $menu = [
 ];
 $admin = service('currentAdmin');
 ?>
-<aside class="l-sidebar">
+<aside class="l-sidebar" id="admin-sidebar">
+<label for="admin-menu" class="l-sidebar__close" role="button" tabindex="0" data-js-admin-menu-button aria-label="メニューを閉じる">×</label>
 <a class="l-sidebar__brand" href="<?= admin_url() ?>">
 <?= $this->include('partials/logo') ?>
 <span class="l-sidebar__name">ぼけばこ</span>

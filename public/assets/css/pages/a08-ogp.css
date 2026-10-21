@@ -28,3 +28,9 @@
 .p-ogp__jobs-title { padding: 12px 8px 4px; }
 .p-ogp__jobs { --table-cols: 96px 100px minmax(0, 1fr) 84px 72px 84px; }
 .p-ogp__bulk { align-items: flex-start; }
+
+/* スマホ・タブレット（ADR 0010） */
+@media (max-width: 1199.98px) {
+  .p-ogp__templates { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .p-ogp { grid-template-columns: minmax(0, 1fr); }
+}
