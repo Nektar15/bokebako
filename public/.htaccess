@@ -1,4 +1,7 @@
 # Disable directory browsing
+
+# アプリのアイコン用（manifest）
+AddType application/manifest+json .webmanifest
 Options -Indexes
 
 # ----------------------------------------------------------------------

@@ -17,6 +17,7 @@ $ads ??= [];
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<?= $this->include('partials/app_icons') ?>
 <?= $this->renderSection('meta') ?: "<title>ぼけばこ｜登録不要・24時間限定の匿名大喜利</title>\n" . '<meta name="description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">' ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
