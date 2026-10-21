@@ -47,7 +47,8 @@ final class ContactService
         if ($type !== null && $type->requiresUrl() && $url === '') {
             $errors['url'] = '対象のURLを入力してください';
         }
-        if ($url !== '' && filter_var($url, FILTER_VALIDATE_URL) === false) {
+        // http・https だけ（javascript: などは管理画面でリンクになるので受け付けない。監査 2026-10-21）
+        if ($url !== '' && (filter_var($url, FILTER_VALIDATE_URL) === false || preg_match('#\Ahttps?://#i', $url) !== 1)) {
             $errors['url'] = 'URLを正しく入力してください';
         }
         if ($body === '') {

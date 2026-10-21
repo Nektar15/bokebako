@@ -2,14 +2,15 @@
 /**
  * A-02 管理ダッシュボード
  *
- * @var string $screenId
- * @var string $title
- * @var list<array{label: string, url: string, active: bool}> $periods    集計期間の切り替え
- * @var string $rangeLabel  集計対象の日付の範囲（例：「10月3日〜10月9日」）
- * @var array{conversionRate: string, answerers: string, converted: string, coefficient: string, oogiris: string, derived: string} $kpi 最重要KPI（整形済み）
- * @var list<array{label: string, value: string, sub: string}> $tiles      指標カード（整形済み）
+ * @var string                                                                                                                      $screenId
+ * @var string                                                                                                                      $title
+ * @var list<array{label: string, url: string, active: bool}>                                                                       $periods    集計期間の切り替え
+ * @var array{active: bool, from: string, to: string}                                                                               $custom     期間指定（開始日・終了日）
+ * @var string                                                                                                                      $rangeLabel  集計対象の日付の範囲（例：「10月3日〜10月9日」）
+ * @var array{conversionRate: string, answerers: string, converted: string, coefficient: string, oogiris: string, derived: string}  $kpi 最重要KPI（整形済み）
+ * @var list<array{label: string, value: string, sub: string}>                                                                      $tiles      指標カード（整形済み）
  * @var array{bars: list<array{label: string, tip: string, x: int, y: int, height: int}>, max: string, mid: string, latest: string} $chart 日別開催数（古い順。棒の座標は計算済み）
- * @var list<array{label: string, count: string, url: string}> $todos      対応が必要なもの
+ * @var list<array{label: string, count: string, url: string}>                                                                      $todos      対応が必要なもの
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -30,6 +31,13 @@
 <?php endforeach; ?>
 </nav>
 <span class="p-dash__range">集計：毎日 4:00（日次バッチ）・表示は <?= esc($rangeLabel) ?></span>
+<?php if ($custom['active']): ?>
+<form class="p-dash__custom" method="get" action="<?= admin_url() ?>">
+<input type="hidden" name="period" value="custom">
+<?= part('partials/admin_date_range', ['from' => $custom['from'], 'to' => $custom['to']]) ?>
+<button type="submit" class="c-abutton c-abutton--small c-abutton--dark">表示</button>
+</form>
+<?php endif; ?>
 </div>
 
 <div class="p-dash__kpis">

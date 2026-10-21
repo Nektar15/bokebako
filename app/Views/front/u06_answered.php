@@ -1,11 +1,15 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+
 /**
  * U-06 回答完了画面
  *
- * @var \App\Entities\Oogiri $oogiri
- * @var \App\Entities\Answer $answer          直前に投稿した回答
- * @var string               $answerIntentUrl 回答を含めてシェアする Web Intent URL
- * @var string               $oogiriIntentUrl 大喜利だけシェアする Web Intent URL
+ * @var Oogiri $oogiri
+ * @var Answer $answer          直前に投稿した回答
+ * @var string $answerIntentUrl 回答を含めてシェアする Web Intent URL
+ * @var string $oogiriIntentUrl 大喜利だけシェアする Web Intent URL
  */
 ?>
 <?= $this->extend('layouts/front') ?>

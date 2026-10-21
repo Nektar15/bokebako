@@ -147,3 +147,9 @@ details > summary::-webkit-details-marker { display: none; }
 .u-mt-3 { margin-top: var(--space-3) !important; }
 .u-mt-4 { margin-top: var(--space-4) !important; }
 .u-mt-5 { margin-top: var(--space-5) !important; }
+
+/* 開催者画面への入口（U-04・U-11） */
+.c-host-entry { text-align: center; font-size: 12.5px; }
+.c-host-entry a { color: var(--ink-sub); }
+
+.c-ad[hidden] { display: none; }

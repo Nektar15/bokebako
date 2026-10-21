@@ -1,18 +1,22 @@
 <?php
+
+use App\Entities\Inquiry;
+use App\Enums\InquiryStatus;
+
 /**
  * A-09 お問い合わせ管理
  *
- * @var string $screenId
- * @var string $title
- * @var array{status: string, type: string, period: string} $filter 絞り込みの現在値
- * @var array<string, string> $types   種別の選択肢（値 => 表示名）
- * @var array<string, string> $periods 期間の選択肢
- * @var list<array{label: string, count: string|null, url: string, active: bool}> $tabs 対応状況のタブ
- * @var list<array{inquiry: \App\Entities\Inquiry, time: string, url: string, active: bool}> $items 左の一覧（新しい順）
- * @var \App\Entities\Inquiry|null $selected   右側に出す1件。一覧が空なら null
- * @var string                     $selectedAt 受付日時（整形済み）
- * @var list<array{when: string, what: string}> $memos 対応メモ（新しい順）
- * @var list<\App\Enums\InquiryStatus> $statusCases
+ * @var string                                                                        $screenId
+ * @var string                                                                        $title
+ * @var array{status: string, type: string, period: string, from: string, to: string} $filter 絞り込みの現在値
+ * @var array<string, string>                                                         $types   種別の選択肢（値 => 表示名）
+ * @var array<string, string>                                                         $periods 期間の選択肢
+ * @var list<array{label: string, count: string|null, url: string, active: bool}>     $tabs 対応状況のタブ
+ * @var list<array{inquiry: Inquiry, time: string, url: string, active: bool}>        $items 左の一覧（新しい順）
+ * @var Inquiry|null                                                                  $selected   右側に出す1件。一覧が空なら null
+ * @var string                                                                        $selectedAt 受付日時（整形済み）
+ * @var list<array{when: string, what: string}>                                       $memos 対応メモ（新しい順）
+ * @var list<InquiryStatus>                                                           $statusCases
  */
 ?>
 <?= $this->extend('layouts/admin') ?>
@@ -37,6 +41,7 @@
 <option value="<?= esc($value, 'attr') ?>"<?= $value === $filter['period'] ? ' selected' : '' ?>><?= esc($label) ?></option>
 <?php endforeach; ?>
 </select>
+<?= part('partials/admin_date_range', ['from' => $filter['from'], 'to' => $filter['to']]) ?>
 <button type="submit" class="c-abutton c-abutton--small" data-js-hide-with-js>絞り込む</button>
 </form>
 </div>

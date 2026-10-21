@@ -3,8 +3,14 @@
  * 広告枠（上部・下部）。広告がないときは枠ごと出さない（FEATURES 0-1）
  *
  * @var array{id:int,image:string,alt:string}|null $ad
- * @var string $position  top | bottom
+ * @var string                                     $position  top | bottom
+ * @var bool                                       $deferred  ページキャッシュで配信するページ：枠だけ置き、JS で表示のたびに取る（components/ad-slot.js）
  */
+if (! empty($deferred)) {
+    echo '<div class="c-ad c-ad--' . esc($position, 'attr') . ' c-ad--deferred" data-js-ad-slot="' . esc($position, 'attr') . '" hidden></div>';
+
+    return;
+}
 if (empty($ad)) {
     return;
 }

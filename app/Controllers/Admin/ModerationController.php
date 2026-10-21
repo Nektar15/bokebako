@@ -57,9 +57,7 @@ final class ModerationController extends AdminController
      */
     public function resolve(string $key): RedirectResponse
     {
-        $this->orFail(static fn () => service('moderation')->resolve($key));
-
-        return $this->backWithNotice('処理済みにしました');
+        return $this->act(static fn () => service('moderation')->resolve($key), '処理済みにしました');
     }
 
     /**
@@ -67,9 +65,7 @@ final class ModerationController extends AdminController
      */
     public function hide(string $key): RedirectResponse
     {
-        $this->orFail(static fn () => service('moderation')->hide($key));
-
-        return $this->backWithNotice('非表示にしました');
+        return $this->act(static fn () => service('moderation')->hide($key), '非表示にしました');
     }
 
     /**
@@ -77,9 +73,7 @@ final class ModerationController extends AdminController
      */
     public function delete(string $key): RedirectResponse
     {
-        $this->orFail(static fn () => service('moderation')->delete($key));
-
-        return $this->backWithNotice('削除しました');
+        return $this->act(static fn () => service('moderation')->delete($key), '削除しました');
     }
 
     /**
@@ -88,9 +82,8 @@ final class ModerationController extends AdminController
     public function restrict(string $key): RedirectResponse
     {
         $hours = $this->choicePost('hours', ModerationService::RESTRICT_HOURS, '24');
-        $this->orFail(static fn () => service('moderation')->restrict($key, (int) $hours));
 
-        return $this->backWithNotice('投稿元を' . ModerationService::RESTRICT_HOURS[$hours] . '制限しました');
+        return $this->act(static fn () => service('moderation')->restrict($key, (int) $hours), '投稿元を' . ModerationService::RESTRICT_HOURS[$hours] . '制限しました');
     }
 
     /**

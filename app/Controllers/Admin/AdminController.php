@@ -47,6 +47,8 @@ abstract class AdminController extends BaseController
      */
     protected function backWithErrors(array $errors): RedirectResponse
     {
+        $this->forgetSecrets();
+
         return redirect()->back()->withInput()->with('errors', $errors);
     }
 
@@ -60,6 +62,27 @@ abstract class AdminController extends BaseController
         $value = (string) $this->request->getGet($name);
 
         return isset($options[$value]) ? $value : $default;
+    }
+
+    /**
+     * 期間の絞り込み（?period= と、期間指定の ?from= ?to=（YYYY-MM-DD））。日付が入っていれば「期間指定」にする（監査 2026-10-21）
+     *
+     * @param array<string, string> $options 期間の選択肢（'custom' を含む）
+     *
+     * @return array{period: string, from: string, to: string}
+     */
+    protected function periodFilter(array $options): array
+    {
+        $date = fn (string $name): string => preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $this->text($name)) === 1 && strtotime($this->text($name)) !== false ? $this->text($name) : '';
+        $from = $date('from');
+        $to   = $date('to');
+
+        if ($from !== '' && $to !== '' && $from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+        $period = $from !== '' || $to !== '' ? 'custom' : $this->choice('period', $options, 'all');
+
+        return ['period' => $period, 'from' => $from, 'to' => $to];
     }
 
     /**
@@ -99,7 +122,7 @@ abstract class AdminController extends BaseController
      */
     protected function page(): int
     {
-        return max(1, (int) $this->request->getGet('page'));
+        return min(10000, max(1, (int) $this->request->getGet('page'))); // 巨大な値で offset が溢れないように上限
     }
 
     /**

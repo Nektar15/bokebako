@@ -13,7 +13,6 @@ use App\Entities\Report;
 use App\Enums\AiVerdict;
 use App\Enums\AnswerStatus;
 use App\Enums\ModerationFlag;
-use App\Enums\OogiriStatus;
 use App\Enums\ReportReason;
 use App\Enums\ReportTarget;
 use App\Exceptions\NotFoundException;
@@ -23,6 +22,7 @@ use App\Models\AnswerModel;
 use App\Models\OogiriModel;
 use App\Models\ReportModel;
 use CodeIgniter\I18n\Time;
+use Throwable;
 
 /**
  * 通報・モデレーション（A-05、S-04、S-05）
@@ -32,6 +32,11 @@ use CodeIgniter\I18n\Time;
  */
 final class ModerationService
 {
+    /**
+     * 同じ投稿の AI 判定がこの回数続けて得られなければ、待ち行列から外す
+     */
+    public const AI_MAX_FAILURES = 5;
+
     /**
      * 絞り込みの選択肢（値 => 表示名）。'all' は未処理すべて、'resolved' は処理済み
      */
@@ -91,12 +96,28 @@ final class ModerationService
         $queue   = $this->settings->bool('ai_enabled') && in_array($trigger, $targets, true) ? 1 : 0;
 
         if ($row === null) {
-            $this->judgements->insert([
-                'target_type' => $target->value, 'target_id' => $id, 'trigger' => $trigger,
-                'ng_detail'   => $ngDetail, 'abnormal' => $abnormal, 'verdict' => AiVerdict::None->value, 'queued' => $queue, 'resolved' => 0,
-            ]);
+            // 同じ対象への通報が同時に来ると、もう一方が先に入れていて一意キー違反になる。そのときは読み直して更新する（監査 2026-10-21）
+            try {
+                $inserted = $this->judgements->insert([
+                    'target_type' => $target->value, 'target_id' => $id, 'trigger' => $trigger,
+                    'ng_detail'   => $ngDetail, 'abnormal' => $abnormal, 'verdict' => AiVerdict::None->value, 'queued' => $queue, 'resolved' => 0,
+                ]);
+            } catch (Throwable $e) {
+                $inserted = false;
+                $error    = $e;
+            }
+            if ($inserted !== false) {
+                return;
+            }
+            $row = $this->judgements->where('target_type', $target->value)->where('target_id', $id)->first();
 
-            return;
+            if ($row === null) {
+                if (isset($error)) {
+                    throw $error; // 一意キー違反でなかった（ほかの DB エラー）
+                }
+
+                return;
+            }
         }
         $update = ['resolved' => 0];
 
@@ -241,7 +262,8 @@ final class ModerationService
     /**
      * 通報の集計（S-04、cron）：条件に達した対象を一時非表示にして管理者に通知する
      *
-     * 同一環境（ブラウザID）からの連続通報は1件として数える。
+     * 同一環境からの連続通報は1件として数える。ブラウザID（Cookie）の種類と IP の種類の両方が条件に達したときだけ
+     * （Cookie を消しながら1人で通報して非表示にさせない。監査 2026-10-21）。お題は公開中のどの状態でも対象
      *
      * @return int 非表示にした件数
      */
@@ -249,10 +271,11 @@ final class ModerationService
     {
         $window = Time::now()->subMinutes($this->settings->int('report_window_min'))->toDateTimeString();
         $rows   = $this->reports->builder()
-            ->select('target_type, target_id, COUNT(DISTINCT browser_id_hash) AS environments')
+            ->select('target_type, target_id, COUNT(DISTINCT browser_id_hash) AS environments, COUNT(DISTINCT ip_hash) AS networks')
             ->where('resolved', 0)->where('created_at >=', $window)
             ->groupBy('target_type, target_id')
             ->having('environments >=', $this->settings->int('report_count'))
+            ->having('networks >=', $this->settings->int('report_count'))
             ->get()->getResultArray();
         $hidden = 0;
 
@@ -264,7 +287,7 @@ final class ModerationService
             if ($entity === null) {
                 continue;
             }
-            $isVisible = $target === ReportTarget::Answer ? $entity->status() === AnswerStatus::Visible : $entity->status() === OogiriStatus::Open;
+            $isVisible = $target === ReportTarget::Answer ? $entity->status() === AnswerStatus::Visible : in_array($entity->status()->value, OgpService::PUBLIC_STATUSES, true);
 
             if (! $isVisible) {
                 continue;
@@ -275,12 +298,30 @@ final class ModerationService
             $this->flag($target, $id, 'reported');
             $hidden++;
         }
+        $this->notifySurge();
+
         if ($hidden > 0) {
             service('mail')->notifyAdmin('autoHidden', ['count' => $hidden, 'url' => admin_url('moderation')]);
             service('adminLog')->record('answer', null, "通報の集計：{$hidden} 件を一時非表示にし、管理者へメール通知", AdminLogService::ACTOR_AUTO);
         }
 
         return $hidden;
+    }
+
+    /**
+     * 通報の急増（直近1時間に surge_count 件超）を、1時間に1通にまとめて管理者に知らせる（S-04、A-10「急増の通知」。監査 2026-10-21）
+     * 急増中は通報ごとの通知を止めている（ReportService::create）ので、ここで送らないと1通も届かない
+     */
+    private function notifySurge(): void
+    {
+        $recent = $this->reports->where('created_at >=', Time::now()->subHours(1)->toDateTimeString())->countAllResults();
+
+        if ($recent <= $this->settings->int('surge_count') || cache('surge_notified') !== null) {
+            return;
+        }
+        cache()->save('surge_notified', 1, 3600);
+        service('mail')->notifyAdmin('surge', ['count' => $recent, 'url' => admin_url('moderation')]);
+        service('adminLog')->record('answer', null, "通報の急増（直近1時間で {$recent} 件）を管理者へメール通知", AdminLogService::ACTOR_AUTO);
     }
 
     /**
@@ -316,7 +357,19 @@ final class ModerationService
             $this->judgements->update($row->id, ['queued' => $result['verdict'] === AiVerdict::None ? 1 : 0, 'verdict' => $result['verdict']->value, 'reason' => $result['reason']]);
 
             if ($result['verdict'] === AiVerdict::None) {
-                break; // API が応答しないときは次回に回す
+                // API が応答しないときは次回に回す。同じ投稿で続けて失敗したら（読めない応答など）、後ろが詰まらないよう待ち行列から外す
+                // （未判定のまま A-05 に残る。監査 2026-10-21）
+                $key   = 'ai_fail_' . $row->id;
+                $fails = (int) cache($key) + 1;
+                cache()->save($key, $fails, 86400);
+
+                if ($fails >= self::AI_MAX_FAILURES) {
+                    $this->judgements->update($row->id, ['queued' => 0]);
+                    cache()->delete($key);
+                    log_message('warning', "AI 判定を {$fails} 回続けて得られなかったため、待ち行列から外しました（judgement {$row->id}）");
+                }
+
+                break;
             }
             $done++;
 

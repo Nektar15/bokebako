@@ -39,8 +39,12 @@ final class LoginController extends BaseController
         try {
             $account = $auth->verifyPassword((string) $this->request->getPost('login_id'), (string) $this->request->getPost('password'));
         } catch (ValidationException $e) {
+            $this->forgetSecrets();
+
             return redirect()->to(admin_url('login'))->withInput()->with('errors', $e->errors);
         } catch (AppException $e) {
+            $this->forgetSecrets();
+
             return redirect()->to(admin_url('login'))->withInput()->with('errors', ['login' => $e->getMessage()]);
         }
         $returnUrl = $auth->pullReturnUrl();

@@ -1,13 +1,17 @@
 <?php
+
+use App\Entities\Ad;
+use App\Enums\AdSlot;
+
 /**
  * A-07 広告管理
  *
- * @var string $screenId
- * @var string $title
- * @var list<array{label: string, live: string, impressions: string, clicks: string, ctr: string}> $slots 枠ごとの今月の実績（整形済み）
- * @var list<array{ad: \App\Entities\Ad, period: string, impressions: string, clicks: string, ctr: string}> $items 一覧の行
- * @var \App\Entities\Ad|null $editing   編集中の広告（登録なら null）
- * @var list<\App\Enums\AdSlot> $slotCases
+ * @var string                                                                                              $screenId
+ * @var string                                                                                              $title
+ * @var list<array{label: string, live: string, impressions: string, clicks: string, ctr: string}>          $slots 枠ごとの今月の実績（整形済み）
+ * @var list<array{ad: Ad, period: string, impressions: string, clicks: string, ctr: string}>               $items 一覧の行
+ * @var Ad|null                                                                                             $editing   編集中の広告（登録なら null）
+ * @var list<AdSlot>                                                                                        $slotCases
  * @var array{name: string, sponsor: string, url: string, slot: string, starts_at: string, ends_at: string} $form フォームの初期値
  */
 ?>

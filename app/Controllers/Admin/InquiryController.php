@@ -30,7 +30,7 @@ final class InquiryController extends AdminController
         $filter = [
             'status' => $this->choice('status', $statuses, 'all'),
             'type'   => $this->choice('type', ['all' => '種別：すべて'] + $service->types(), 'all'),
-            'period' => $this->choice('period', InquiryService::PERIODS, 'all'),
+            ...$this->periodFilter(InquiryService::PERIODS),
         ];
         $items    = $service->list($filter);
         $selected = null;

@@ -9,6 +9,7 @@ use App\Enums\NgWordAction;
 use App\Enums\NgWordMatchType;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
+use App\Libraries\Text;
 use App\Models\NgWordModel;
 
 /**
@@ -58,11 +59,13 @@ final class NgWordService
         }
         $action = null;
         $hits   = [];
+        $text   = Text::forMatch($text); // 見えない文字・全角半角の違いですり抜けさせない（監査 2026-10-21）
 
         foreach ($words as $w) {
+            $word    = Text::forMatch($w['word']);
             $matched = match (NgWordMatchType::from($w['match_type'])) {
-                NgWordMatchType::Exact   => trim($text) === $w['word'],
-                NgWordMatchType::Partial => mb_stripos($text, $w['word']) !== false,
+                NgWordMatchType::Exact   => Text::clean($text) === $word,
+                NgWordMatchType::Partial => $word !== '' && mb_stripos($text, $word) !== false,
                 NgWordMatchType::Regex   => $this->isValidRegex($w['word']) && preg_match('/' . str_replace('/', '\\/', $w['word']) . '/u', $text) === 1,
             };
 
@@ -208,25 +211,45 @@ final class NgWordService
      */
     public function importCsv(string $csv): int
     {
-        $rows = array_filter(array_map('trim', explode("\n", $csv)), static fn (string $l) => $l !== '');
+        // Excel で保存した CSV（Shift_JIS・BOM 付き UTF-8）も読む（監査 2026-10-21）
+        if (! mb_check_encoding($csv, 'UTF-8')) {
+            $csv = (string) mb_convert_encoding($csv, 'UTF-8', 'SJIS-win');
+        }
+        $csv  = (string) preg_replace('/\A\x{FEFF}/u', '', $csv);
+        $rows = array_values(array_filter(array_map('trim', preg_split('/\R/u', $csv) ?: []), static fn (string $l) => $l !== ''));
 
-        if (count($rows) < 2) {
+        // 1行目が見出し（書き出した CSV と同じ word,match_type,…）なら飛ばす
+        if ($rows !== [] && str_starts_with(strtolower($rows[0]), self::CSV_COLUMNS[0] . ',')) {
+            array_shift($rows);
+        }
+        if ($rows === []) {
             throw new ValidationException(['csv' => 'CSV にデータ行がありません']);
         }
-        $count = 0;
+        // 先に全行を確かめ、1行でも誤りがあれば何も保存しない（途中まで反映されるのを防ぐ）
+        $inputs = [];
 
-        foreach (array_slice(array_values($rows), 1) as $line) {
+        foreach ($rows as $i => $line) {
             $cols = array_map('trim', str_getcsv($line, ',', '"', '\\'));
 
             if (count($cols) < 5) {
-                throw new ValidationException(['csv' => '列が足りない行があります：' . mb_substr($line, 0, 40)]);
+                throw new ValidationException(['csv' => ($i + 1) . '行目：列が足りません（' . mb_substr($line, 0, 40) . '）']);
             }
             $input    = array_combine(self::CSV_COLUMNS, array_slice($cols, 0, 5));
             $existing = $this->model->where('word', $input['word'])->where('match_type', $input['match_type'])->first();
-            $this->validate($input, $existing?->id);
-            $this->save($existing?->id, $input);
-            $count++;
+
+            try {
+                $this->validate($input, $existing?->id);
+            } catch (ValidationException $e) {
+                throw new ValidationException(['csv' => ($i + 1) . '行目：' . implode(' ', $e->errors)]);
+            }
+            $inputs[] = [$existing?->id, $input];
         }
+        $this->model->transaction(function () use ($inputs): void {
+            foreach ($inputs as [$id, $input]) {
+                $this->save($id, $input);
+            }
+        });
+        $count = count($inputs);
         service('adminLog')->record('ng_word', null, "CSV から {$count} 行を取り込み");
 
         return $count;

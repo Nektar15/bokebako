@@ -1,17 +1,21 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+
 /**
  * U-04 大喜利回答画面（U-05 回答確認モーダルを含む）
  *
- * @var \App\Entities\Oogiri      $oogiri
- * @var string                    $remaining       残り時間の表示（例：「18時間32分」）
- * @var int                       $progressPercent 残り時間バーの幅（0〜100）
- * @var int                       $answerMax       回答の最大文字数
- * @var array<string, string>     $errors          項目名 => 文言。'_' は項目に属さないエラー
- * @var array{body:string}        $old
- * @var \App\Entities\Answer|null $sharedAnswer    回答シェア用URLで開いたとき、添えて表示する回答
+ * @var Oogiri                                     $oogiri
+ * @var string                                     $remaining       残り時間の表示（例：「18時間32分」）
+ * @var int                                        $progressPercent 残り時間バーの幅（0〜100）
+ * @var int                                        $answerMax       回答の最大文字数
+ * @var array<string, string>                      $errors          項目名 => 文言。'_' は項目に属さないエラー
+ * @var array{body:string}                         $old
+ * @var Answer|null                                $sharedAnswer    回答シェア用URLで開いたとき、添えて表示する回答
  * @var array{top: array|null, bottom: array|null} $ads
- * @var string $ogpUrl  OGP 画像の URL（募集用。回答シェア用URLなら回答用）
- * @var string $captcha CAPTCHA のサイトキー（空なら出さない）
+ * @var string                                     $ogpUrl  OGP 画像の URL（募集用。回答シェア用URLなら回答用）
+ * @var string                                     $captcha CAPTCHA のサイトキー（空なら出さない）
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -91,6 +95,10 @@
 <div class="p-answer__report">
 <button type="button" class="c-button c-button--ghost p-answer__report-btn" data-js-open-dialog="report-dialog" data-js-report-type="odai" data-js-report-id="<?= $oogiri->id ?>"><?= $this->include('partials/icon_flag') ?>このお題を通報する</button>
 </div>
+</section>
+
+<section class="l-section">
+<?= part('partials/host_entry', ['slug' => $oogiri->slug]) ?>
 </section>
 
 <?= part('partials/modal_report', ['slug' => $oogiri->slug]) ?>

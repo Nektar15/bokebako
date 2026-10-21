@@ -16,7 +16,7 @@ use App\Models\InquiryModel;
  *
  * 受け付ける側（U-18）は ContactService。対応メモは admin_logs（target_type = inquiry）に残す。
  *
- * @phpstan-type InquiryFilter array{status: string, type: string, period: string}
+ * @phpstan-type InquiryFilter array{status: string, type: string, period: string, from?: string, to?: string}
  */
 final class InquiryService
 {
@@ -51,7 +51,7 @@ final class InquiryService
         if ($filter['type'] !== 'all') {
             $builder->where('type', $filter['type']);
         }
-        OogiriAdminService::applyPeriod($builder, $filter['period']);
+        OogiriAdminService::applyPeriod($builder, $filter['period'], 'created_at', $filter['from'] ?? '', $filter['to'] ?? '');
         $rows = $builder->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')->get(100)->getResultArray();
 
         return array_map(fn (array $row) => $this->withMemos(new Inquiry($row)), $rows);

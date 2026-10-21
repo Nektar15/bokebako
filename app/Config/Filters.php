@@ -8,6 +8,7 @@ use App\Filters\AdminAuth;
 use App\Filters\AdminIp;
 use App\Filters\AjaxOnly;
 use App\Filters\BrowserId;
+use App\Filters\ScalarInput;
 use App\Filters\SecurityHeaders;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
@@ -44,6 +45,7 @@ class Filters extends BaseFilters
         'adminIp'       => AdminIp::class,   // 管理画面の IP 制限（任意。ADMIN_ALLOWED_IPS）
         'adminAuth'     => AdminAuth::class, // 管理画面のログイン確認（A-01）
         'browserId'     => BrowserId::class, // 匿名ブラウザIDの発行（FEATURES 0-2）
+        'scalarInput'   => ScalarInput::class, // 配列で送られた値をそろえる
     ];
 
     /**
@@ -81,6 +83,7 @@ class Filters extends BaseFilters
         'before' => [
             'csrf' => ['except' => ['api/v1/*']], // JSON API は CSRF の代わりに ajaxOnly（ADR 0002・0005）
             'invalidchars',
+            'scalarInput', // 配列で送られた値を空にする（500 を防ぐ）
             'browserId',
         ],
         'after' => [

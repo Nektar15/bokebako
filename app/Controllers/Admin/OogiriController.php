@@ -23,8 +23,8 @@ final class OogiriController extends AdminController
     public function index(): string
     {
         $filter = [
-            'q'      => $this->text('q'),
-            'period' => $this->choice('period', OogiriAdminService::PERIODS, 'all'),
+            'q' => $this->text('q'),
+            ...$this->periodFilter(OogiriAdminService::PERIODS),
             'sort'   => $this->choice('sort', OogiriAdminService::SORTS, 'new'),
             'status' => $this->choice('status', $this->statuses(), 'all'),
         ];
@@ -74,10 +74,11 @@ final class OogiriController extends AdminController
                 '派生開催' => $display->number($oogiri->derived_count),
                 '通報'     => $display->number($oogiri->report_count),
             ],
-            'ranked'  => $ranked,
-            'editing' => $this->request->getGet('edit') === '1',
-            'answers' => array_map(static fn (Answer $a) => ['answer' => $a, 'posted' => $display->short($a->created_at)], $service->answers($oogiri)),
-            'logs'    => $display->logs($service->logs($oogiri)),
+            'ranked'     => $ranked,
+            'editing'    => $this->request->getGet('edit') === '1',
+            'candidates' => $service->rankCandidates($oogiri),
+            'answers'    => array_map(static fn (Answer $a) => ['answer' => $a, 'posted' => $display->short($a->created_at)], $service->answers($oogiri)),
+            'logs'       => $display->logs($service->logs($oogiri)),
         ]);
     }
 

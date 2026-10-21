@@ -21,8 +21,7 @@ final class ReportController extends BaseController
      */
     public function create(): ResponseInterface
     {
-        $json = $this->request->getJSON(true);
-        $body = is_array($json) ? $json : (array) $this->request->getPost();
+        $body = $this->apiBody();
 
         try {
             $oogiri = service('oogiri')->findBySlug((string) ($body['slug'] ?? ''));

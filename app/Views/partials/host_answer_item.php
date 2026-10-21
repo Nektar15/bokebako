@@ -1,10 +1,13 @@
 <?php
+
+use App\Entities\Answer;
+
 /**
  * U-08 開催者画面の回答1件（募集中：いいねボタン、結果選択待ち：ベスト回答の選択）
  *
  * いいね（開催者だけが押せる。公開しない。ADR 0011）は結果確定のフォームの中に置き、formaction で送り先だけ変える（「もっと見る」で足した行もそのまま動く）。
  *
- * @var \App\Entities\Answer $answer
+ * @var Answer $answer
  * @var bool   $isOpen 募集中か
  * @var string $slug
  */

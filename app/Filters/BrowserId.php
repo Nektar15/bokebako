@@ -29,8 +29,10 @@ class BrowserId implements FilterInterface
 
         $id = bin2hex(random_bytes(16));
         service('response')->setCookie(self::COOKIE_NAME, $id, self::LIFETIME, '', '/', '', null, true, 'Lax');
-        // 同じリクエスト内でも読めるように、リクエスト側にも持たせる（Cookie の発行は Filter の責務なのでここだけ許可）
+        // 同じリクエスト内でも読めるように、リクエスト側にも持たせる（Cookie の発行は Filter の責務なのでここだけ許可）。
+        // getCookie() で読み込み済みのリクエストには $_COOKIE を書いても届かないので、setGlobal でも入れる（監査 2026-10-21）
         $_COOKIE[self::COOKIE_NAME] = $id;
+        $request->setGlobal('cookie', [self::COOKIE_NAME => $id] + (array) $request->getCookie());
 
         return null;
     }

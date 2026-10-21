@@ -16,7 +16,7 @@ use RuntimeException;
 final class IdentityService
 {
     public const HOST_COOKIE          = 'bk_host';         // 開催者トークン（slug ごと）。localStorage と併用（U-03）
-    public const HOST_COOKIE_LIFETIME = 60 * 60 * 24 * 90;
+    public const HOST_COOKIE_LIFETIME = 60 * 60 * 24 * 365; // 1年（ADR 0004-3）
 
     private string $secret;
 

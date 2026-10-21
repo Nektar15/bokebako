@@ -60,7 +60,8 @@ final class OogiriController extends BaseController
     {
         $this->cacheFirstPage();
 
-        return view('front/u11_closed', ['oogiri' => $oogiri]);
+        // og:image は、画像がなければ既定の画像にする（監査 2026-10-21）
+        return view('front/u11_closed', ['oogiri' => $oogiri, 'ogpUrl' => service('ogp')->url(OgpKind::Recruit, $oogiri->slug)]);
     }
 
     /**
@@ -68,7 +69,7 @@ final class OogiriController extends BaseController
      */
     private function resultPage(Oogiri $oogiri): string
     {
-        $page   = max(1, (int) $this->request->getGet('page'));
+        $page   = min(10000, max(1, (int) $this->request->getGet('page'))); // 巨大な値で offset が溢れないように上限
         $ranked = service('answer')->ranked($oogiri);
         $format = service('display');
         $share  = service('share');
@@ -82,7 +83,7 @@ final class OogiriController extends BaseController
             'answers'         => service('answer')->listVisible($oogiri, $page, false), // 共有キャッシュに個人の情報を載せない
             'resultIntentUrl' => $share->resultIntent($oogiri, $ranked),
             'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
-            'ads'             => service('ads')->slots(),
+            'ads'             => ['deferred' => true], // キャッシュに広告を焼き込まない（GET /api/v1/ads で表示のたびに取る）
         ]);
     }
 
@@ -91,16 +92,17 @@ final class OogiriController extends BaseController
      */
     private function noResultPage(Oogiri $oogiri): string
     {
-        $page  = max(1, (int) $this->request->getGet('page'));
+        $page  = min(10000, max(1, (int) $this->request->getGet('page'))); // 巨大な値で offset が溢れないように上限
         $share = service('share');
         $this->cacheFirstPage();
 
         return view('front/u12_no_result', [
             'oogiri'          => $oogiri,
+            'ogpUrl'          => service('ogp')->url(OgpKind::Result, $oogiri->slug), // S-02 で作る結果用（選出なし）。なければ既定の画像
             'period'          => service('display')->period($oogiri->starts_at, $oogiri->ends_at),
             'answers'         => service('answer')->listVisible($oogiri, $page, false), // 共有キャッシュに個人の情報を載せない
             'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
-            'ads'             => service('ads')->slots(),
+            'ads'             => ['deferred' => true], // キャッシュに広告を焼き込まない（GET /api/v1/ads で表示のたびに取る）
         ]);
     }
 

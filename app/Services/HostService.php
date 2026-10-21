@@ -23,9 +23,14 @@ use CodeIgniter\I18n\Time;
 final class HostService
 {
     /**
-     * 開催者が結果を確定できる状態（募集中の早期確定を含む）
+     * 開催者が結果を確定できる状態（SPEC U-08：募集終了後。募集中は画面にもボタンを出さない。監査 2026-10-21）
      */
-    public const DECIDABLE_BY_HOST = [OogiriStatus::Open, OogiriStatus::AwaitingSelection];
+    public const DECIDABLE_BY_HOST = [OogiriStatus::AwaitingSelection];
+
+    /**
+     * 開催者が削除できる状態（募集中・結果選択待ち）
+     */
+    public const DELETABLE_BY_HOST = [OogiriStatus::Open, OogiriStatus::AwaitingSelection];
 
     /**
      * 開催者画面で一度に出す回答の件数
@@ -228,7 +233,7 @@ final class HostService
     {
         $this->assertAuthorized($oogiri);
 
-        if (! in_array($oogiri->status(), self::DECIDABLE_BY_HOST, true)) {
+        if (! in_array($oogiri->status(), self::DELETABLE_BY_HOST, true)) {
             throw new AppException(ErrorCode::Forbidden, 'この大喜利は削除できません');
         }
         $this->oogiris->where('id', $oogiri->id)->where('status', $oogiri->status)

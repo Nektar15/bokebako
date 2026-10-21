@@ -11,6 +11,7 @@ import { initReport } from './components/report.js';
 import { initAutosubmit } from './components/autosubmit.js';
 import { initScreenNav } from './components/screen-nav.js';
 import { initAdminMenu } from './components/admin-menu.js';
+import { initAdSlots } from './components/ad-slot.js';
 
 const root = document;
 
@@ -23,3 +24,4 @@ initReport(root);
 initAutosubmit(root);
 initScreenNav(root);
 initAdminMenu(root);
+initAdSlots(root);

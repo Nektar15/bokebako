@@ -1,22 +1,26 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+
 /**
  * U-08 開催者専用画面（U-09 結果確認モーダルを含む）
  *
- * @var \App\Entities\Oogiri $oogiri
- * @var bool   $isOpen              募集中か（false なら結果選択待ち）
- * @var string $startsAt            募集開始日時の表示
- * @var string $endsAt              募集終了日時の表示
- * @var string $remaining           募集の残り時間（募集中のみ意味を持つ）
- * @var string $selectionRemaining  結果選出の残り時間（選択待ちのみ）
- * @var string $pv                  表示用に整形したPV
- * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers 回答一覧（新着順、100件ずつ。結果選択待ちではいいねを除く）
- * @var list<\App\Entities\Answer> $favorites  いいねした回答（結果選択待ちの1ページ目だけ。上にまとめて出す）
- * @var int    $favoriteCount いいねした件数
- * @var string $moreUrl       「もっと見る」の行き先（次のページ）
- * @var string $shareUrl
- * @var string $intentUrl
- * @var array<string, string> $errors
- * @var string $hostToken 開催者トークン（JS が localStorage に保存し直す）
+ * @var Oogiri                                               $oogiri
+ * @var bool                                                 $isOpen              募集中か（false なら結果選択待ち）
+ * @var string                                               $startsAt            募集開始日時の表示
+ * @var string                                               $endsAt              募集終了日時の表示
+ * @var string                                               $remaining           募集の残り時間（募集中のみ意味を持つ）
+ * @var string                                               $selectionRemaining  結果選出の残り時間（選択待ちのみ）
+ * @var string                                               $pv                  表示用に整形したPV
+ * @var array{items: list<Answer>, hasMore: bool, page: int} $answers 回答一覧（新着順、100件ずつ。結果選択待ちではいいねを除く）
+ * @var list<Answer>                                         $favorites  いいねした回答（結果選択待ちの1ページ目だけ。上にまとめて出す）
+ * @var int                                                  $favoriteCount いいねした件数
+ * @var string                                               $moreUrl       「もっと見る」の行き先（次のページ）
+ * @var string                                               $shareUrl
+ * @var string                                               $intentUrl
+ * @var array<string, string>                                $errors
+ * @var string                                               $hostToken 開催者トークン（JS が localStorage に保存し直す）
  */
 ?>
 <?= $this->extend('layouts/front') ?>

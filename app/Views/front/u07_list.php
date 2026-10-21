@@ -1,12 +1,16 @@
 <?php
+
+use App\Entities\Answer;
+use App\Entities\Oogiri;
+
 /**
  * U-07 回答後・回答一覧画面
  *
- * @var \App\Entities\Oogiri $oogiri
- * @var string $remaining
- * @var int    $progressPercent
- * @var array{items: list<\App\Entities\Answer>, hasMore: bool, page: int} $answers
- * @var callable(\App\Entities\Answer): string $answerIntentUrl
+ * @var Oogiri                                               $oogiri
+ * @var string                                               $remaining
+ * @var int                                                  $progressPercent
+ * @var array{items: list<Answer>, hasMore: bool, page: int} $answers
+ * @var callable(Answer): string                             $answerIntentUrl
  */
 ?>
 <?= $this->extend('layouts/front') ?>

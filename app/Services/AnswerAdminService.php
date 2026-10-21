@@ -11,11 +11,12 @@ use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Models\AnswerModel;
 use App\Models\OogiriModel;
+use App\Models\ReportModel;
 
 /**
  * 回答管理（A-04）：大喜利をまたいだ回答の一覧と、管理者による操作
  *
- * @phpstan-type AnswerFilter array{q: string, oogiri: string, status: string, reports: string, period: string}
+ * @phpstan-type AnswerFilter array{q: string, oogiri: string, status: string, reports: string, period: string, from?: string, to?: string}
  * @phpstan-type AnswerPage   array{items: list<Answer>, total: int, page: int, perPage: int, pages: int}
  */
 final class AnswerAdminService
@@ -77,7 +78,7 @@ final class AnswerAdminService
             }
             $builder->groupEnd();
         }
-        OogiriAdminService::applyPeriod($builder, $filter['period'], 'answers.created_at');
+        OogiriAdminService::applyPeriod($builder, $filter['period'], 'answers.created_at', $filter['from'] ?? '', $filter['to'] ?? '');
         $total = $builder->countAllResults(false);
         $rows  = $builder->orderBy('answers.created_at', 'DESC')->orderBy('answers.id', 'DESC')->get(self::PER_PAGE, ($page - 1) * self::PER_PAGE)->getResultArray();
         $items = array_map(static fn (array $row) => new Answer($row), $rows);
@@ -121,6 +122,8 @@ final class AnswerAdminService
 
         if ($answer !== null) {
             $this->purge($answer);
+            // 再公開した時点までの通報は処理済みにする（残すと次の集計でまた自動で非表示になる。監査 2026-10-21）
+            model(ReportModel::class)->where('target_type', 'answer')->where('target_id', $id)->where('resolved', 0)->set(['resolved' => 1])->update();
             service('adminLog')->record('answer', $id, '再公開');
         }
     }
