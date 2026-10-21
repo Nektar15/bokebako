@@ -1,0 +1,9 @@
+{
+  "name": "bokebako-vercel-og",
+  "private": true,
+  "description": "Vercel 仮置きの OGP 画像生成（api/og.js）だけで使う。本番（Xserver）では使わない（ADR 0014）",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@vercel/og": "0.6.8"
+  }
+}

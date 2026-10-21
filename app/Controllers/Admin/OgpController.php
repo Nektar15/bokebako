@@ -139,6 +139,17 @@ final class OgpController extends AdminController
     private function previewUrls(): array
     {
         $canDraw = (new OgpImage())->isAvailable();
+
+        // Vercel 仮置き：Vercel の画像生成で、今の文言のプレビューを描く（ADR 0014）
+        if (! $canDraw && OgpService::usesVercelRenderer()) {
+            $urls = [];
+
+            foreach (OgpKind::cases() as $kind) {
+                $urls[$kind->value] = base_url('og-image/' . $kind->value . '/preview.png') . '?v=' . OgpService::textsVersion();
+            }
+
+            return $urls;
+        }
         $version = substr(md5((string) json_encode(service('settings')->ogpTexts()) . (string) @filemtime(WRITEPATH . 'ogp-templates')), 0, 8);
         $urls    = [];
 

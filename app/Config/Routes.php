@@ -66,6 +66,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
     $routes->post('events', 'EventController::create');                 // 計測（S-06）
     $routes->post('reports', 'ReportController::create');               // 通報（S-04）
     $routes->get('ads', 'AdController::index');                         // 広告枠（キャッシュ配信のページ用）
+    $routes->get('ogp/(:segment)/(:segment)', 'OgpController::show/$1/$2'); // OGP 画像の中身（Vercel の画像生成用。ADR 0014）
 });
 
 // ---------------------------------------------------------------

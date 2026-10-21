@@ -67,7 +67,78 @@ final class OgpService
     {
         $path = $this->path($kind, $key);
 
-        return is_file($path) ? base_url('ogp/' . $kind->value . '/' . $key . '.png') . '?v=' . filemtime($path) : base_url('assets/img/ogp-default.png');
+        if (is_file($path)) {
+            return base_url('ogp/' . $kind->value . '/' . $key . '.png') . '?v=' . filemtime($path);
+        }
+        // Vercel 仮置きは GD がなく画像を作れないので、Vercel の画像生成（api/og.js）で描く（ADR 0014）
+        if (self::usesVercelRenderer()) {
+            return base_url('og-image/' . $kind->value . '/' . rawurlencode($key) . '.png') . '?v=' . self::textsVersion();
+        }
+
+        return base_url('assets/img/ogp-default.png');
+    }
+
+    /**
+     * Vercel の画像生成を使うか（api/index.php が ogp.renderer=vercel にする）
+     */
+    public static function usesVercelRenderer(): bool
+    {
+        return env('ogp.renderer', '') === 'vercel';
+    }
+
+    /**
+     * 画像に載せる文言の版（A-08 で変えたら URL を変え、X などのキャッシュを使わせない）
+     */
+    public static function textsVersion(): string
+    {
+        return substr(md5((string) json_encode(service('settings')->ogpTexts())), 0, 8);
+    }
+
+    /**
+     * Vercel の画像生成に渡す中身（GET /api/v1/ogp/{kind}/{key}）。公開中のものだけ。なければ null
+     *
+     * key：募集用・結果用はスラッグ、回答シェア用は回答ID。'preview' は A-08 のプレビュー用の見本
+     *
+     * @return array{kind: string, odai: string, answer: string, ranked: list<array{rank: int, body: string}>, count: string, texts: array<string, int|string>}|null
+     */
+    public function data(OgpKind $kind, string $key): ?array
+    {
+        $texts = service('settings')->ogpTexts();
+        $pack  = static fn (string $odai, string $answer, array $ranked, int $count): array => [
+            'kind'   => $kind->value,
+            'odai'   => $odai,
+            'answer' => $answer,
+            'ranked' => array_slice($ranked, 0, $texts['result_ranks']),
+            'count'  => str_replace('{count}', number_format($count), $texts['result_count']),
+            'texts'  => $texts,
+        ];
+
+        if ($key === 'preview') {
+            return $pack(
+                $kind === OgpKind::Result ? '絶対に売れない駄菓子の商品名とは？' : 'こんなコンビニ店員は嫌だ',
+                '「袋いりますか？」のあとに、10秒の沈黙を置いてくる',
+                [['rank' => 1, 'body' => 'うまい棒・味なし'], ['rank' => 2, 'body' => 'チロルチョコ 1,980円'], ['rank' => 3, 'body' => 'よっちゃんイカ・本人']],
+                412,
+            );
+        }
+        if ($kind === OgpKind::Answer) {
+            $answer = ctype_digit($key) ? $this->answers->find((int) $key) : null;
+            $oogiri = $answer !== null ? $this->oogiris->find($answer->oogiri_id) : null;
+
+            if ($answer === null || $oogiri === null || $answer->status() !== AnswerStatus::Visible || ! in_array($oogiri->status()->value, self::PUBLIC_STATUSES, true)) {
+                return null;
+            }
+
+            return $pack($oogiri->odai, $answer->body, [], $oogiri->answer_count);
+        }
+        $oogiri = $this->oogiris->where('slug', $key)->first();
+
+        if ($oogiri === null || $oogiri->slug !== $key || ! in_array($oogiri->status()->value, self::PUBLIC_STATUSES, true)) {
+            return null;
+        }
+        $ranked = array_map(static fn (Answer $a): array => ['rank' => (int) $a->rank, 'body' => $a->body], $this->ranked($oogiri));
+
+        return $pack($oogiri->odai, '', $ranked, $oogiri->answer_count);
     }
 
     /**

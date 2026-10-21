@@ -121,7 +121,7 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 - **events の削除は 90 日固定**（`StatsService::EVENT_KEEP_DAYS`）。運用設定にすると「仕様にない設定値の追加」になるため
 - **A-05 の待ち行列は新しい順に 1000 件まで読んで並べる**（`ModerationService::SCAN_LIMIT`）。それより古い未処理は件数だけ画面に出る。毎日処理していれば届かない量
 - **長い回答は OGP 画像で「…」になる**（文字を小さくしても入りきらないとき）
-- **Vercel の PHP には GD がない**ので、Vercel では OGP 画像を作らない（本番は GD あり）。A-08 のプレビューは同梱の見本画像になる
+- **Vercel の PHP には GD がない**ので、Vercel では OGP 画像を `api/og.js`（@vercel/og）で描く（ADR 0014。本番は PHP の GD）
 - **アプリのアイコン**は `docs/design/icon.png` から切り出した（favicon・ホーム画面・ロゴマーク・OGP のロゴ）。絵を変えたら `public/favicon.ico` と `public/assets/img/{icon-*,apple-touch-icon,logo-mark,logo-ogp}.png` を作り直す
 - **PHPStan は 1.12 のまま**。2 系へ上げるなら依存の変更なので ADR を書いて別ブランチで
 
@@ -197,3 +197,4 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 - `0011` お気に入りを「いいね」に変え、結果シェアに1〜3位を載せる
 - `0012` OGP 画像の見た目を変え、文言と載せる順位を A-08 で編集できるようにする
 - `0013` 仕様の突き合わせ・バグ調査（2026-10-21）で直したもの
+- `0014` Vercel 仮置きの OGP 画像は Vercel の画像生成で描く
