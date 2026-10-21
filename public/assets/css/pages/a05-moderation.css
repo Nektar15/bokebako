@@ -44,3 +44,24 @@
 .p-mod__restrict { margin-left: auto; display: flex; gap: 6px; align-items: center; }
 .p-mod__restrict-hours { width: 100px; }
 .p-mod__history-title { margin-bottom: 4px; font-size: 13px; font-weight: 900; }
+
+/* スマホ・タブレット（ADR 0010）：一覧の下に詳細。一覧のカードを押すと詳細の位置まで進む（#detail） */
+.p-mod__detail { scroll-margin-top: 72px; }
+@media (max-width: 1199.98px) {
+  .p-mod { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767.98px) {
+  .p-mod__filters { gap: 8px; }
+  .p-mod__order { margin-left: 0; flex-basis: 100%; }
+  .p-mod__detail { padding: 16px; }
+  .p-mod__detail-head { flex-wrap: wrap; }
+  .p-mod__target { padding: 14px; }
+  .p-mod__target-text { font-size: 17px; }
+  .p-mod__facts { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .p-mod__ai-head { flex-wrap: wrap; }
+  .p-mod__ai-note { margin-left: 0; flex-basis: 100%; }
+  .p-mod__actions > .c-action, .p-mod__actions > .c-abutton { flex: 1 1 calc(50% - 4px); }
+  .p-mod__actions .c-action .c-abutton { width: 100%; }
+  .p-mod__restrict { margin-left: 0; flex-basis: 100%; flex-wrap: wrap; }
+  .p-mod__restrict-hours { flex: 1 1 100px; }
+}

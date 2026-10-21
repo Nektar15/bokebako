@@ -10,6 +10,7 @@ import { initTracking } from './components/tracking.js';
 import { initReport } from './components/report.js';
 import { initAutosubmit } from './components/autosubmit.js';
 import { initScreenNav } from './components/screen-nav.js';
+import { initAdminMenu } from './components/admin-menu.js';
 
 const root = document;
 
@@ -21,3 +22,4 @@ initTracking(root);
 initReport(root);
 initAutosubmit(root);
 initScreenNav(root);
+initAdminMenu(root);

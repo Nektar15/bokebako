@@ -1,6 +1,8 @@
 <?php
 /**
- * 管理画面の共通レイアウト（PC 幅のみ）
+ * 管理画面の共通レイアウト（スマホ・タブレット・PC。ADR 0010）
+ *
+ * 1024px 未満では左メニューを引き出しにして、上のバーの「メニュー」で開く（チェックボックスで開け閉めするので JS がなくても動く）
  *
  * セクション：meta（任意）/ content（必須）/ styles / scripts
  *
@@ -48,6 +50,12 @@ $errors ??= [];
 <?php else: ?>
 <body class="l-admin">
 <?= $this->include('partials/screen_nav') ?>
+<input type="checkbox" id="admin-menu" class="l-admin__menu-toggle" aria-hidden="true" tabindex="-1" data-js-admin-menu>
+<div class="l-topbar">
+<label for="admin-menu" class="l-topbar__menu" role="button" tabindex="0" data-js-admin-menu-button aria-controls="admin-sidebar" aria-label="メニューを開く"><span class="l-topbar__burger" aria-hidden="true"></span>メニュー<?php if ($badges['todo'] + $badges['inquiries'] > 0): ?><span class="c-badge"><?= esc((string) ($badges['todo'] + $badges['inquiries'])) ?></span><?php endif; ?></label>
+<a class="l-topbar__brand" href="<?= admin_url() ?>"><?= $this->include('partials/logo') ?><span class="l-topbar__name">ぼけばこ</span><span class="c-tag c-tag--small">管理</span></a>
+</div>
+<label for="admin-menu" class="l-admin__scrim" aria-hidden="true"></label>
 <?= $this->include('partials/admin_sidebar') ?>
 <main class="l-admin__main">
 <header class="l-admin__header">

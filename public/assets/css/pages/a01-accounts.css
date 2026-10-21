@@ -5,3 +5,7 @@
 .p-accounts__table { --table-cols: minmax(0, 1fr) minmax(0, 1fr) 100px 120px 150px; }
 .p-accounts__form { padding: 18px; gap: 16px; }
 .p-accounts__reset { display: flex; gap: 8px; }
+
+/* スマホ・タブレット（ADR 0010） */
+@media (max-width: 1199.98px) { .p-accounts { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 767.98px) { .p-accounts__reset { flex-direction: column; } }

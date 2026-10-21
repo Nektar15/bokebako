@@ -38,3 +38,17 @@
 /* 鍵のついた注記（A-04 の投稿元） */
 .c-lock-note { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink-sub); }
 .c-lock-note svg { flex-shrink: 0; }
+
+@media (max-width: 767.98px) {
+  .c-panel { padding: 16px; border-radius: 14px; }
+  .c-panel--table { padding: 2px 12px 6px; }
+  .c-panel__head { flex-wrap: wrap; }
+  .c-panel__actions { flex-wrap: wrap; }
+  .c-panel__actions > * { flex: 1 1 auto; }
+
+  /* 絞り込みバー：検索欄は1行を使い、セレクトとボタンは2つずつ並べる */
+  .c-filterbar { padding: 12px; gap: 8px; }
+  .c-filterbar > .c-ainput, .c-filterbar > .c-aselect, .c-filterbar > .c-abutton, .c-filterbar > select, .c-filterbar > button { flex: 1 1 140px; width: auto; }
+  .c-filterbar > input[type="text"], .c-filterbar > input[type="search"] { flex-basis: 100%; }
+  .c-filterbar__count { flex-basis: 100%; margin-left: 0; }
+}

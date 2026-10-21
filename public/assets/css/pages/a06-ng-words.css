@@ -9,3 +9,6 @@
 .p-ng__try { background: var(--paper); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 .p-ng__import { position: relative; cursor: pointer; }
 .p-ng__import:has(:focus-visible) { outline: 3px solid var(--shu); outline-offset: 2px; }
+
+/* スマホ・タブレット（ADR 0010） */
+@media (max-width: 1199.98px) { .p-ng { grid-template-columns: minmax(0, 1fr); } }

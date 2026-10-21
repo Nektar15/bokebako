@@ -78,3 +78,21 @@
 .c-setting__group { display: flex; flex-direction: column; }
 .c-setting__group.is-disabled { opacity: .4; }
 .c-code { font-family: var(--font-mono); background: var(--paper); border-radius: 4px; padding: 1px 6px; color: var(--ink); }
+
+.c-ainput, .c-aselect, .c-atextarea { max-width: 100%; }
+
+/* タッチの端末：入力欄の文字を 16px にする（iPhone・iPad で入力時に画面が拡大されないように。ADR 0010） */
+@media (max-width: 1023.98px), (pointer: coarse) {
+  .c-ainput, .c-aselect { height: 44px; font-size: 16px; }
+  .c-atextarea { font-size: 16px; }
+  .c-segment__label { height: 42px; }
+  .c-checks__item { min-height: 44px; }
+}
+
+@media (max-width: 767.98px) {
+  .c-setting { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .c-afield__inline { flex-wrap: wrap; }
+  .c-afield__default { margin-left: 0; }
+  .c-segment--fit { display: grid; width: 100%; grid-auto-columns: minmax(0, 1fr); }
+  .c-segment--fit .c-segment__label { min-width: 0; padding: 0 8px; }
+}

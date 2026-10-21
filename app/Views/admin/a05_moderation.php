@@ -37,7 +37,7 @@
 <?php foreach ($queue as $row): ?>
 <?php $item = $row['item']; ?>
 <li>
-<a class="p-mod__card<?= $row['active'] ? ' is-active' : '' ?>" href="<?= esc($row['url'], 'attr') ?>"<?= $row['active'] ? ' aria-current="true"' : '' ?>>
+<a class="p-mod__card<?= $row['active'] ? ' is-active' : '' ?>" href="<?= esc($row['url'] . '#detail', 'attr') ?>"<?= $row['active'] ? ' aria-current="true"' : '' ?>>
 <span class="p-mod__card-head">
 <?php foreach ($row['flags'] as $flag): ?>
 <span class="c-status c-status--small p-mod__flag p-mod__flag--<?= esc($flag['value'], 'attr') ?>"><?= esc($flag['label']) ?></span>
@@ -52,7 +52,7 @@
 </ul>
 
 <?php if ($selected !== null): ?>
-<section class="c-panel c-panel--raised p-mod__detail" aria-label="選択中の投稿">
+<section id="detail" class="c-panel c-panel--raised p-mod__detail" aria-label="選択中の投稿">
 <div class="p-mod__detail-head">
 <span class="c-tag c-tag--ink c-tag--small p-mod__kind"><?= esc($selected->target()->label()) ?></span>
 <span class="u-mono p-mod__id"><?= esc($selected->displayId()) ?></span>

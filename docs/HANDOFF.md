@@ -34,6 +34,7 @@ develop で `cp .env.example .env && composer install && composer check` を通�
 
 - 公開済み：`https://bokebako.vercel.app`（Vercel：lunaticbeat15@gmail.com のチーム「Goma's projects」、プロジェクト `bokebako`。Production は `develop` を追う＝develop に push すると本番に入る）
 - 画面の右下に「全画面」ボタン（押すと全画面へのリンクのモーダル）（確認用。Vercel だけ表示。ADR 0009）
+- 管理画面はスマホ・iPad・PC に対応済み（ADR 0010）。実機の iPhone・iPad での確認はまだ（手元のブラウザで 390・820・1180・1440px を確認済み）
 - 2026-10-21 時点で確認済み：`/about`、回答画面、結果画面、管理画面ログインが動き、開発用データが入っている
 
 - 設定と手順はできている：`docs/vercel.md`（Vercel で Import → 環境変数 → Deploy）
@@ -169,3 +170,4 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 - `0007` A-01 ログインと管理者アカウント（二段階認証の前まで）
 - `0008` Vercel への仮置き
 - `0009` 画面一覧ナビ（確認用のモーダル）
+- `0010` 管理画面をスマホ・タブレットに対応する

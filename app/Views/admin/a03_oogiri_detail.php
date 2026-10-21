@@ -129,11 +129,11 @@
 <?php foreach ($answers as $row): ?>
 <?php $answer = $row['answer']; ?>
 <div class="c-table__row" role="row">
-<div class="c-table__cell c-table__cell--id" role="cell">A-<?= esc((string) $answer->id) ?></div>
-<div class="c-table__cell c-table__cell--strong" role="cell"><?= nl2br_esc($answer->body) ?></div>
-<div class="c-table__cell c-table__cell--time" role="cell"><?= esc($row['posted']) ?></div>
-<div class="c-table__cell c-table__cell--num" role="cell"><?= esc((string) $answer->report_count) ?></div>
-<div class="c-table__cell" role="cell"><?= part('partials/admin_badge', ['status' => $answer->status()->value, 'label' => $answer->status()->label()]) ?></div>
+<div class="c-table__cell c-table__cell--id" role="cell" data-label="ID">A-<?= esc((string) $answer->id) ?></div>
+<div class="c-table__cell c-table__cell--strong" role="cell" data-label="本文"><?= nl2br_esc($answer->body) ?></div>
+<div class="c-table__cell c-table__cell--time" role="cell" data-label="投稿日時"><?= esc($row['posted']) ?></div>
+<div class="c-table__cell c-table__cell--num" role="cell" data-label="通報"><?= esc((string) $answer->report_count) ?></div>
+<div class="c-table__cell" role="cell" data-label="状態"><?= part('partials/admin_badge', ['status' => $answer->status()->value, 'label' => $answer->status()->label()]) ?></div>
 <div class="c-table__cell" role="cell"><?= part('partials/admin_action_form', ['action' => admin_url('answers/' . $answer->id . '/hide'), 'label' => '非表示', 'variant' => 'tiny', 'iconOnly' => false, 'confirm' => null, 'id' => '', 'hidden' => []]) ?></div>
 </div>
 <?php endforeach; ?>

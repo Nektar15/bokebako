@@ -49,7 +49,7 @@
 <?php foreach ($items as $row): ?>
 <?php $inquiry = $row['inquiry']; ?>
 <li>
-<a class="p-inq__card<?= $row['active'] ? ' is-active' : '' ?>" href="<?= esc($row['url'], 'attr') ?>"<?= $row['active'] ? ' aria-current="true"' : '' ?>>
+<a class="p-inq__card<?= $row['active'] ? ' is-active' : '' ?>" href="<?= esc($row['url'] . '#detail', 'attr') ?>"<?= $row['active'] ? ' aria-current="true"' : '' ?>>
 <span class="p-inq__card-head">
 <?= part('partials/admin_badge', ['status' => $inquiry->status()->value, 'label' => $inquiry->status()->label()]) ?>
 <span class="p-inq__card-type"><?= esc($inquiry->type()->label()) ?></span>
@@ -63,7 +63,7 @@
 </ul>
 
 <?php if ($selected !== null): ?>
-<section class="c-panel c-panel--raised p-inq__detail" aria-label="選択中のお問い合わせ">
+<section id="detail" class="c-panel c-panel--raised p-inq__detail" aria-label="選択中のお問い合わせ">
 <dl class="p-inq__meta">
 <dt>受付日時</dt><dd><?= esc($selectedAt) ?></dd>
 <dt>種別</dt><dd class="p-inq__meta-strong"><?= esc($selected->type()->label()) ?></dd>

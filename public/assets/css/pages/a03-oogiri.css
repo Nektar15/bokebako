@@ -24,3 +24,16 @@
 .p-oogiri-detail__answers { --table-cols: 80px minmax(0, 1fr) 92px 44px 92px 70px; }
 .p-oogiri-detail__derived { font-size: 13px; line-height: 1.7; }
 .p-oogiri-detail__derived-count { font-family: var(--font-display); font-weight: 400; font-size: 18px; color: var(--shu); }
+
+/* スマホ・タブレット（ADR 0010） */
+@media (max-width: 1199.98px) {
+  .p-oogiri-detail { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 767.98px) {
+  .p-oogiri-detail__summary { padding: 16px; }
+  .p-oogiri-detail__odai { font-size: 20px; }
+  .p-oogiri-detail__dates { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .p-oogiri-detail__stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .p-oogiri-detail__rank { flex-wrap: wrap; }
+  .p-oogiri-detail__rank-select { min-width: 0; flex-basis: calc(100% - 48px); }
+}
