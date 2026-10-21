@@ -81,4 +81,20 @@ final class AdminLoginTest extends DatabaseTestCase
         $this->get('admin/login')->assertStatus(403);
         $this->asAdmin(AdminRole::Super)->get('admin')->assertStatus(403);
     }
+
+    public function testLoginReturnsToRequestedPage(): void
+    {
+        $this->get('admin/oogiri/12452?edit=1')->assertRedirectTo(site_url('admin/login'));
+        // FeatureTestTrait はリクエストごとにセッションを入れ直すので、1回目のセッションを引き継ぐ
+        $this->withSession($_SESSION)->post('admin/login', ['login_id' => 'dev-admin', 'password' => DevSeeder::ADMIN_PASSWORD])
+            ->assertRedirectTo(site_url('admin/oogiri/12452?edit=1'));
+    }
+
+    public function testReturnPathOutsideAdminIsIgnored(): void
+    {
+        foreach (['//evil.example.com/admin', '/o/k7Qm2xPz', 'https://evil.example.com/'] as $path) {
+            $_SESSION[AdminAuthService::SESSION_RETURN] = $path;
+            $this->assertSame(admin_url(), service('adminAuth')->pullReturnUrl(), $path);
+        }
+    }
 }

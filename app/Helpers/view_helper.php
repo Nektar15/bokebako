@@ -63,3 +63,17 @@ if (! function_exists('nl2br_esc')) {
         return nl2br(esc($text));
     }
 }
+
+if (! function_exists('screen_nav')) {
+    /**
+     * 画面一覧ナビ（確認用。ADR 0009）のプルダウンの中身。無効なら null（partials/screen_nav は何も出さない）
+     *
+     * @return array{action: string, groups: list<array{label: string, options: list<array{index: int, label: string, note: string}>}>}|null
+     */
+    function screen_nav(): ?array
+    {
+        $nav = service('screenNav');
+
+        return $nav->enabled() ? ['action' => site_url('_screens/go'), 'groups' => $nav->groups()] : null;
+    }
+}

@@ -33,6 +33,7 @@ develop で `cp .env.example .env && composer install && composer check` を通�
 ### 1. Vercel で触り心地を確かめる
 
 - 公開済み：`https://bokebako.vercel.app`（Vercel：lunaticbeat15@gmail.com のチーム「Goma's projects」、プロジェクト `bokebako`。Production は `develop` を追う＝develop に push すると本番に入る）
+- 画面の最上部に「全画面へ移動」のプルダウン（確認用。Vercel だけ表示。ADR 0009）
 - 2026-10-21 時点で確認済み：`/about`、回答画面、結果画面、管理画面ログインが動き、開発用データが入っている
 
 - 設定と手順はできている：`docs/vercel.md`（Vercel で Import → 環境変数 → Deploy）
@@ -167,3 +168,4 @@ ADR に【仮】と書いたもの。決まったら ADR の状態を更新し�
 - `0006` 工程5後のコードレビューの修正
 - `0007` A-01 ログインと管理者アカウント（二段階認証の前まで）
 - `0008` Vercel への仮置き
+- `0009` 画面一覧ナビ（確認用のプルダウン）

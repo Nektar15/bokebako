@@ -48,6 +48,7 @@ final class AdminAuthService
     public const SESSION_FINGERPRINT = 'bk_admin_fp';
     public const SESSION_LOGIN_AT    = 'bk_admin_login_at';
     public const SESSION_SEEN_AT     = 'bk_admin_seen_at';
+    public const SESSION_RETURN      = 'bk_admin_return'; // ログイン後に戻す管理画面のパス
 
     /**
      * 存在しない ID のときにも password_verify() を1回通すためのハッシュ（応答時間で ID の有無を推測させない）
@@ -111,6 +112,25 @@ final class AdminAuthService
         $this->admins->update($account->id, ['last_login_at' => Time::now()->toDateTimeString()]);
         service('currentAdmin')->set($account->toAdminUser());
         service('adminLog')->record('admin', $account->id, 'ログイン');
+    }
+
+    /**
+     * ログイン後の行き先。未ログインで開こうとした管理画面があればそこ、なければダッシュボード（取り出したら消す）
+     */
+    public function pullReturnUrl(): string
+    {
+        $path = (string) session(self::SESSION_RETURN);
+        session()->remove(self::SESSION_RETURN);
+        $base = '/' . trim((string) env('app.adminPath', 'admin'), '/');
+
+        // 管理画面の中のパスだけを受け付ける（//example.com のような別サイトへの飛び先を作らせない）
+        $inside = $path === $base || str_starts_with($path, $base . '/') || str_starts_with($path, $base . '?');
+
+        if (! $inside || str_contains($path, '//') || str_contains($path, '\\')) {
+            return admin_url();
+        }
+
+        return site_url(ltrim($path, '/'));
     }
 
     /**

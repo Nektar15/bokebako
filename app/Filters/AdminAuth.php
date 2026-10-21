@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Filters;
 
+use App\Services\AdminAuthService;
 use CodeIgniter\Filters\FilterInterface;
+use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 
@@ -21,6 +23,12 @@ class AdminAuth implements FilterInterface
         $account = service('adminAuth')->current();
 
         if ($account === null) {
+            // ログイン後に、開こうとしていた画面へ戻す（GET だけ。行き先はサーバーが見たパスなので外部には飛ばない）
+            if ($request instanceof IncomingRequest && $request->getMethod() === 'GET') {
+                $query = $request->getUri()->getQuery();
+                session()->set(AdminAuthService::SESSION_RETURN, '/' . ltrim($request->getUri()->getPath(), '/') . ($query !== '' ? '?' . $query : ''));
+            }
+
             return redirect()->to(admin_url('login'))->with('notice', 'ログインしてください');
         }
         service('currentAdmin')->set($account->toAdminUser());
