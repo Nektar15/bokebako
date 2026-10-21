@@ -11,6 +11,10 @@
 | PHP | 8.2（`vercel-php@0.6.2`） | 本番と同じ版 |
 | メール・CAPTCHA・AI 判定 | 設定しなければ動かない | — |
 
+## 0. 公開中の URL
+
+`https://bokebako.vercel.app`（Production は `develop` ブランチを追う。プレビューの URL は Vercel のログインが要る）
+
 ## 1. GitHub
 
 リポジトリは `https://github.com/Nektar15/bokebako`（2026-10-20 に全ブランチを push 済み。コミットの作者は Claude と lunaticbeat15@gmail.com だけ）。Vercel は `develop` ブランチを使う。
