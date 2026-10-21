@@ -28,6 +28,12 @@ foreach (getenv() as $name => $value) {
     }
 }
 
+// OGP 画像：Vercel の PHP には GD がないので、Vercel の画像生成（api/og.js）で描く（ADR 0014）
+if (! isset($childEnv['ogp.renderer'])) {
+    putenv('ogp.renderer=vercel');
+    $_ENV['ogp.renderer'] = $_SERVER['ogp.renderer'] = $childEnv['ogp.renderer'] = 'vercel';
+}
+
 // 画面一覧ナビ（確認用のモーダル。ADR 0009）は、Vercel の仮置きでは既定でオン（環境変数 screennav_enabled=false で消せる）
 if (! isset($childEnv['screennav.enabled'])) {
     putenv('screennav.enabled=true');

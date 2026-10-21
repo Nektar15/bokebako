@@ -3,15 +3,42 @@
   "functions": {
     "api/index.php": {
       "runtime": "vercel-php@0.6.2",
-      "maxDuration": 30
+      "maxDuration": 30,
+      "excludeFiles": "{node_modules/**,resources/og/**,docs/**,tests/**}"
+    },
+    "api/og.js": {
+      "includeFiles": "resources/og/**",
+      "memory": 1024,
+      "maxDuration": 15
     }
   },
   "outputDirectory": "public",
   "routes": [
-    { "src": "^/(index\\.php)?$", "dest": "/api/index.php" },
-    { "src": "^/\\.htaccess$", "status": 404 },
-    { "src": "^/assets/(.*)$", "headers": { "Cache-Control": "public, max-age=31536000, immutable" }, "continue": true },
-    { "handle": "filesystem" },
-    { "src": "^/(.*)$", "dest": "/api/index.php" }
+    {
+      "src": "^/og-image/(recruit|answer|result)/([A-Za-z0-9]+)\\.png$",
+      "dest": "/api/og.js?kind=$1&key=$2"
+    },
+    {
+      "src": "^/(index\\.php)?$",
+      "dest": "/api/index.php"
+    },
+    {
+      "src": "^/\\.htaccess$",
+      "status": 404
+    },
+    {
+      "src": "^/assets/(.*)$",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      },
+      "continue": true
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "^/(.*)$",
+      "dest": "/api/index.php"
+    }
   ]
 }
