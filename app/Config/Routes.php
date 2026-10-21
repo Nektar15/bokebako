@@ -48,7 +48,7 @@ $routes->group('host', ['namespace' => 'App\Controllers\Host'], static function 
     $routes->get('(:segment)', 'HostController::show/$1');                        // U-08
     $routes->post('(:segment)/recover', 'HostController::recover/$1');            // 合言葉で本人確認
     $routes->post('(:segment)/restore', 'HostController::restore/$1');            // localStorage のトークンで Cookie を復元（JS から。ADR 0004）
-    $routes->post('(:segment)/favorites/(:num)', 'HostController::favorite/$1/$2');
+    $routes->post('(:segment)/likes/(:num)', 'HostController::favorite/$1/$2'); // いいね（開催者だけ。ADR 0011）
     $routes->post('(:segment)/result', 'HostController::decide/$1');              // U-09 同意後の確定
     $routes->post('(:segment)/delete', 'HostController::delete/$1');
 });

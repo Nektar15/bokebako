@@ -16,7 +16,7 @@ use CodeIgniter\I18n\Time;
  * @property Time     $created_at
  * @property int      $id
  * @property string   $ip_hash         投稿元のIP（ハッシュ。上位管理者だけが見る：A-04）
- * @property bool     $is_favorite     開催者のお気に入り（非公開）
+ * @property bool     $is_favorite     開催者のいいね（非公開。仕様書の「開催者お気に入り」。ADR 0011）
  * @property bool     $is_mine         表示中のブラウザが投稿したものか（Service が付ける）
  * @property string   $odai            親のお題（管理画面用。Service が付ける）
  * @property int      $oogiri_id

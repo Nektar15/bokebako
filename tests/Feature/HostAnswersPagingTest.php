@@ -9,7 +9,7 @@ use CodeIgniter\I18n\Time;
 use Tests\Support\DatabaseTestCase;
 
 /**
- * U-08 開催者画面：回答が多くても古い回答まで選べる（100件ずつ「もっと見る」、お気に入りは上にまとめる。レビュー「取得上限」）
+ * U-08 開催者画面：回答が多くても古い回答まで選べる（100件ずつ「もっと見る」、いいねは上にまとめる。レビュー「取得上限」）
  *
  * @internal
  */
@@ -35,18 +35,18 @@ final class HostAnswersPagingTest extends DatabaseTestCase
     {
         $result = $this->asHost(self::TOKEN)->get('/host/' . self::SLUG);
         $result->assertOK();
-        $result->assertSee('お気に入り（1）');
-        $result->assertSee('BULK-200'); // 古いがお気に入りなので1ページ目に出る
+        $result->assertSee('いいねした回答（1）');
+        $result->assertSee('BULK-200'); // 古いがいいねしたので1ページ目に出る
         $result->assertSee('もっと見る');
         $result->assertDontSee('OLDEST-ANSWER');
-        $this->assertSame(HostService::PER_PAGE + 1, substr_count($result->response()->getBody(), 'name="ranks[]"'), '一覧100件＋お気に入り1件');
+        $this->assertSame(HostService::PER_PAGE + 1, substr_count($result->response()->getBody(), 'name="ranks[]"'), '一覧100件＋いいね1件');
     }
 
     public function testOldestAnswerCanBeReachedAndDecided(): void
     {
         $page3 = $this->asHost(self::TOKEN)->get('/host/' . self::SLUG . '?page=3');
         $page3->assertSee('OLDEST-ANSWER');
-        $page3->assertDontSee('お気に入り（');
+        $page3->assertDontSee('いいねした回答（');
         $page3->assertDontSee('もっと見る');
 
         $oldest = $this->db->table('answers')->where('body', 'OLDEST-ANSWER')->get()->getRow();

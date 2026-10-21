@@ -100,7 +100,7 @@ URLは外側で先に確定させる。管理画面のパスは推測困難な�
 | GET | `/o/{slug}/a/{answerId}` | 回答シェア用URL（回答シェアOGPの表示先。仕様に画面定義なし→「6. 未確定事項」を参照） |
 | GET | `/host/{slug}` | U-08 開催者専用画面 |
 | POST | `/host/{slug}/recover` | 合言葉による本人確認 |
-| POST | `/host/{slug}/favorites/{answerId}` | お気に入りの切り替え |
+| POST | `/host/{slug}/likes/{answerId}` | いいねの切り替え（開催者だけ。ADR 0011） |
 | POST | `/host/{slug}/result` | 結果の確定（U-09で同意したあと） |
 | POST | `/host/{slug}/delete` | 大喜利の削除 |
 | GET | `/about` `/terms` `/privacy` `/guidelines` | U-14〜U-17 |
@@ -209,13 +209,13 @@ Viewへ渡す値：`oogiri`、`remaining`、`answers[]`（`id`、`body`、`poste
 
 - 【外】開催中の表示：お題、開始・終了日時、残り時間、PV、回答数、回答一覧、募集URL
 - 【外】開催中の操作：Xで再募集、URLコピー、大喜利削除（確認ダイアログあり）
-- 【外】各回答のお気に入りボタン（非公開）
+- 【外】各回答のいいねボタン（開催者だけ・非公開。ADR 0011）
 - 【外】募集終了後の表示：「ベスト回答を選んでください」、選出期限の残り時間、1〜3位の枠
 - 【外】タップした順に順位が入り、再タップで解除する選択UI（1件だけでも確定可能）
 - 【外】「結果を発表する」でU-09を表示。選択0件のときは押せない
 - 【外】合言葉入力画面（トークンがないとき）とエラー表示
 - 【内】開催者の認証：トークンの照合、合言葉の照合と試行制限
-- 【内】お気に入りの保存、削除処理
+- 【内】いいねの保存、取り消し
 - 【内】状態による出し分け（開催中／選択待ち／確定後は結果ページへ）
 
 Viewへ渡す値：`oogiri`（`slug`、`odai`、`startsAt`、`endsAt`、`selectionDeadline`、`pv`、`answerCount`、`status`）、`answers[]`（`id`、`body`、`postedAt`、`isFavorite`）、`shareUrl`、`intentUrl`、`needsRecovery`、`errors[]`
@@ -232,7 +232,7 @@ Viewへ渡す値：`oogiri`（`slug`、`odai`、`startsAt`、`endsAt`、`selecti
 
 - 【外】結果発表の判子、お題、総回答数、募集期間
 - 【外】1位（大）、2位・3位のカード
-- 【外】「結果をXでシェアする」（1位の回答を含む投稿文）、「自分も大喜利を開催する」
+- 【外】「結果をXでシェアする」（1〜3位の回答を含む投稿文。ADR 0011）、「自分も大喜利を開催する」
 - 【外】全回答の一覧（シェア・通報ボタン、もっと見る）
 - 【外】広告枠、title／descriptionの自動設定
 - 【内】ページキャッシュの対象。結果用OGPを使用する

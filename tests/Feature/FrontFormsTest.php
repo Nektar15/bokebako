@@ -130,9 +130,9 @@ final class FrontFormsTest extends DatabaseTestCase
 
     public function testFavoriteToggles(): void
     {
-        $this->asHost()->post('/host/k7Qm2xPz/favorites/90412', [])->assertRedirect();
+        $this->asHost()->post('/host/k7Qm2xPz/likes/90412', [])->assertRedirect();
         $this->seeInDatabase('answers', ['id' => 90412, 'is_favorite' => 1]);
-        $this->asHost()->post('/host/k7Qm2xPz/favorites/90412', [])->assertRedirect();
+        $this->asHost()->post('/host/k7Qm2xPz/likes/90412', [])->assertRedirect();
         $this->seeInDatabase('answers', ['id' => 90412, 'is_favorite' => 0]);
     }
 

@@ -30,8 +30,10 @@
 .p-host__body { display: block; font-size: 15.5px; font-weight: 700; line-height: 1.6; overflow-wrap: anywhere; }
 .p-host__item-meta { display: flex; justify-content: space-between; align-items: center; padding: 0 6px 6px 14px; }
 .p-host__item > .p-host__body { padding: 14px 14px 4px; }
-.p-host__fav { width: var(--tap-min); height: var(--tap-min); border: 0; background: transparent; font-size: 22px; color: var(--line); cursor: pointer; }
-.p-host__fav.is-on { color: var(--kin); text-shadow: 0 0 0 var(--ink); }
+.p-host__like { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap-min); padding: 0 14px; border: 1.5px solid var(--line); border-radius: var(--radius-pill); background: var(--white); color: var(--ink-sub); font: inherit; font-size: 13px; font-weight: 900; cursor: pointer; }
+.p-host__like .c-icon-heart { fill: none; }
+.p-host__like.is-on { border-color: var(--shu); background: var(--shu); color: var(--white); }
+.p-host__like.is-on .c-icon-heart { fill: currentColor; }
 .p-host__pick { display: flex; align-items: flex-start; gap: 12px; padding: 14px; cursor: pointer; border-radius: 16px; }
 .p-host__pick-badge { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; border: var(--border); background: var(--white); color: var(--white); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 12px; }
 .p-host__pick-body { display: flex; flex-direction: column; gap: 4px; }
