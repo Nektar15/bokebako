@@ -1,25 +1,33 @@
 <?php
 /**
- * 画面一覧ナビ（確認用。ADR 0009）。screenNav.enabled のときだけ画面の最上部に出す。本番では出ない
+ * 画面一覧ナビ（確認用。ADR 0009）。screenNav.enabled のときだけ、画面の右下に「全画面」ボタンを出す。本番では出ない
  *
- * 値は受け取らない（screen_nav() ヘルパーから読む）。JS があれば選んだ時点で移動、なければ「移動」ボタンで送る。
+ * 値は受け取らない（screen_nav() ヘルパーから読む）。開け閉めは <details>、移動はふつうのリンクなので JS がなくても動く。
+ * JS があれば、背景のクリックと Esc でも閉じる（components/screen-nav.js）。
  */
 $nav = screen_nav();
 ?>
 <?php if ($nav !== null): ?>
-<form class="c-screen-nav" method="get" action="<?= esc($nav['action'], 'attr') ?>" data-js-screen-nav>
-<span class="c-screen-nav__tag">確認用</span>
-<label class="u-visually-hidden" for="screen-nav-to">画面を選んで移動</label>
-<select class="c-screen-nav__select" id="screen-nav-to" name="to" data-js-screen-nav-select>
-<option value="" selected disabled>全画面へ移動…</option>
+<details class="c-screen-nav" data-js-screen-nav>
+<summary class="c-screen-nav__open"><span class="c-screen-nav__tag">確認用</span>全画面</summary>
+<div class="c-screen-nav__backdrop" data-js-screen-nav-close></div>
+<div class="c-screen-nav__panel" role="dialog" aria-label="全画面へ移動">
+<div class="c-screen-nav__head">
+<p class="c-screen-nav__title">全画面へ移動<span class="c-screen-nav__sub">開発用データの大喜利で開きます</span></p>
+<button type="button" class="c-screen-nav__close" aria-label="閉じる" data-js-screen-nav-close>×</button>
+</div>
+<div class="c-screen-nav__body">
 <?php foreach ($nav['groups'] as $group): ?>
-<optgroup label="<?= esc($group['label'], 'attr') ?>">
+<section class="c-screen-nav__group">
+<h2 class="c-screen-nav__group-title"><?= esc($group['label']) ?></h2>
+<ul class="c-screen-nav__list">
 <?php foreach ($group['options'] as $option): ?>
-<option value="<?= esc((string) $option['index'], 'attr') ?>"><?= esc($option['label']) ?><?= $option['note'] !== '' ? '（' . esc($option['note']) . '）' : '' ?></option>
+<li><a class="c-screen-nav__link" href="<?= esc($option['href'], 'attr') ?>"><span class="c-screen-nav__label"><?= esc($option['label']) ?></span><?php if ($option['note'] !== ''): ?><span class="c-screen-nav__note"><?= esc($option['note']) ?></span><?php endif; ?></a></li>
 <?php endforeach; ?>
-</optgroup>
+</ul>
+</section>
 <?php endforeach; ?>
-</select>
-<button type="submit" class="c-screen-nav__go" data-js-hide-with-js>移動</button>
-</form>
+</div>
+</div>
+</details>
 <?php endif; ?>
