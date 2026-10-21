@@ -30,7 +30,10 @@ develop で `cp .env.example .env && composer install && composer check` を通�
 
 ## 残課題
 
-### 1. Vercel に上げて触り心地を確かめる（Masato さんの作業）
+### 1. Vercel で触り心地を確かめる
+
+- 公開済み：`https://bokebako.vercel.app`（Vercel：lunaticbeat15@gmail.com のチーム「Goma's projects」、プロジェクト `bokebako`。Production は `develop` を追う＝develop に push すると本番に入る）
+- 2026-10-21 時点で確認済み：`/about`、回答画面、結果画面、管理画面ログインが動き、開発用データが入っている
 
 - 設定と手順はできている：`docs/vercel.md`（Vercel で Import → 環境変数 → Deploy）
 - GitHub は `https://github.com/Nektar15/bokebako`（全ブランチ push 済み。コミットの作者は Claude と lunaticbeat15@gmail.com だけにする決まり）。Vercel は **lunaticbeat15@gmail.com のアカウント（チーム「Goma's projects」、Hobby）**で、このリポジトリの `develop` を読み込む
