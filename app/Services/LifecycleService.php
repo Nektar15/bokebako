@@ -68,7 +68,7 @@ final class LifecycleService
                 continue;
             }
             service('pageCache')->purgeOogiri($oogiri->slug);
-            service('ogp')->generateResult($this->oogiris->find($oogiri->id), null);
+            service('ogp')->generateResult($this->oogiris->find($oogiri->id));
             service('adminLog')->record('oogiri', $oogiri->id, '選出期限を過ぎたため結果未選出で確定', AdminLogService::ACTOR_AUTO);
             $count++;
         }
@@ -115,7 +115,7 @@ final class LifecycleService
             $decided = in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true);
 
             if ($decided && ! $ogp->exists(OgpKind::Result, $oogiri->slug)) {
-                $count += $ogp->generateResult($oogiri, $ogp->firstRanked($oogiri)) ? 1 : 0;
+                $count += $ogp->generateResult($oogiri) ? 1 : 0;
             }
         }
 

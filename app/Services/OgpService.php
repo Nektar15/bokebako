@@ -89,11 +89,13 @@ final class OgpService
     }
 
     /**
-     * 結果用（確定時）
+     * 結果用（確定時）。1〜3位を載せる（ADR 0011）
      */
-    public function generateResult(Oogiri $oogiri, ?Answer $first, string $actor = AdminLogService::ACTOR_AUTO): bool
+    public function generateResult(Oogiri $oogiri, string $actor = AdminLogService::ACTOR_AUTO): bool
     {
-        return $this->run(OgpKind::Result, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->result($oogiri->odai, $first?->body ?? '（選出なし）', $oogiri->answer_count));
+        $ranked = array_map(static fn (Answer $a): array => ['rank' => (int) $a->rank, 'body' => $a->body], $this->ranked($oogiri));
+
+        return $this->run(OgpKind::Result, $oogiri->id, $oogiri->slug, '#' . $oogiri->id . ' ' . $oogiri->odai, $actor, fn () => $this->image->result($oogiri->odai, $ranked, $oogiri->answer_count));
     }
 
     /**
@@ -113,7 +115,17 @@ final class OgpService
      */
     public function firstRanked(Oogiri $oogiri): ?Answer
     {
-        return $this->answers->where('oogiri_id', $oogiri->id)->where('rank IS NOT NULL')->where('status', AnswerStatus::Visible->value)->orderBy('rank', 'ASC')->first();
+        return $this->ranked($oogiri)[0] ?? null;
+    }
+
+    /**
+     * 結果画像・結果シェアに載せる1〜3位：順位のついた公開中の回答（順位の若い順。U-10 の表示と同じ）
+     *
+     * @return list<Answer>
+     */
+    public function ranked(Oogiri $oogiri): array
+    {
+        return $this->answers->where('oogiri_id', $oogiri->id)->where('rank IS NOT NULL')->where('status', AnswerStatus::Visible->value)->orderBy('rank', 'ASC')->findAll(3);
     }
 
     /**
@@ -154,7 +166,7 @@ final class OgpService
         $this->generateRecruit($oogiri);
 
         if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
-            $this->generateResult($oogiri, $this->firstRanked($oogiri));
+            $this->generateResult($oogiri);
         }
     }
 
@@ -166,7 +178,7 @@ final class OgpService
         $this->remove(OgpKind::Answer, (string) $answer->id);
 
         if (in_array($oogiri->status(), [OogiriStatus::Decided, OogiriStatus::NoResult], true)) {
-            $this->generateResult($oogiri, $this->firstRanked($oogiri));
+            $this->generateResult($oogiri);
         }
     }
 
@@ -317,7 +329,7 @@ final class OgpService
                 $oogiri = $this->findOogiri($target);
                 $ok     = $kind === OgpKind::Recruit
                     ? $this->generateRecruit($oogiri, $actor)
-                    : $this->generateResult($oogiri, $this->firstRanked($oogiri), $actor);
+                    : $this->generateResult($oogiri, $actor);
             }
         } catch (NotFoundException) {
             throw new ValidationException(['target' => '対象が見つかりません']);

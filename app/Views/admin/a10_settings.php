@@ -62,7 +62,7 @@
 
 <section class="c-panel p-settings__section">
 <div class="p-settings__section-head"><h2 class="c-panel__title c-panel__title--lg">Xシェアの投稿文</h2><span class="p-settings__ref">U-03 / U-06 / U-10</span></div>
-<p class="p-settings__vars">使える変数：<code class="c-code">{odai}</code><code class="c-code">{answer}</code><code class="c-code">{first}</code><code class="c-code">{url}</code></p>
+<p class="p-settings__vars">使える変数：<code class="c-code">{odai}</code><code class="c-code">{answer}</code><code class="c-code">{ranks}</code><code class="c-code">{first}</code><code class="c-code">{url}</code></p>
 <?= part('partials/admin_setting', ['type' => 'textarea', 'name' => '募集シェア', 'desc' => '使える変数は上の一覧を参照', 'default' => $defaultLabels['tpl'], 'key' => 'tpl_recruit', 'value' => $values['tpl_recruit'], 'error' => $errors['tpl_recruit'] ?? '', 'extra' => '', 'inputs' => []]) ?>
 <?= part('partials/admin_setting', ['type' => 'textarea', 'name' => '回答シェア', 'desc' => '使える変数は上の一覧を参照', 'default' => $defaultLabels['tpl'], 'key' => 'tpl_answer', 'value' => $values['tpl_answer'], 'error' => $errors['tpl_answer'] ?? '', 'extra' => '', 'inputs' => []]) ?>
 <?= part('partials/admin_setting', ['type' => 'textarea', 'name' => '結果シェア', 'desc' => '使える変数は上の一覧を参照', 'default' => $defaultLabels['tpl'], 'key' => 'tpl_result', 'value' => $values['tpl_result'], 'error' => $errors['tpl_result'] ?? '', 'extra' => '', 'inputs' => []]) ?>

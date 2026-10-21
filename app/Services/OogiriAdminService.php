@@ -278,10 +278,10 @@ final class OogiriAdminService
         if (! in_array($oogiri->status(), self::DECIDABLE_BY_ADMIN, true)) {
             throw new AppException(ErrorCode::Forbidden, '非表示・削除中の大喜利のベスト回答は変更できません');
         }
-        $ids   = HostService::normalizeIds($answerIds);
-        $first = $this->host->saveRanks($oogiri, $ids, [$oogiri->status()]);
+        $ids = HostService::normalizeIds($answerIds);
+        $this->host->saveRanks($oogiri, $ids, [$oogiri->status()]);
         $actor = service('currentAdmin')->get()->name;
-        service('ogp')->generateResult($this->find($id), $first, $actor);
+        service('ogp')->generateResult($this->find($id), $actor);
         service('adminLog')->record('oogiri', $id, '代理でベスト回答を変更（' . count($ids) . '件）');
     }
 

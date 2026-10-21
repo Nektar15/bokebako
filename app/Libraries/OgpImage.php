@@ -77,17 +77,37 @@ final class OgpImage
     }
 
     /**
-     * 結果用：お題、1位の回答、回答数、ロゴ、「結果発表」
+     * 結果用：お題、1〜3位の回答、回答数、ロゴ、「結果発表」（ADR 0011）
+     *
+     * 1位だけなら大きく1件。2位・3位があれば、1位を2行まで、2位・3位を1行ずつ（入り切らなければ「…」）
+     *
+     * @param list<array{rank: int, body: string}> $ranked 順位の若い順（空なら「選出なし」）
      */
-    public function result(string $odai, string $first, int $answerCount): GdImage
+    public function result(string $odai, array $ranked, int $answerCount): GdImage
     {
         $img = $this->canvas(OgpKind::Result);
         $this->brand($img);
         $this->stamp($img, self::WIDTH - 140, 80, '結果発表');
         $this->text($img, $this->fit('お題：' . $odai, 30, self::WIDTH - 160), 80, 190, 30, self::SUB);
-        $this->circle($img, 110, 300, 30, self::SHU, '1位', 22, self::CARD);
-        $this->paragraph($img, $first, 170, 270, 950, 220, 60, 34, self::INK);
-        $this->text($img, "全{$answerCount}回答", 80, 580, 28, self::INK);
+
+        if ($ranked === []) {
+            $this->paragraph($img, '（選出なし）', 170, 270, 950, 220, 60, 34, self::SUB);
+        } elseif (count($ranked) === 1) {
+            $this->circle($img, 110, 300, 30, self::SHU, $ranked[0]['rank'] . '位', 22, self::CARD);
+            $this->paragraph($img, $ranked[0]['body'], 170, 270, 950, 220, 60, 34, self::INK);
+        } else {
+            $first = array_shift($ranked);
+            $this->circle($img, 110, 268, 30, self::SHU, $first['rank'] . '位', 22, self::CARD);
+            $this->paragraph($img, $first['body'], 170, 238, 950, 132, 44, 30, self::INK);
+            imageline($img, 80, 388, self::WIDTH - 80, 388, $this->color($img, self::INK));
+
+            foreach ($ranked as $i => $row) {
+                $cy = 432 + $i * 64;
+                $this->circle($img, 110, $cy, 24, self::INK, $row['rank'] . '位', 17, self::CARD);
+                $this->text($img, $this->fit(str_replace(["\r\n", "\r", "\n"], ' ', $row['body']), 30, 950), 160, $cy + 11, 30, self::INK);
+            }
+        }
+        $this->text($img, "全{$answerCount}回答", 80, 590, 26, self::INK);
 
         return $img;
     }

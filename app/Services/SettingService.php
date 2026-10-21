@@ -79,7 +79,7 @@ final class SettingService
         'hashtag'           => 'ぼけばこ',
         'tpl_recruit'       => "24時間だけ大喜利やります！\nお題：{odai}\n{url}",
         'tpl_answer'        => "お題：{odai}\n俺の回答：{answer}\n{url}",
-        'tpl_result'        => "結果発表！\nお題：{odai}\n1位：{first}\n{url}",
+        'tpl_result'        => "結果発表！\nお題：{odai}\n{ranks}\n{url}",
     ];
 
     /**
