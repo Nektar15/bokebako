@@ -5,11 +5,13 @@
  * resources/og/render.cjs（app/Libraries/OgpImage.php と同じ配置）で描く。本番（Xserver）では使わない。
  */
 // 読み込みに失敗しても関数ごと落とさず、原因を返す（Vercel のログを見なくても分かるように）
+// @vercel/og は ES モジュールなので import() で読む（Vercel の Node では require できない）
 let loaded = null;
-function load() {
+async function load() {
   if (loaded === null) {
     try {
-      loaded = { ImageResponse: require('@vercel/og').ImageResponse, build: require('../resources/og/render.cjs').build };
+      const og = await import('@vercel/og');
+      loaded = { ImageResponse: og.ImageResponse, build: require('../resources/og/render.cjs').build };
     } catch (e) {
       loaded = { error: e };
     }
@@ -33,7 +35,7 @@ module.exports = async (req, res) => {
   };
 
   if (!KINDS.includes(kind) || !/^[A-Za-z0-9]{1,32}$/.test(key)) return fallback();
-  const { ImageResponse, build, error } = load();
+  const { ImageResponse, build, error } = await load();
   if (error) {
     console.error('OGP の生成の準備に失敗', error);
     res.statusCode = 500;
