@@ -28,10 +28,21 @@ foreach (getenv() as $name => $value) {
     }
 }
 
-// 画面一覧ナビ（確認用のプルダウン。ADR 0009）は、Vercel の仮置きでは既定でオン（環境変数 screennav_enabled=false で消せる）
+// 画面一覧ナビ（確認用のモーダル。ADR 0009）は、Vercel の仮置きでは既定でオン（環境変数 screennav_enabled=false で消せる）
 if (! isset($childEnv['screennav.enabled'])) {
     putenv('screennav.enabled=true');
     $_ENV['screennav.enabled'] = $_SERVER['screennav.enabled'] = $childEnv['screennav.enabled'] = 'true';
+}
+
+// CSS・JS の URL につける版（?v=）。ふだんはファイルの更新日時だが、Vercel ではデプロイしても更新日時が変わらず、
+// 1年キャッシュされた古い CSS がそのまま使われてしまう。デプロイごとに変わる値（コミット・デプロイの ID）にする
+if (! isset($childEnv['app.assetVersion'])) {
+    $assetVersion = substr((string) (getenv('VERCEL_GIT_COMMIT_SHA') ?: getenv('VERCEL_DEPLOYMENT_ID') ?: getenv('VERCEL_URL') ?: ''), 0, 16);
+
+    if ($assetVersion !== '') {
+        putenv('app.assetVersion=' . $assetVersion);
+        $_ENV['app.assetVersion'] = $_SERVER['app.assetVersion'] = $childEnv['app.assetVersion'] = $assetVersion;
+    }
 }
 
 $root     = dirname(__DIR__);

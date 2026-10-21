@@ -56,8 +56,10 @@ final class ScreenNavTest extends DatabaseTestCase
         config(ScreenNav::class)->enabled = true;
         $result                           = $this->get('/');
         $result->assertSee('全画面へ移動');
-        $result->assertSee('U-12 結果未選出');
-        $result->assertSee('A-10 運用設定');
+        // 画面 ID と名前は分けて表示する
+        $this->assertStringContainsString('<span class="c-screen-nav__id">U-12</span>', (string) $result->getBody());
+        $result->assertSee('結果未選出');
+        $result->assertSee('運用設定');
         // そのまま開ける画面はふつうのリンク、開催者として開く画面は /_screens/go を通る
         $this->assertSame(site_url('o/Bx2gHj8k'), $this->hrefOf('U-12 結果未選出'));
         $this->assertStringContainsString('_screens/go?to=', $this->hrefOf('U-03 開催完了'));
