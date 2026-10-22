@@ -4,7 +4,7 @@
 
 | 項目 | Vercel での扱い | 本番との違い |
 |---|---|---|
-| データベース | SQLite を `/tmp` に置く。インスタンスが起きたときに開発用データ（DevSeeder）を入れる | **数分〜数時間でデータが消えて最初の状態に戻る**。アクセスが別のインスタンスに振られると、別のデータに見えることがある |
+| データベース | **推奨：外部の MySQL 互換 DB**（下の「2-2」。ADR 0015）。全インスタンスで同じデータを使い、消えない。最初の1回だけ開発用データを入れる。<br>SQLite（`/tmp`）のままにもできるが、インスタンスごとに別の DB になり、数分でデータが消える | SQLite のままだと、**同時アクセスの多くが 404 になる**（2026-10-22 の実測で 40 件中 29 件）。X のカード・回答リンク・開催者ページが開けない |
 | 書き込み（キャッシュ・セッション・ログ） | `/tmp/bokebako` | 上と同じく消える。消えるとログインし直しになる |
 | cron | 1分に1回まで、リクエストのついでに `cron:minute`（S-01・S-02・S-04・S-05）を動かす | アクセスがないと進まない。日次集計（S-06）と OGP の取りこぼし（S-07）は動かない |
 | OGP 画像 | Vercel の PHP に GD がないので、Node の関数 `api/og.js`（@vercel/og）で同じデザインを描く（ADR 0014） | 本番は PHP の GD。行の折り返しが少し違うことがある |
@@ -43,6 +43,31 @@ Vercel の Import 画面は GitHub の既定ブランチを読み込む。main �
 | `devSeeder_adminPassword` | 管理画面のパスワード（**必ず設定する**。設定しないと DevSeeder の公開されたパスワードで誰でも入れる） |
 
 4. 「Deploy」を押す。数分で `https://<プロジェクト名>.vercel.app` が開く
+
+## 2-2. 外部 DB につなぐ（推奨。ADR 0015）
+
+SQLite（`/tmp`）は Vercel のインスタンスごとに別の DB になるので、作った大喜利がほかの人や X のクローラーから見えない。
+MySQL 互換の外部 DB を1つ用意し、全インスタンスでそれを使う。例として TiDB Cloud Serverless（無料枠あり。MySQL 互換、TLS 必須）の手順を書く。Aiven for MySQL などでも、接続情報の入れ方は同じ。
+
+1. https://tidbcloud.com でアカウントを作り、Serverless のクラスターを作る（リージョンは Vercel の関数に近い場所。今は `iad1`＝米国東部で動いている）
+2. 「Connect」で接続情報（Host・Port・User・Password）を出し、データベース `bokebako` を作る（`CREATE DATABASE bokebako;`）
+3. Vercel の Environment Variables を次のとおりにする（SQLite の行は消すか書き換える）
+
+| 名前 | 値 |
+|---|---|
+| `database_default_DBDriver` | `MySQLi` |
+| `database_default_hostname` | 接続情報の Host |
+| `database_default_port` | 接続情報の Port（TiDB は `4000`） |
+| `database_default_username` | 接続情報の User |
+| `database_default_password` | 接続情報の Password |
+| `database_default_database` | `bokebako` |
+| `database_default_sslCA` | `/etc/pki/tls/certs/ca-bundle.crt`（Vercel の PHP の CA 証明書。TLS 必須の DB だけ） |
+
+4. Redeploy する。最初のアクセスで `vercel:prepare` がマイグレーションと開発用データを入れる（2回目からはマイグレーションの確認だけ。データは消えない）
+5. 確かめる：大喜利を1つ作り、別のブラウザで開く。同じ URL へ同時に何十件か送っても 404 にならないこと
+
+- 開発用データを最初の状態に戻したいときは、DB の中身を空にして（テーブルを消す）Redeploy する
+- cron の代わり（1分に1回、アクセスのついで）は、インスタンスの数だけ重なって動くことがある。各処理は状態を条件にして更新するので、二重に処理はされない（ADR 0006）
 
 ## 3. 確かめること
 

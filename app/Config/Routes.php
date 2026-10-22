@@ -65,6 +65,7 @@ $routes->group('api/v1', ['namespace' => 'App\Controllers\Api\V1', 'filter' => '
     $routes->get('o/(:segment)/status', 'StatusController::show/$1');   // 残り時間・回答数・状態
     $routes->post('events', 'EventController::create');                 // 計測（S-06）
     $routes->post('reports', 'ReportController::create');               // 通報（S-04）
+    $routes->post('hosted', 'HostedController::index');                 // このブラウザで開催した大喜利（D-02、ADR 0015）
     $routes->get('ads', 'AdController::index');                         // 広告枠（キャッシュ配信のページ用）
     $routes->get('ogp/(:segment)/(:segment)', 'OgpController::show/$1/$2'); // OGP 画像の中身（Vercel の画像生成用。ADR 0014）
 });

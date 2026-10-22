@@ -150,6 +150,8 @@ use App\Entities\Oogiri;
 </form>
 </section>
 <?php endif; ?>
+
+<?= part('partials/hosted_list', ['except' => $oogiri->slug]) ?>
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>

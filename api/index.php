@@ -10,7 +10,8 @@ declare(strict_types=1);
  *
  * 1. 書き込み先を /tmp にする（プロジェクトのフォルダは読み取り専用）。環境変数 BOKEBAKO_WRITABLE → Config\Paths
  * 2. 利用者の IP を Vercel のヘッダーから取る（PHP から見える接続元は 127.0.0.1 のため。レート制限が全員共通にならないように）
- * 3. DB（SQLite、/tmp）がなければ、マイグレーションと開発用データを入れる。/tmp は数分〜数時間で消えるので、そのたびに入れ直しになる
+ * 3. DB の準備。SQLite（/tmp）なら、なければマイグレーションと開発用データを入れる（/tmp は数分〜数時間で消える）。
+ *    外部 DB（ADR 0015）なら、インスタンスごとに1回 vercel:prepare（マイグレーション、空のときだけ開発用データ）
  * 4. cron の代わりに、1分に1回まで、リクエストのついでに cron:minute（S-01・S-02・S-04・S-05）を動かす
  *
  * 環境変数（Vercel の Project Settings → Environment Variables。名前の「.」は「_」にする）は docs/vercel.md
@@ -116,9 +117,16 @@ if ($lock !== false && flock($lock, LOCK_EX)) {
     // 3. DB の準備（このインスタンスで初めてのリクエストのとき）
     $database = $childEnv['database.default.database'] ?? '';
 
-    if ($database !== '' && ! is_file($database)) {
-        $spark('migrate', '--all', '-n', 'App');
-        $spark('db:seed', 'DevSeeder');
+    if (($childEnv['database.default.DBDriver'] ?? '') === 'SQLite3') {
+        // SQLite（/tmp）：インスタンスごとに別の DB になり、数分で消える（ADR 0008。ADR 0015 で外部 DB を推奨）
+        if ($database !== '' && ! is_file($database)) {
+            $spark('migrate', '--all', '-n', 'App');
+            $spark('db:seed', 'DevSeeder');
+        }
+    } elseif (! is_file($writable . '/.db-prepared')) {
+        // 外部 DB（全インスタンスで共有。ADR 0015）：マイグレーションを最新にし、空のときだけ開発用データを入れる
+        $spark('vercel:prepare');
+        touch($writable . '/.db-prepared');
     }
 
     // 4. cron の代わり（1分に1回まで）

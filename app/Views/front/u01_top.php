@@ -84,6 +84,8 @@ use App\Libraries\Passphrase;
 <?= $this->include('partials/doc_sheet') ?>
 </section>
 
+<?= part('partials/hosted_list') ?>
+
 <section class="l-section" id="howto">
 <h2 class="p-top__h2">あそびかた</h2>
 <ol class="p-top__steps">

@@ -15,6 +15,7 @@ import { initAdSlots } from './components/ad-slot.js';
 import { initReveal } from './components/reveal.js';
 import { initDocSheet } from './components/doc-sheet.js';
 import { initWebShare } from './components/web-share.js';
+import { initHostedList } from './components/hosted-list.js';
 
 const root = document;
 
@@ -31,3 +32,4 @@ initAdSlots(root);
 initReveal(root);
 initDocSheet(root);
 initWebShare(root);
+initHostedList(root);

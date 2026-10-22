@@ -201,5 +201,13 @@ class Database extends Config
         if (ENVIRONMENT === 'testing') {
             $this->defaultGroup = 'tests';
         }
+
+        // TLS が必須の外部 DB（Vercel の仮置きでつなぐ TiDB Cloud など。ADR 0015）。CA 証明書のパスを .env の
+        // database.default.sslCA に書いたときだけ、証明書を確かめる TLS でつなぐ（本番の Xserver では設定しない）
+        $sslCa = (string) env('database.default.sslCA', '');
+
+        if ($sslCa !== '') {
+            $this->default['encrypt'] = ['ssl_ca' => $sslCa, 'ssl_verify' => true];
+        }
     }
 }
