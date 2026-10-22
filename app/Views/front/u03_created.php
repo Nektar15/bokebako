@@ -27,6 +27,7 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_create_complete', 'params' => ['oogiri' => $oogiri->slug], 'once' => $oogiri->slug]) ?>
 <section class="l-section p-created__hero">
 <span class="c-stamp c-stamp--pop">開催<br>中</span>
 <div>
@@ -40,7 +41,7 @@ use App\Entities\Oogiri;
 </section>
 
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($intentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_recruit" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>Xで回答を募集する</a>
+<?= part('partials/share_buttons', ['intentUrl' => $intentUrl, 'label' => 'Xで回答を募集する', 'track' => 'share_recruit', 'slug' => $oogiri->slug, 'url' => $shareUrl, 'title' => 'お題：' . $oogiri->odai]) ?>
 <div class="p-created__url">
 <label class="u-visually-hidden" for="share-url">募集URL</label>
 <input class="c-input u-mono p-created__url-input" id="share-url" type="text" readonly value="<?= esc($shareUrl, 'attr') ?>">

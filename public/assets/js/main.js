@@ -13,6 +13,8 @@ import { initScreenNav } from './components/screen-nav.js';
 import { initAdminMenu } from './components/admin-menu.js';
 import { initAdSlots } from './components/ad-slot.js';
 import { initReveal } from './components/reveal.js';
+import { initDocSheet } from './components/doc-sheet.js';
+import { initWebShare } from './components/web-share.js';
 
 const root = document;
 
@@ -27,3 +29,5 @@ initScreenNav(root);
 initAdminMenu(root);
 initAdSlots(root);
 initReveal(root);
+initDocSheet(root);
+initWebShare(root);

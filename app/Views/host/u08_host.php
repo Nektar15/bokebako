@@ -36,6 +36,7 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'organizer_page_view', 'params' => ['oogiri' => $oogiri->slug]]) ?>
 <div class="p-host__bar">
 <?= $this->include('partials/icon_lock') ?>
 <span>開催者ページ</span>
@@ -65,7 +66,7 @@ use App\Entities\Oogiri;
 
 <?php if ($isOpen): ?>
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($intentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_recruit" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>Xで再募集する</a>
+<?= part('partials/share_buttons', ['intentUrl' => $intentUrl, 'label' => 'Xで再募集する', 'track' => 'share_recruit', 'slug' => $oogiri->slug, 'url' => $shareUrl, 'title' => 'お題：' . $oogiri->odai]) ?>
 <div class="p-host__url">
 <label class="u-visually-hidden" for="share-url">募集URL</label>
 <input class="c-input u-mono p-host__url-input" id="share-url" type="text" readonly value="<?= esc($shareUrl, 'attr') ?>">

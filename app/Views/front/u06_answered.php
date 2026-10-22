@@ -25,6 +25,7 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'answer_complete', 'params' => ['oogiri' => $oogiri->slug], 'once' => (string) $answer->id]) ?>
 <section class="l-section p-answered__hero">
 <svg class="p-answered__box" width="120" height="104" viewBox="0 0 120 104" aria-hidden="true">
 <g class="c-stamp-drop"><path d="M42 58 L46 8 L80 12 L76 58" fill="#F2C230" stroke="#1D1A16" stroke-width="3" stroke-linejoin="round"></path><path d="M52 24 H70 M51 34 H66" stroke="#1D1A16" stroke-width="3" stroke-linecap="round"></path></g>
@@ -43,7 +44,7 @@ use App\Entities\Oogiri;
 </section>
 
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($answerIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_answer" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>" data-js-track-answer="<?= $answer->id ?>"><?= $this->include('partials/icon_share') ?>この回答をXでシェアする</a>
+<?= part('partials/share_buttons', ['intentUrl' => $answerIntentUrl, 'label' => 'この回答をXでシェアする', 'track' => 'share_answer', 'slug' => $oogiri->slug, 'answerId' => $answer->id, 'url' => site_url('o/' . $oogiri->slug . '/a/' . $answer->id), 'title' => 'お題：' . $oogiri->odai]) ?>
 <div class="p-answered__pair">
 <a class="c-button c-button--secondary p-answered__half" href="<?= esc($oogiriIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_recruit" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>">大喜利だけ<br>シェアする</a>
 <a class="c-button c-button--secondary c-button--accent p-answered__half" href="<?= site_url('o/' . $oogiri->slug . '/answers') ?>">みんなの回答<br>を見る（<?= esc((string) $oogiri->answer_count) ?>）</a>

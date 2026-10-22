@@ -43,7 +43,7 @@ use App\Entities\Oogiri;
 <h1 class="p-list__h1">みんなのボケ</h1>
 <nav class="c-segment" aria-label="並び順">
 <?php foreach ($sorts as $key => $label): ?>
-<a class="c-segment__item<?= $key === $sort ? ' is-current' : '' ?>" href="<?= site_url('o/' . $oogiri->slug . '/answers' . ($key === 'new' ? '' : '?sort=' . $key)) ?>"<?= $key === $sort ? ' aria-current="true"' : '' ?> data-js-track="sort_change" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>" data-js-track-from="<?= esc($key, 'attr') ?>"><?= esc($label) ?></a>
+<a class="c-segment__item<?= $key === $sort ? ' is-current' : '' ?>" href="<?= site_url('o/' . $oogiri->slug . '/answers' . ($key === 'new' ? '' : '?sort=' . $key)) ?>"<?= $key === $sort ? ' aria-current="true"' : '' ?> data-js-ga="sort_change" data-js-ga-param-sort="<?= esc($key, 'attr') ?>" data-js-ga-param-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= esc($label) ?></a>
 <?php endforeach; ?>
 </nav>
 </div>

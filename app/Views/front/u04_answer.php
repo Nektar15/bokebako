@@ -13,6 +13,8 @@ use App\Entities\Oogiri;
  * @var array<string, string>                      $errors          項目名 => 文言。'_' は項目に属さないエラー
  * @var array{body:string}                         $old
  * @var Answer|null                                $sharedAnswer    回答シェア用URLで開いたとき、添えて表示する回答
+ * @var bool                                       $isHost          開催者本人が開いている（BUG-003）
+ * @var string                                     $recruitIntent   開催者本人のときだけ、募集シェアの Web Intent URL
  * @var array{top: array|null, bottom: array|null} $ads
  * @var string                                     $ogpUrl  OGP 画像の URL（募集用。回答シェア用URLなら回答用）
  * @var string                                     $captcha CAPTCHA のサイトキー（空なら出さない）
@@ -24,7 +26,7 @@ use App\Entities\Oogiri;
 <title><?= esc($oogiri->odai) ?>｜ぼけばこ</title>
 <meta name="description" content="24時間限定の大喜利「<?= esc($oogiri->odai, 'attr') ?>」に、登録なしで匿名回答できます。">
 <meta property="og:title" content="<?= esc($oogiri->odai, 'attr') ?>">
-<meta property="og:description" content="24時間限定 回答募集中。登録なしでボケられます。">
+<meta property="og:description" content="<?= $sharedAnswer !== null ? esc(mb_strimwidth($sharedAnswer->body, 0, 120, '…'), 'attr') : '24時間限定 回答募集中。登録なしでボケられます。' ?>">
 <meta property="og:image" content="<?= esc($ogpUrl, 'attr') ?>">
 <meta property="og:url" content="<?= esc(current_url(), 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
@@ -36,6 +38,9 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_page_view', 'params' => ['oogiri' => $oogiri->slug, 'status' => 'open']]) ?>
+<?php if ($sharedAnswer !== null): ?><?= part('partials/ga_event', ['name' => 'answer_page_view', 'params' => ['oogiri' => $oogiri->slug, 'answer_id' => $sharedAnswer->id]]) ?><?php endif; ?>
+<?php if ($errors !== []): ?><?= part('partials/ga_event', ['name' => 'answer_error', 'params' => ['oogiri' => $oogiri->slug, 'fields' => implode(',', array_keys($errors))]]) ?><?php endif; ?>
 <section class="l-section p-answer__head">
 <div class="p-answer__status">
 <span class="c-tag c-tag--ink p-answer__live"><span class="p-answer__dot" aria-hidden="true"></span>回答募集中</span>
@@ -44,6 +49,16 @@ use App\Entities\Oogiri;
 <?= part('partials/odai_card', ['odai' => $oogiri->odai, 'size' => 'lg']) ?>
 <?= part('partials/timer', ['slug' => $oogiri->slug, 'remaining' => $remaining, 'progressPercent' => $progressPercent]) ?>
 </section>
+
+<?php if ($isHost): ?>
+<section class="l-section">
+<div class="c-card c-card--raised p-answer__host">
+<p class="p-answer__host-title">あなたが開催した大喜利です</p>
+<?= part('partials/share_buttons', ['intentUrl' => $recruitIntent, 'label' => 'Xで回答を募集する', 'track' => 'share_recruit', 'slug' => $oogiri->slug, 'url' => site_url('o/' . $oogiri->slug), 'title' => 'お題：' . $oogiri->odai]) ?>
+<a class="c-button c-button--secondary" href="<?= site_url('host/' . $oogiri->slug) ?>">開催者ページを見る</a>
+</div>
+</section>
+<?php endif; ?>
 
 <?php if ($sharedAnswer !== null): ?>
 <section class="l-section">
@@ -63,7 +78,7 @@ use App\Entities\Oogiri;
 <label class="c-field__label" for="body">あなたのボケ</label>
 <span class="c-field__count" id="body-count" aria-live="polite"></span>
 </div>
-<textarea class="c-textarea<?= isset($errors['body']) ? ' is-invalid' : '' ?>" id="body" name="body" rows="4" maxlength="<?= $answerMax ?>" required placeholder="ここにボケを書く" data-js-char-counter="body-count" data-js-answer-input<?= isset($errors['body']) ? ' aria-describedby="body-error"' : '' ?>><?= esc($old['body']) ?></textarea>
+<textarea class="c-textarea<?= isset($errors['body']) ? ' is-invalid' : '' ?>" id="body" name="body" rows="4" maxlength="<?= $answerMax ?>" required placeholder="ここにボケを書く" data-js-char-counter="body-count" data-js-answer-input data-js-ga-start="answer_start" data-js-ga-oogiri="<?= esc($oogiri->slug, 'attr') ?>"<?= isset($errors['body']) ? ' aria-describedby="body-error"' : '' ?>><?= esc($old['body']) ?></textarea>
 <?php if (isset($errors['body'])): ?><p class="c-field__error" id="body-error" role="alert"><?= esc($errors['body']) ?></p><?php endif; ?>
 <p class="c-field__help">名前も登録もいりません。匿名で投稿されます。</p>
 </div>

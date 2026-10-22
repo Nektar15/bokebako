@@ -33,6 +33,7 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_page_view', 'params' => ['oogiri' => $oogiri->slug, 'status' => 'no_result']]) ?>
 <section class="l-section p-result__head">
 <span class="c-stamp c-stamp--muted p-result__stamp">選出<br>なし</span>
 <span class="c-tag c-tag--sand p-result__tag">24時間大喜利・終了</span>

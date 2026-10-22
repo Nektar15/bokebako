@@ -38,6 +38,7 @@ $first = $ranked[0] ?? null;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_page_view', 'params' => ['oogiri' => $oogiri->slug, 'status' => 'decided']]) ?>
 <section class="l-section p-result__head">
 <span class="c-stamp c-stamp--pop p-result__stamp">結果<br>発表</span>
 <span class="c-tag c-tag--ink p-result__tag">24時間大喜利・結果</span>

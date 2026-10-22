@@ -18,7 +18,23 @@ $ads ??= [];
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <?= $this->include('partials/app_icons') ?>
-<?= $this->renderSection('meta') ?: "<title>ぼけばこ｜登録不要・24時間限定の匿名大喜利</title>\n" . '<meta name="description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">' ?>
+<?php
+$meta = $this->renderSection('meta') ?: "<title>ぼけばこ｜登録不要・24時間限定の匿名大喜利</title>\n" . '<meta name="description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">';
+?>
+<?= $meta . "\n" ?>
+<?php // OGP の共通部分。og:image のないページ（トップなど）は既定のカードを出す（BUG-001・N-05） ?>
+<meta property="og:site_name" content="ぼけばこ">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:type" content="website">
+<?php if (! str_contains($meta, 'og:image')): ?>
+<meta property="og:title" content="ぼけばこ｜登録不要・24時間限定の匿名大喜利">
+<meta property="og:description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">
+<meta property="og:image" content="<?= esc(base_url('assets/img/ogp-default.png'), 'attr') ?>">
+<meta property="og:url" content="<?= esc(current_url(), 'attr') ?>">
+<meta name="twitter:card" content="summary_large_image">
+<?php endif; ?>
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">

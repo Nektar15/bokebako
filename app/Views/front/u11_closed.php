@@ -27,6 +27,8 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_page_view', 'params' => ['oogiri' => $oogiri->slug, 'status' => 'awaiting_selection']]) ?>
+<?php if ($justClosed): ?><?= part('partials/ga_event', ['name' => 'answer_error', 'params' => ['oogiri' => $oogiri->slug, 'fields' => 'closed']]) ?><?php endif; ?>
 <?php if ($justClosed): ?>
 <p class="c-field__error l-section p-closed__notice" role="alert">送信する前に募集が締め切られたため、回答は登録されませんでした。</p>
 <?php endif; ?>

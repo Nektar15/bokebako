@@ -173,6 +173,7 @@ final class AdminFormsTest extends DatabaseTestCase
             'hashtag'           => '#ぼけばこ',
             'tpl_recruit'       => 'お題：{odai}',
             'tpl_answer'        => '{url}',
+            'tpl_answer_other'  => '{url}',
             'tpl_result'        => '{url}',
         ]);
         $result->assertRedirect();
@@ -208,6 +209,7 @@ final class AdminFormsTest extends DatabaseTestCase
             'hashtag'           => 'ぼけばこ',
             'tpl_recruit'       => '{odai} {url}',
             'tpl_answer'        => '{answer} {url}',
+            'tpl_answer_other'  => '{answer} {url}',
             'tpl_result'        => '{first} {url}',
         ];
     }
