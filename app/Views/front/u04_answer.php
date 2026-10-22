@@ -112,9 +112,11 @@ use App\Entities\Oogiri;
 </div>
 </section>
 
+<?php if (! $isHost): // 開催者本人には上の「あなたが開催した大喜利です」があるので出さない ?>
 <section class="l-section">
 <?= part('partials/host_entry', ['slug' => $oogiri->slug]) ?>
 </section>
+<?php endif; ?>
 
 <?= part('partials/modal_report', ['slug' => $oogiri->slug]) ?>
 <?= $this->endSection() ?>

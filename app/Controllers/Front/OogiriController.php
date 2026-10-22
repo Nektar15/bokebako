@@ -47,6 +47,7 @@ final class OogiriController extends BaseController
             'endsAt'    => service('display')->datetime($oogiri->ends_at),
             'shareUrl'  => service('share')->url($oogiri),
             'intentUrl' => service('share')->recruitIntent($oogiri),
+            'preview'   => service('share')->recruitPreview($oogiri), // 運用設定（A-10）の投稿文に合わせる
             'hostUrl'   => site_url('host/' . $slug),
             'ogpUrl'    => service('ogp')->url(OgpKind::Recruit, $slug),
             'hostToken' => service('host')->tokenFromRequest($oogiri), // 開催時に発行したトークン（この画面と U-08 からだけ渡す）

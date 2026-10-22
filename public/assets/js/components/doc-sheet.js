@@ -19,6 +19,7 @@ export function initDocSheet(root = document) {
       e.preventDefault();
       title.textContent = '読み込み中…';
       body.replaceChildren();
+      body.setAttribute('aria-busy', 'true');
       dialog.showModal();
       try {
         const doc = await fetchPage(link.href);
@@ -29,6 +30,7 @@ export function initDocSheet(root = document) {
         title.textContent = link.textContent.trim();
         if (h1) h1.remove();
         body.replaceChildren(...[...main.childNodes].map((n) => document.importNode(n, true)));
+        body.removeAttribute('aria-busy');
         body.scrollTop = 0;
         body.focus();
         ga('guideline_view', { doc: link.dataset.jsDocName || '', via: 'modal' });
