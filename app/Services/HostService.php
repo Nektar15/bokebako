@@ -13,6 +13,7 @@ use App\Enums\OogiriStatus;
 use App\Exceptions\AppException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\ValidationException;
+use App\Libraries\Passphrase;
 use App\Models\AnswerModel;
 use App\Models\OogiriModel;
 use CodeIgniter\I18n\Time;
@@ -76,7 +77,7 @@ final class HostService
      */
     public function recover(Oogiri $oogiri, string $passphrase): string
     {
-        if (trim($passphrase) === '') {
+        if (Passphrase::normalize($passphrase) === '') {
             throw new ValidationException(['passphrase' => '合言葉を入力してください']);
         }
 
@@ -85,7 +86,7 @@ final class HostService
         } catch (AppException) {
             throw new AppException(ErrorCode::RateLimited, '試行回数の上限に達しました。しばらくしてからお試しください');
         }
-        if ($oogiri->passphrase_hash === null || ! password_verify(trim($passphrase), $oogiri->passphrase_hash)) {
+        if ($oogiri->passphrase_hash === null || ! Passphrase::verify($passphrase, $oogiri->passphrase_hash)) {
             throw new ValidationException(['passphrase' => '合言葉が違います']);
         }
         $token = $this->identity->issueHostToken();

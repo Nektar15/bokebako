@@ -28,6 +28,11 @@ final class AnswerService
     public const PER_PAGE = 20;
 
     /**
+     * 回答一覧（U-07）の並び順。値 => 表示名（BUG-009、ADR 0015）。同じ日時の回答は ID で順を決める
+     */
+    public const SORTS = ['new' => '新着順', 'old' => '古い順'];
+
+    /**
      * 直前に投稿した回答の ID を置くセッションのキー（U-06）
      */
     public const SESSION_LAST = 'bk_last_answer';
@@ -45,17 +50,18 @@ final class AnswerService
     }
 
     /**
-     * 公開中の回答を新着順で返す（ページング）
+     * 公開中の回答を返す（ページング）。$sort は SORTS のキー（知らない値は新着順）
      *
      * is_mine（「あなたの回答」）は $markMine のときだけブラウザIDで判定する。
      * 全員で共有するページキャッシュ（U-10・U-12）に載せると、最初に開いた人の判定が他の人にも出るため（レビュー指摘 2）
      *
      * @return array{items: list<Answer>, hasMore: bool, page: int}
      */
-    public function listVisible(Oogiri $oogiri, int $page, bool $markMine): array
+    public function listVisible(Oogiri $oogiri, int $page, bool $markMine, string $sort = 'new'): array
     {
-        $items = $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)
-            ->orderBy('created_at', 'DESC')->orderBy('id', 'DESC')
+        $direction = $sort === 'old' ? 'ASC' : 'DESC';
+        $items     = $this->answers->where('oogiri_id', $oogiri->id)->where('status', AnswerStatus::Visible->value)
+            ->orderBy('created_at', $direction)->orderBy('id', $direction)
             ->findAll(self::PER_PAGE + 1, ($page - 1) * self::PER_PAGE);
         $hasMore = count($items) > self::PER_PAGE;
         $items   = array_slice($items, 0, self::PER_PAGE);
@@ -67,6 +73,14 @@ final class AnswerService
         }
 
         return ['items' => $items, 'hasMore' => $hasMore, 'page' => $page];
+    }
+
+    /**
+     * URL の ?sort= を SORTS のキーにする。知らない値は新着順
+     */
+    public static function sortKey(mixed $value): string
+    {
+        return is_string($value) && isset(self::SORTS[$value]) ? $value : 'new';
     }
 
     /**

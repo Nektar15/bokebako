@@ -61,7 +61,11 @@ final class OogiriController extends BaseController
         $this->cacheFirstPage();
 
         // og:image は、画像がなければ既定の画像にする（監査 2026-10-21）
-        return view('front/u11_closed', ['oogiri' => $oogiri, 'ogpUrl' => service('ogp')->url(OgpKind::Recruit, $oogiri->slug)]);
+        return view('front/u11_closed', [
+            'oogiri'     => $oogiri,
+            'ogpUrl'     => service('ogp')->url(OgpKind::Recruit, $oogiri->slug),
+            'justClosed' => false,
+        ]);
     }
 
     /**

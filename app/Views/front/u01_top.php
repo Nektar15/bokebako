@@ -1,4 +1,7 @@
 <?php
+
+use App\Libraries\Passphrase;
+
 /**
  * U-01 トップ・大喜利開催画面（U-02 開催確認モーダルを含む）
  *
@@ -61,9 +64,13 @@
 <div class="c-card__divider"></div>
 
 <div class="c-field">
-<label class="c-field__label" for="passphrase">合言葉</label>
-<input class="c-input" id="passphrase" name="passphrase" type="text" autocomplete="off" placeholder="あなただけが分かる言葉" value="<?= esc($old['passphrase'], 'attr') ?>">
-<p class="c-field__help p-top__hint"><?= $this->include('partials/icon_key') ?><span>別の端末から開催者ページを開くときに使います。ふだんは入力不要です。</span></p>
+<div class="c-field__head">
+<label class="c-field__label" for="passphrase">合言葉<span class="c-field__required">必須</span></label>
+<button type="button" class="c-field__reveal" data-js-reveal="passphrase" aria-pressed="false">表示</button>
+</div>
+<input class="c-input<?= isset($errors['passphrase']) ? ' is-invalid' : '' ?>" id="passphrase" name="passphrase" type="password" autocomplete="new-password" required minlength="<?= Passphrase::MIN ?>" maxlength="<?= Passphrase::MAX ?>" placeholder="あなただけが分かる言葉（<?= Passphrase::MIN ?>〜<?= Passphrase::MAX ?>文字）" value="<?= esc($old['passphrase'], 'attr') ?>" aria-describedby="<?= isset($errors['passphrase']) ? 'passphrase-error ' : '' ?>passphrase-help">
+<?php if (isset($errors['passphrase'])): ?><p class="c-field__error" id="passphrase-error" role="alert"><?= esc($errors['passphrase']) ?></p><?php endif; ?>
+<p class="c-field__help p-top__hint" id="passphrase-help"><?= $this->include('partials/icon_key') ?><span>別の端末から開催者ページを開くときに使います。忘れないものにしてください。</span></p>
 </div>
 
 <?= part('partials/captcha', ['siteKey' => $captcha]) ?>
