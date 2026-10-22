@@ -126,7 +126,7 @@ DNS を Cloudflare に向け、「常に HTTPS」を ON。キャッシュルー�
 3. `php spark migrate` 済み。**本番では `db:seed DevSeeder` を実行しない**（全テーブルを消し、パスワードが公開されている開発用の管理者を入れる）。`php spark admin:create` で管理者を作り、管理画面にログインできる
 4. cron が登録されている（下の表）
 5. `https://<ドメイン>/` が開き、`http://` が `https://` に転送される。レスポンスヘッダーに `Content-Security-Policy` と `Strict-Transport-Security` がある
-6. お題を1つ開催し、別端末で回答し、確定して結果ページが出る。X のカード検証（`https://cards-dev.twitter.com/validator` 相当）で OGP 画像が出る
+6. お題を1つ開催し、別端末で回答し、確定して結果ページが出る。大喜利と回答の URL を X に投稿し、カードに OGP 画像が出る（X の Card Validator は廃止されたため、実際に投稿して確かめる）。E2E（`tests/e2e`）が通る
 7. `docs/load-test.md` の手順でステージングに負荷をかけ、結果を追記する
 
 ## cron（Xserver のサーバーパネルで設定）

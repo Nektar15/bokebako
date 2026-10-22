@@ -1,6 +1,8 @@
 # 引き継ぎメモ（新しいセッション・別の開発者向け）
 
-最終更新：2026-10-20　ブランチ：`develop`（下の表の作業はすべて取り込み済み。`composer check` 通過、212 テスト）
+最終更新：2026-10-22　ブランチ：`develop`（下の表の作業はすべて取り込み済み）。**2026-10-22 の品質保証の作業は `claude/adoring-hawking-gwrevo` にあり、まだ `develop` に取り込んでいない**
+
+> 2026-10-22 の作業（現状調査・不具合の修正・E2E・納品書類）は、プロジェクト直下の `PROJECT_PLAN.md`・`TASKS.md`・`PROGRESS.md`・`DECISIONS.md`・`TEST_STATUS.md` と `docs/delivery/` を先に読む。判定は NOT READY（`docs/delivery/10_最終納品報告書.md` 12 章）
 
 ## 今どこまでできているか
 
@@ -18,6 +20,7 @@
 | 小さな積み残し（メールのテンプレート、OGP の一括作り直し） | 完了 | `feature/small-leftovers` |
 | 未確認だったことの確認（フォント・MariaDB・k6・JS なし） | 完了。見つけた不具合も修正 | `fix/verification` |
 | Vercel 仮置き用の設定 | 完了（ADR 0008）。**Vercel への実際の公開は未実施**（下の「残課題 1」） | `feature/vercel-staging` |
+| 品質保証（BUG-001〜009、合言葉の必須化、並び替え、規約のシート、共有シート、開催の一覧、GA4、Vercel の外部 DB、E2E） | 完了（ADR 0015。PHPUnit 303、E2E 66）。Vercel の外部 DB は発注者の設定待ち | `claude/adoring-hawking-gwrevo` |
 | A-01 二段階認証（TOTP） | **未実装・最終工程**（発注者の指示。ログインの手間になるため最後に回す） | |
 
 ## 最初にやること（新しいセッションでそのまま貼る指示）
