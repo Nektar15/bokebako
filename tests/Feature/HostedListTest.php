@@ -61,4 +61,12 @@ final class HostedListTest extends DatabaseTestCase
         $this->get('/')->assertSee('あなたが開催した大喜利');
         $this->asHost()->get('/host/k7Qm2xPz')->assertSee('あなたが開催した大喜利');
     }
+
+    public function testTooManyRequestsReturnEmpty(): void
+    {
+        for ($i = 0; $i < 30; $i++) {
+            $this->assertCount(1, $this->hosted([['slug' => 'k7Qm2xPz', 'token' => 'dev-token-k7Qm2xPz']]));
+        }
+        $this->assertSame([], $this->hosted([['slug' => 'k7Qm2xPz', 'token' => 'dev-token-k7Qm2xPz']]));
+    }
 }

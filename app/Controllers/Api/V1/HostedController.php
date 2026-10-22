@@ -18,6 +18,11 @@ final class HostedController extends BaseController
      */
     public function index(): ResponseInterface
     {
+        // トークンの総当たりをさせない：同じ IP からは1分に30回まで。超えたら空の一覧を返す（ブラッシュアップ2回目）
+        if (! service('throttler')->check('hosted_' . substr(service('identity')->ipHash(), 0, 16), 30, 60)) {
+            return $this->response->setJSON(['ok' => true, 'data' => ['items' => []]]);
+        }
+
         try {
             $json = $this->request->getJSON(true); // apiBody() は文字列と数だけを通すので、配列はここで読む
         } catch (Throwable) {

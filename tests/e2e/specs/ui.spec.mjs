@@ -59,6 +59,7 @@ test('共有シートが使える端末では「ほかのアプリで共有」�
   await expect(page.locator('a.c-button--x', { hasText: 'Xで回答を募集する' })).toBeVisible();
   await expect(native).toBeVisible();
   await native.click();
+  await expect(page.locator('[data-js-toast]')).toHaveText('共有しました'); // 送り終えたことが分かる
   const shared = await page.evaluate(() => window.__shared);
   expect(shared[0].url).toMatch(new RegExp(`/o/${slug}$`));
   const events = await page.evaluate(() => window.__ga.filter((a) => a[0] === 'event').map((a) => a[1]));

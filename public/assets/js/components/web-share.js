@@ -3,6 +3,7 @@
  * 送り終えたときだけ GA4 に share_complete を送る（取り消したとき・失敗したときは送らない）。
  */
 import { ga } from './tracking.js';
+import { showToast } from './toast.js';
 
 export function initWebShare(root = document) {
   if (typeof navigator.share !== 'function') return;
@@ -13,6 +14,7 @@ export function initWebShare(root = document) {
       try {
         await navigator.share({ title, text: title, url });
         ga('share_complete', { method: 'web_share', share_type: type, oogiri });
+        showToast('共有しました');
       } catch (_) { /* 取り消し（AbortError）や失敗は何もしない */ }
     });
   });
