@@ -29,7 +29,8 @@ $meta = $this->renderSection('meta') ?: "<title>ぼけばこ｜登録不要・24
 <?php if (! str_contains($meta, 'og:image')): ?>
 <meta property="og:title" content="ぼけばこ｜登録不要・24時間限定の匿名大喜利">
 <meta property="og:description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">
-<meta property="og:image" content="<?= esc(base_url('assets/img/ogp-default.png'), 'attr') ?>">
+<meta property="og:image" content="<?= esc(asset_url('img/ogp-default.png'), 'attr') ?>">
+<meta property="og:image:alt" content="ぼけばこ：お題を出したら、24時間だけ大喜利スタート。">
 <meta property="og:url" content="<?= esc(current_url(), 'attr') ?>">
 <meta name="twitter:card" content="summary_large_image">
 <?php endif; ?>
