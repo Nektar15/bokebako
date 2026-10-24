@@ -10,7 +10,6 @@
 .p-contact__chip:has(input:focus-visible) { outline: 3px solid var(--shu); outline-offset: 2px; }
 .p-contact__body { resize: vertical; font-size: 16px; font-weight: 400; }
 .p-contact__captcha { height: 78px; border: 1.5px dashed var(--ink-muted); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--ink-muted); }
-.c-req { margin-left: 8px; background: var(--shu); color: var(--white); border-radius: 4px; padding: 0 6px; font-size: 11px; font-weight: 900; vertical-align: 2px; }
 .p-contact__done { align-items: center; text-align: center; gap: 14px; padding-top: 40px; }
-.p-contact__done-lead { font-size: 14px; line-height: 1.8; color: #3A342D; }
+.p-contact__done-lead { font-size: 14px; line-height: 1.8; color: var(--ink-body); }
 .p-contact__done-btn { align-self: stretch; margin-top: var(--space-2); }

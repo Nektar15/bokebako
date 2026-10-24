@@ -68,7 +68,7 @@ use App\Libraries\Passphrase;
 
 <div class="c-field">
 <div class="c-field__head">
-<label class="c-field__label" for="passphrase">合言葉<span class="c-field__required">必須</span></label>
+<label class="c-field__label" for="passphrase">合言葉<span class="c-req">必須</span></label>
 <button type="button" class="c-field__reveal" data-js-reveal="passphrase" aria-pressed="false">表示</button>
 </div>
 <input class="c-input<?= isset($errors['passphrase']) ? ' is-invalid' : '' ?>" id="passphrase" name="passphrase" type="password" autocomplete="new-password" required minlength="<?= Passphrase::MIN ?>" maxlength="<?= Passphrase::MAX ?>" placeholder="あなただけが分かる言葉（<?= Passphrase::MIN ?>〜<?= Passphrase::MAX ?>文字）" value="<?= esc($old['passphrase'], 'attr') ?>" aria-describedby="<?= isset($errors['passphrase']) ? 'passphrase-error ' : '' ?>passphrase-help">
@@ -89,9 +89,9 @@ use App\Libraries\Passphrase;
 <section class="l-section" id="howto">
 <h2 class="p-top__h2">あそびかた</h2>
 <ol class="p-top__steps">
-<li class="p-top__step"><span class="p-top__num">1</span><span class="p-top__step-title">お題を出す</span><span class="p-top__step-body">登録なしで今すぐ</span></li>
-<li class="p-top__step"><span class="p-top__num">2</span><span class="p-top__step-title">Xで募集</span><span class="p-top__step-body">回答は24時間だけ</span></li>
-<li class="p-top__step"><span class="p-top__num p-top__num--shu">3</span><span class="p-top__step-title">ベスト3発表</span><span class="p-top__step-body">あなたが選ぶ</span></li>
+<li class="p-top__step"><span class="p-top__num">1</span><span class="p-top__step-title">お題を出す</span><span class="p-top__step-body"><span>登録なしで</span><span>今すぐ</span></span></li>
+<li class="p-top__step"><span class="p-top__num">2</span><span class="p-top__step-title">Xで募集</span><span class="p-top__step-body"><span>回答は</span><span>24時間だけ</span></span></li>
+<li class="p-top__step"><span class="p-top__num p-top__num--shu">3</span><span class="p-top__step-title">ベスト3発表</span><span class="p-top__step-body"><span>あなたが</span><span>選ぶ</span></span></li>
 </ol>
 </section>
 <?= $this->endSection() ?>

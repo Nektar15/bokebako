@@ -44,7 +44,7 @@ details > summary::-webkit-details-marker { display: none; }
 .l-footer { margin-top: auto; padding: 16px var(--gutter) 24px; border-top: var(--border); display: flex; flex-direction: column; gap: var(--space-1); }
 .l-footer__nav { display: flex; flex-wrap: wrap; column-gap: 16px; font-size: 12.5px; }
 .l-footer__nav a { min-height: 40px; display: flex; align-items: center; text-decoration: none; }
-.l-footer__copy { font-size: 11px; color: var(--ink-muted); }
+.l-footer__copy { font-size: 12px; color: var(--ink-muted); }
 
 @media (min-width: 768px) {
   .l-header, .l-footer { width: 100%; max-width: var(--content-max); margin-left: auto; margin-right: auto; padding-left: 0; padding-right: 0; }
@@ -85,13 +85,13 @@ details > summary::-webkit-details-marker { display: none; }
 }
 .c-tag--ink { background: var(--ink); color: var(--white); border-color: var(--ink); }
 .c-tag--sand { background: var(--sand); }
-.c-tag--small { padding: 0 6px; font-size: 11px; border-radius: 4px; }
+.c-tag--small { padding: 0 6px; font-size: 12px; border-radius: 4px; }
 .c-tag--outline { background: transparent; border: 1.5px dashed var(--kin); color: var(--kin); border-radius: 6px; padding: 1px 8px; font-size: 11px; }
 
 .c-badge {
   min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--radius-pill);
   background: var(--shu); color: var(--white);
-  display: inline-flex; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 900;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900;
 }
 
 .c-card { background: var(--card); border: var(--border); border-radius: var(--radius-card); padding: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
@@ -119,8 +119,8 @@ details > summary::-webkit-details-marker { display: none; }
 .c-segment { display: inline-flex; padding: 3px; border: var(--border); border-radius: 999px; background: var(--card); }
 .c-segment__item { min-height: 36px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--ink-sub); text-decoration: none; }
 .c-segment__item.is-current { background: var(--ink); color: var(--white); }
-.c-field__required { margin-left: 8px; padding: 1px 6px; border-radius: 4px; background: var(--shu); color: var(--white); font-size: 11px; font-weight: 700; vertical-align: 2px; }
-.c-field__reveal { min-height: 32px; padding: 0 4px; border: 0; background: none; font-size: 13px; font-weight: 700; color: var(--ink-sub); text-decoration: underline; cursor: pointer; }
+.c-req { margin-left: 8px; padding: 0 6px; border-radius: 4px; background: var(--shu); color: var(--white); font-size: 12px; font-weight: 900; vertical-align: 2px; } /* 入力欄の「必須」（U-01・U-18） */
+.c-field__reveal { min-height: 44px; min-width: 44px; padding: 0 6px; border: 0; background: none; font-size: 13px; font-weight: 700; color: var(--ink-sub); text-decoration: underline; cursor: pointer; }
 .c-input, .c-textarea, .c-select {
   width: 100%; border: var(--border); border-radius: var(--radius-input);
   background: var(--white); padding: 0 14px; font-size: 16px; color: var(--ink);
@@ -164,6 +164,6 @@ details > summary::-webkit-details-marker { display: none; }
 
 /* 開催者画面への入口（U-04・U-11） */
 .c-host-entry { text-align: center; font-size: 12.5px; }
-.c-host-entry a { color: var(--ink-sub); }
+.c-host-entry a { display: inline-block; padding: 12px 0; color: var(--ink-sub); } /* 1行だけのリンクなので、押せる高さを 44px にする */
 
 .c-ad[hidden] { display: none; }

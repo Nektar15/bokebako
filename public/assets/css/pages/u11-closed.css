@@ -1,6 +1,6 @@
 /* U-11 募集終了 ／ U-13 非表示 */
 .p-closed__hero { align-items: center; text-align: center; gap: 14px; padding-top: 40px; }
-.p-closed__lead { font-size: 14.5px; line-height: 1.75; color: #3A342D; }
+.p-closed__lead { font-size: 14.5px; line-height: 1.75; color: var(--ink-body); }
 .p-closed__cta { margin-top: auto; padding-bottom: var(--space-5); }
 .p-closed__cta-text { font-size: 14px; font-weight: 900; text-align: center; }
 .p-hidden__box { display: flex; flex-direction: column; gap: var(--space-1); }
