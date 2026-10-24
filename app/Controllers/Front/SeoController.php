@@ -50,7 +50,7 @@ final class SeoController extends BaseController
             ->orderBy('ends_at', 'DESC')->findAll(self::SITEMAP_RESULTS);
 
         foreach ($rows as $row) {
-            $urls[] = ['loc' => site_url('o/' . $row->slug), 'lastmod' => ($row->decided_at ?? $row->ends_at)?->format('Y-m-d')];
+            $urls[] = ['loc' => site_url('o/' . $row->slug), 'lastmod' => ($row->decided_at ?? $row->ends_at)->format('Y-m-d')];
         }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
