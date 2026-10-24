@@ -75,7 +75,7 @@ final class OgpService
             return base_url('og-image/' . $kind->value . '/' . rawurlencode($key) . '.png') . '?v=' . self::textsVersion();
         }
 
-        return base_url('assets/img/ogp-default.png');
+        return asset_url('img/ogp-default.png'); // ?v= を付けて、画像を差し替えたときに X などの古いキャッシュを使わせない
     }
 
     /**
