@@ -102,6 +102,6 @@
 .c-date-range__input { width: 150px; }
 .c-date-range__sep { font-size: 13px; color: var(--ink-sub); }
 @media (max-width: 767.98px) {
-  .c-filterbar > .c-date-range, .p-inq__selects > .c-date-range { flex-basis: 100%; }
-  .c-date-range__input { flex: 1 1 0; width: auto; }
+  .c-filterbar > .c-date-range, .p-inq__selects > .c-date-range { flex-basis: 100%; min-width: 0; }
+  .c-date-range__input { flex: 1 1 0; width: auto; min-width: 0; } /* 日付の入力欄は既定の最小幅で縮まず、iPhone の幅ではみ出していた（2026-10-24） */
 }
