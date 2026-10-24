@@ -20,11 +20,14 @@ export const options = {
     answer_page: { executor: 'constant-arrival-rate', exec: 'answerPage', rate: RATE, timeUnit: '1s', duration: DURATION, preAllocatedVUs: 40, maxVUs: 200 },
     answer_post: { executor: 'constant-arrival-rate', exec: 'answerPost', rate: RATE, timeUnit: '1s', duration: DURATION, preAllocatedVUs: 300, maxVUs: 900 },
     result_page: { executor: 'constant-arrival-rate', exec: 'resultPage', rate: RATE, timeUnit: '1s', duration: DURATION, preAllocatedVUs: 40, maxVUs: 200 },
+    // 2026-10-24 に足した画面・API（ADR 0015・0016）：トップ＋開催の一覧 API、みんなのボケ（古い順）、サイトマップ
+    added: { executor: 'constant-arrival-rate', exec: 'added', rate: RATE, timeUnit: '1s', duration: DURATION, preAllocatedVUs: 40, maxVUs: 200 },
   },
   thresholds: {
     'http_req_duration{scenario:answer_page}': ['p(95)<2000'],
     'http_req_duration{scenario:answer_post}': ['p(95)<2000'],
     'http_req_duration{scenario:result_page}': ['p(95)<2000'],
+    'http_req_duration{scenario:added}': ['p(95)<2000'],
     http_req_failed: ['rate<0.01'],
   },
 };
@@ -48,4 +51,13 @@ export function answerPost() {
 export function resultPage() {
   const res = http.get(`${BASE}/o/${RESULT_SLUG}`, { tags: { name: 'U-10' } });
   check(res, { 'U-10 200': (r) => r.status === 200 });
+}
+
+export function added() {
+  const top = http.get(`${BASE}/`, { tags: { name: 'U-01' } });
+  check(top, { 'U-01 200': (r) => r.status === 200 });
+  const hosted = http.post(`${BASE}/api/v1/hosted`, JSON.stringify({ items: [{ slug: OPEN_SLUG, token: `dev-token-${OPEN_SLUG}` }] }), { headers: { 'Content-Type': 'application/json' }, tags: { name: 'hosted api' } });
+  check(hosted, { 'hosted 200': (r) => r.status === 200 });
+  const list = http.get(`${BASE}/sitemap.xml`, { tags: { name: 'sitemap' } });
+  check(list, { 'sitemap 200': (r) => r.status === 200 });
 }

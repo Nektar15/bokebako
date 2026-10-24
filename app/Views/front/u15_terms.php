@@ -21,6 +21,7 @@ $toc = [
 <?= $this->extend('layouts/front') ?>
 <?= $this->section('meta') ?>
 <title>利用規約｜ぼけばこ</title>
+<meta name="description" content="ぼけばこの利用規約。投稿の扱い、禁止事項、非表示・削除について。">
 <?= $this->endSection() ?>
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= asset_url('css/pages/doc.css') ?>">

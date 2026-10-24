@@ -2,6 +2,7 @@
 
 画面デザインの原本は `docs/design/`（発注時のデザイン）。ここは、2026-10-22 の品質保証の作業で変えた画面を、**実装した画面そのもの**で撮ったもの（HTML/CSS は本体のコード）。
 
+- 確認用ページ（スマホ・PC を切り替えて見られる）：https://claude.ai/artifact/Uqrise6cRnLgjB17JVsVTn（2026-10-24。非公開。見る人に共有が要る）
 - 撮り方：ローカル（開発用データ）を Playwright の Chromium で表示。`sp-` は iPhone 13 の画面（390×844）、`pc-` は 1280×800
 - 実機（iPhone Safari・Android Chrome）での表示は未確認（`docs/delivery/04_品質保証・テスト報告書.md`）
 - OGP 画像は、撮った環境に日本語フォントがないので既定の画像になっている

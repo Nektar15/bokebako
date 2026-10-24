@@ -17,6 +17,7 @@ $toc = [
 <?= $this->extend('layouts/front') ?>
 <?= $this->section('meta') ?>
 <title>プライバシーポリシー｜ぼけばこ</title>
+<meta name="description" content="ぼけばこのプライバシーポリシー。取得する情報と使いみち、アクセス解析について。">
 <?= $this->endSection() ?>
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= asset_url('css/pages/doc.css') ?>">

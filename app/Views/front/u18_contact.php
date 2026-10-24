@@ -13,6 +13,7 @@
 
 <?= $this->section('meta') ?>
 <title>お問い合わせ｜ぼけばこ</title>
+<meta name="description" content="ぼけばこへのお問い合わせ。不具合の報告、権利侵害の申し立てなど。">
 <?= $this->endSection() ?>
 
 <?= $this->section('styles') ?>

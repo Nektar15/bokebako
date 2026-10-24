@@ -35,7 +35,7 @@
   .p-inq { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 767.98px) {
-  .p-inq__selects { margin-left: 0; flex-basis: 100%; }
+  .p-inq__selects { margin-left: 0; flex-basis: 100%; flex-wrap: wrap; } /* 期間指定（.c-date-range）は次の行に回す（2026-10-24、E2E で見つけた） */
   .p-inq__selects > * { flex: 1 1 0; width: auto; min-width: 0; }
   .p-inq__detail { padding: 16px; }
   .p-inq__meta { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }

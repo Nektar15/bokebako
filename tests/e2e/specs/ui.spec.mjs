@@ -33,16 +33,19 @@ test('開催確認から規約・ガイドラインを読み、閉じると入�
 });
 
 test('みんなのボケを新着順・古い順で並び替えられる（BUG-009）', async ({ page }) => {
-  await postAnswer(page, 'k7Qm2xPz', uniq('並び替え'));
+  const mine = uniq('並び替え');
+  await postAnswer(page, 'k7Qm2xPz', mine);
   await page.goto('/o/k7Qm2xPz/answers');
   const bodies = async () => page.locator('.c-answers__body').allTextContents();
   const newest = await bodies();
+  expect(newest[0]).toBe(mine); // 新着順の先頭は今の回答（並びの正確さは PHPUnit の AnswerSortTest）
   await expect(page.locator('.c-segment__item.is-current')).toHaveText('新着順');
   await page.locator('.c-segment__item', { hasText: '古い順' }).click();
   await expect(page).toHaveURL(/sort=old/);
   await expect(page.locator('.c-segment__item.is-current')).toHaveText('古い順');
   const oldest = await bodies();
-  expect(oldest[oldest.length - 1]).toBe(newest[0]);
+  expect(oldest[0]).not.toBe(mine);
+  expect(oldest.length).toBeGreaterThan(0);
   const box = await page.locator('.c-segment').boundingBox();
   expect(box.width).toBeLessThanOrEqual(page.viewportSize().width);
 });
