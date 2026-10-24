@@ -10,6 +10,10 @@
 | 2026-10-22（最終） | 同上 | `composer check`（PHPUnit 303 件） | PASS（302 合格・1 スキップ：OGP のフォントがない環境） |
 | 2026-10-22（最終） | ローカル、Chromium 141（Playwright 1.56.1）、iPhone 13・Pixel 7・PC 1280px の画面 | E2E 66 件（`tests/e2e`） | PASS（66/66） |
 | 2026-10-22 | 同上（iPhone 13 の画面） | axe-core 4.10 WCAG 2 A/AA、主要 11 画面＋U-02 | PASS（違反 0） |
+| 2026-10-24 | ローカル（PHP 8.3.6、SQLite） | `composer check`（PHPUnit 312 件。SEO の 9 件を追加） | PASS（311 合格・1 スキップ） |
+| 2026-10-24 | ローカル、Chromium 141、3 つの画面 | E2E 78 件（管理画面 4 シナリオ × 3 を追加） | PASS（78/78） |
+| 2026-10-24 | ローカル（4 vCPU、PHP 8.3 内蔵サーバー 8 ワーカー、MariaDB、production） | k6 0.54：4 シナリオ × 20 req/s × 30 秒 | PASS（エラー 0／4,804、p95 10〜27 ms） |
+| 2026-10-24 | ローカル、MariaDB | `vercel:prepare` を 3 つ同時（GET_LOCK） | PASS（1 つだけが投入、11 件そろう。3 回） |
 
 ## 作業前の調査で FAIL だった項目の、修正後の結果
 
