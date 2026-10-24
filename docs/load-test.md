@@ -79,3 +79,21 @@
 | PV 計測の非同期化 | `events` に1行ずつ入れ、`stats:daily` が `daily_stats` と `oogiris.pv` に反映。90日より古い生ログは削除 | `EventService`、`StatsService::aggregateDay()`・`pruneEvents()` |
 | CDN | 未設定（推奨）。Cloudflare を置くときは `/assets/*`・`/ogp/*` をキャッシュ、HTML は素通し | — |
 | レート制限 | 開催・回答・通報・問い合わせ・合言葉の試行（ブラウザID＋IP 単位） | `RateLimitService` |
+
+## 結果 3：開発環境（2026-10-24、品質保証の作業のあと。指示書 第6章）
+
+2026-10-22〜24 の変更（合言葉、並び替え、計測、開催の一覧 API、SEO）のあとに流し直した。新しく足した画面・API のシナリオ `added`（トップ ＋ `POST /api/v1/hosted` ＋ `/sitemap.xml`）を加えた。
+
+- 環境：Linux コンテナ（4 vCPU）、PHP 8.3 内蔵サーバー（`PHP_CLI_SERVER_WORKERS=8`）、MariaDB 同居、`CI_ENVIRONMENT=production`。k6 0.54
+- 負荷：4 シナリオ × 20 req/s × 30 秒（合計 4,804 リクエスト、約 160 req/s）。結果 2 と同じく、試験の間だけ連続投稿の閾値を 100 回／10 秒にした
+
+| シナリオ | 平均 | 中央値 | p90 | p95 | 最大 | 判定 |
+|---|---|---|---|---|---|---|
+| answer_page（U-04 ＋ status API） | 16.2 ms | 10.6 ms | 18.6 ms | 25.2 ms | 597.6 ms | 合格 |
+| answer_post（回答 POST） | 19.9 ms | 13.5 ms | 20.7 ms | 26.9 ms | 634.9 ms | 合格 |
+| result_page（U-10 キャッシュ配信） | 10.6 ms | 4.6 ms | 8.2 ms | 10.1 ms | 498.7 ms | 合格 |
+| added（U-01 ＋ hosted API ＋ サイトマップ） | 12.4 ms | 7.8 ms | 13.3 ms | 22.7 ms | 544.2 ms | 合格 |
+
+- エラー：0 / 4,804（checks 100%）。回答は 600 件すべて保存され、`answer_count`（609）と公開中の回答数（609）が一致
+- 最大値の 0.5〜0.6 秒は開始直後だけ（ワーカーの起動と OPcache なしの読み込み）。p95 は結果 2 とほぼ同じ
+- 本番相当（Xserver・ステージング）と Vercel ではまだ流していない（Vercel は無料枠の実行時間を使うため、流すなら発注者と相談）
