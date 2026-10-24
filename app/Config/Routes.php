@@ -39,6 +39,9 @@ $routes->group('', ['namespace' => 'App\Controllers\Front'], static function (Ro
     $routes->get('contact/done', 'ContactController::done');
 
     $routes->get('ad/(:num)/click', 'AdController::click/$1');             // 広告クリック計測（A-07）
+
+    $routes->get('robots.txt', 'SeoController::robots');                   // SEO（ADR 0016）
+    $routes->get('sitemap.xml', 'SeoController::sitemap');
 });
 
 // ---------------------------------------------------------------

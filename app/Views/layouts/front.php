@@ -22,6 +22,13 @@ $ads ??= [];
 $meta = $this->renderSection('meta') ?: "<title>ぼけばこ｜登録不要・24時間限定の匿名大喜利</title>\n" . '<meta name="description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">';
 ?>
 <?= $meta . "\n" ?>
+<?php // SEO（ADR 0016）：説明文のないページには既定の説明文。正式な URL は、?page= などを除いた今の URL ?>
+<?php if (! str_contains($meta, 'name="description"')): ?>
+<meta name="description" content="お題を出したら、24時間だけ大喜利スタート。Xでシェアして、みんなからボケを集めよう。">
+<?php endif; ?>
+<?php if (! str_contains($meta, 'rel="canonical"')): ?>
+<link rel="canonical" href="<?= esc(current_url(), 'attr') ?>">
+<?php endif; ?>
 <?php // OGP の共通部分。og:image のないページ（トップなど）は既定のカードを出す（BUG-001・N-05） ?>
 <meta property="og:site_name" content="ぼけばこ">
 <meta property="og:locale" content="ja_JP">

@@ -15,6 +15,7 @@ use App\Entities\Oogiri;
 
 <?= $this->section('meta') ?>
 <title>募集は終了しました：<?= esc($oogiri->odai) ?>｜ぼけばこ</title>
+<meta name="description" content="大喜利「<?= esc($oogiri->odai, 'attr') ?>」の募集は終了しました。主催者がベスト回答を選んでいます（全<?= esc((string) $oogiri->answer_count) ?>回答）。">
 <meta property="og:title" content="<?= esc($oogiri->odai, 'attr') ?>">
 <meta property="og:description" content="募集は終了しました。主催者がベスト回答を選んでいます。">
 <meta property="og:image" content="<?= esc($ogpUrl, 'attr') ?>">
