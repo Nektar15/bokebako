@@ -21,7 +21,7 @@
 <li>違法なもの・他人の権利を侵害するものは書かない</li>
 <li>問題のある投稿は非表示・削除することがあります</li>
 </ul>
-<div class="c-sheet__links"><a href="<?= site_url('terms') ?>">利用規約</a><a href="<?= site_url('guidelines') ?>">投稿ガイドライン</a></div>
+<div class="c-sheet__links"><a href="<?= site_url('terms') ?>" target="_blank" rel="noopener" data-js-doc-sheet="doc-dialog" data-js-doc-name="terms">利用規約</a><a href="<?= site_url('guidelines') ?>" target="_blank" rel="noopener" data-js-doc-sheet="doc-dialog" data-js-doc-name="guidelines">投稿ガイドライン</a></div>
 </div>
 <div class="c-sheet__actions">
 <button type="submit" class="c-button c-button--primary">同意して開催する</button>

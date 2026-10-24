@@ -5,14 +5,18 @@ declare(strict_types=1);
 namespace App\Controllers\Front;
 
 use App\Controllers\BaseController;
+use App\Enums\ErrorCode;
 use App\Enums\OgpKind;
 use App\Enums\OogiriStatus;
 use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Libraries\Captcha;
+use App\Services\AnswerService;
 use App\Services\OgpService;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RedirectResponse;
+use CodeIgniter\HTTP\ResponseInterface;
 
 /**
  * 回答まわり：U-05（登録）→ U-06（完了）→ U-07（一覧）、回答シェア用URL
@@ -24,7 +28,7 @@ final class AnswerController extends BaseController
     /**
      * U-05「同意して回答する」→ 登録して U-06 へ
      */
-    public function create(string $slug): RedirectResponse
+    public function create(string $slug): ResponseInterface
     {
         $oogiri = $this->findOogiriOrFail($slug);
 
@@ -33,6 +37,15 @@ final class AnswerController extends BaseController
         } catch (ValidationException $e) {
             return redirect()->back()->withInput()->with('errors', $e->errors);
         } catch (AppException $e) {
+            // 書いている間に締め切られた：戻り先の U-11 はキャッシュ配信でエラーを出せないので、理由を添えた U-11 をこの場で返す（N-09）
+            if ($e->errorCode === ErrorCode::Closed) {
+                return $this->response->setStatusCode(409)->setBody(view('front/u11_closed', [
+                    'oogiri'     => $oogiri,
+                    'ogpUrl'     => service('ogp')->url(OgpKind::Recruit, $oogiri->slug),
+                    'justClosed' => true,
+                ]));
+            }
+
             return redirect()->back()->withInput()->with('errors', ['_' => $e->getMessage()]);
         }
 
@@ -56,7 +69,7 @@ final class AnswerController extends BaseController
         return view('front/u06_answered', [
             'oogiri'          => $oogiri,
             'answer'          => $answer,
-            'answerIntentUrl' => $share->answerIntent($oogiri, $answer),
+            'answerIntentUrl' => $share->answerIntent($oogiri, $answer, true), // U-06 は本人の回答
             'oogiriIntentUrl' => $share->recruitIntent($oogiri),
         ]);
     }
@@ -76,6 +89,7 @@ final class AnswerController extends BaseController
         }
 
         $page   = min(10000, max(1, (int) $this->request->getGet('page'))); // 巨大な値で offset が溢れないように上限
+        $sort   = AnswerService::sortKey($this->request->getGet('sort'));
         $format = service('display');
         $share  = service('share');
 
@@ -83,27 +97,30 @@ final class AnswerController extends BaseController
             'oogiri'          => $oogiri,
             'remaining'       => $format->remaining($oogiri->ends_at),
             'progressPercent' => $format->progressPercent($oogiri->starts_at, $oogiri->ends_at),
-            'answers'         => service('answer')->listVisible($oogiri, $page, true), // U-07 はキャッシュしないので本人の印を付けてよい
-            'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer),
+            'sort'            => $sort,
+            'sorts'           => AnswerService::SORTS,
+            'answers'         => service('answer')->listVisible($oogiri, $page, true, $sort), // U-07 はキャッシュしないので本人の印を付けてよい
+            'answerIntentUrl' => static fn ($answer) => $share->answerIntent($oogiri, $answer, (bool) $answer->is_mine), // 本人の回答だけ「俺の回答」（BUG-008）
         ]);
     }
 
     /**
-     * 回答シェア用URL（未確定事項5：募集中は U-04 に回答を1件添えて表示。終了後は回答と「結果を見る」だけのページ。非表示・削除中は募集URLへ）
+     * 回答シェア用URL（未確定事項5：募集中は U-04 に回答を1件添えて表示。終了後は回答と「結果を見る」だけのページ）
+     *
+     * 存在しない回答・非表示や削除の回答・非表示や削除中の大喜利の回答は 404（BUG-004、ADR 0015。中身を出さない）
      */
-    public function share(string $slug, int $answerId): RedirectResponse|string
+    public function share(string $slug, int $answerId): string
     {
         $oogiri = $this->findOogiriOrFail($slug);
 
-        // 非表示・削除中は募集URL（U-13）へ
         if (! in_array($oogiri->status()->value, OgpService::PUBLIC_STATUSES, true)) {
-            return redirect()->to('/o/' . $slug);
+            throw PageNotFoundException::forPageNotFound();
         }
 
         try {
             $answer = service('answer')->find($oogiri, $answerId);
         } catch (NotFoundException) {
-            return redirect()->to('/o/' . $slug);
+            throw PageNotFoundException::forPageNotFound();
         }
         service('ogp')->ensureAnswer($oogiri, $answer); // 回答シェア用 OGP は初回アクセス時に生成（S-07）
 

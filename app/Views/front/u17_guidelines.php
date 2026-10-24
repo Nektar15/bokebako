@@ -23,6 +23,7 @@ $rules = [
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'guideline_view', 'params' => ['doc' => 'guidelines', 'via' => 'page']]) ?>
 <section class="l-section p-guide__hero">
 <span class="c-tag">投稿ガイドライン</span>
 <h1 class="c-heading">みんなで笑える<br>ボケにしよう。</h1>
@@ -47,7 +48,7 @@ $rules = [
 <div class="c-card p-guide__report"><span class="p-guide__report-icon"><?= $this->include('partials/icon_flag') ?></span><div><h2 class="p-guide__h3">見つけたら通報を</h2><p class="p-guide__p">ボケの横にある旗のボタンから通報できます。通報したことが、投稿した人に伝わることはありません。</p></div></div>
 </section>
 
-<section class="l-section p-guide__last">
+<section class="l-section p-guide__last" data-js-doc-skip>
 <a class="c-button c-button--primary" href="<?= site_url('/') ?>">大喜利を開催する</a>
 </section>
 <?= $this->endSection() ?>

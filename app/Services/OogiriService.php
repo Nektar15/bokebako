@@ -14,6 +14,7 @@ use App\Exceptions\AppException;
 use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Libraries\Captcha;
+use App\Libraries\Passphrase;
 use App\Libraries\Text;
 use App\Models\OogiriModel;
 use CodeIgniter\I18n\Time;
@@ -23,11 +24,6 @@ use CodeIgniter\I18n\Time;
  */
 final class OogiriService
 {
-    /**
-     * 合言葉の最小文字数（未確定事項2：任意。入れるなら4文字以上を仮置き）
-     */
-    public const PASSPHRASE_MIN = 4;
-
     public function __construct(
         private readonly OogiriModel $oogiris,
         private readonly SettingService $settings,
@@ -87,7 +83,7 @@ final class OogiriService
 
         $now        = Time::now();
         $token      = $this->identity->issueHostToken();
-        $passphrase = Text::clean((string) ($input['passphrase'] ?? ''));
+        $passphrase = (string) ($input['passphrase'] ?? '');
         $parent     = $this->parentIdFromSlug((string) ($input['from'] ?? ''));
         // 開催と派生元の派生開催数の加算は一緒に成功・失敗させる
         $id     = $this->oogiris->transaction(fn (): int => $this->insertOogiri($odai, $token['hash'], $passphrase, $parent, $now));
@@ -118,7 +114,7 @@ final class OogiriService
             'slug'             => $this->uniqueSlug(),
             'odai'             => $odai,
             'host_token_hash'  => $tokenHash,
-            'passphrase_hash'  => $passphrase === '' ? null : password_hash($passphrase, PASSWORD_DEFAULT),
+            'passphrase_hash'  => Passphrase::hash($passphrase),
             'browser_id_hash'  => $this->identity->browserIdHash(),
             'ip_hash'          => $this->identity->ipHash(),
             'status'           => OogiriStatus::Open->value,
@@ -163,10 +159,9 @@ final class OogiriService
      */
     private function validate(array $input): array
     {
-        $odai       = Text::clean((string) ($input['odai'] ?? ''));
-        $passphrase = Text::clean((string) ($input['passphrase'] ?? ''));
-        $max        = $this->settings->int('odai_max');
-        $errors     = [];
+        $odai   = Text::clean((string) ($input['odai'] ?? ''));
+        $max    = $this->settings->int('odai_max');
+        $errors = [];
 
         if ($odai === '') {
             $errors['odai'] = 'お題を入力してください';
@@ -175,8 +170,11 @@ final class OogiriService
         } elseif (preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', $odai) === 1) {
             $errors['odai'] = '使えない文字が含まれています';
         }
-        if ($passphrase !== '' && mb_strlen($passphrase) < self::PASSPHRASE_MIN) {
-            $errors['passphrase'] = '合言葉は' . self::PASSPHRASE_MIN . '文字以上にしてください';
+        // 合言葉は必須（BUG-006、ADR 0015）
+        $passphraseError = Passphrase::error((string) ($input['passphrase'] ?? ''));
+
+        if ($passphraseError !== null) {
+            $errors['passphrase'] = $passphraseError;
         }
 
         return $errors;

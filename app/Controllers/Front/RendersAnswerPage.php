@@ -18,6 +18,7 @@ trait RendersAnswerPage
     protected function renderAnswerPage(Oogiri $oogiri, ?Answer $sharedAnswer = null): string
     {
         $format = service('display');
+        $isHost = service('host')->isAuthorized($oogiri);
         service('event')->recordVisit($oogiri->id); // 募集URL流入（S-06）
 
         return view('front/u04_answer', [
@@ -31,6 +32,9 @@ trait RendersAnswerPage
             'ads'             => service('ads')->slots(),
             'ogpUrl'          => $sharedAnswer !== null ? service('ogp')->url(OgpKind::Answer, (string) $sharedAnswer->id) : service('ogp')->url(OgpKind::Recruit, $oogiri->slug),
             'captcha'         => service('rateLimit')->needsCaptcha(RateLimitService::ACTION_ANSWER) ? (new Captcha())->siteKey() : '',
+            // 開催者本人が開いたときは、募集のシェアを出す（スマホで U-03 を開けなかったときの導線。BUG-003）
+            'isHost'        => $isHost,
+            'recruitIntent' => $isHost ? service('share')->recruitIntent($oogiri) : '',
         ]);
     }
 }

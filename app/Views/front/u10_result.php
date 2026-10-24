@@ -38,6 +38,7 @@ $first = $ranked[0] ?? null;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_page_view', 'params' => ['oogiri' => $oogiri->slug, 'status' => 'decided']]) ?>
 <section class="l-section p-result__head">
 <span class="c-stamp c-stamp--pop p-result__stamp">結果<br>発表</span>
 <span class="c-tag c-tag--ink p-result__tag">24時間大喜利・結果</span>
@@ -59,7 +60,7 @@ $first = $ranked[0] ?? null;
 </section>
 
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($resultIntentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_result" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>結果をXでシェアする</a>
+<?= part('partials/share_buttons', ['intentUrl' => $resultIntentUrl, 'label' => '結果をXでシェアする', 'track' => 'share_result', 'slug' => $oogiri->slug, 'url' => site_url('o/' . $oogiri->slug), 'title' => '結果発表：' . $oogiri->odai]) ?>
 <?= part('partials/host_cta', ['slug' => $oogiri->slug, 'from' => 'U-10']) ?>
 </section>
 

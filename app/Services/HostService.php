@@ -13,6 +13,7 @@ use App\Enums\OogiriStatus;
 use App\Exceptions\AppException;
 use App\Exceptions\ForbiddenException;
 use App\Exceptions\ValidationException;
+use App\Libraries\Passphrase;
 use App\Models\AnswerModel;
 use App\Models\OogiriModel;
 use CodeIgniter\I18n\Time;
@@ -41,6 +42,11 @@ final class HostService
      * 結果選択待ちで上にまとめて出すいいねの上限
      */
     public const FAVORITES_MAX = 100;
+
+    /**
+     * 一度に確かめる開催の数の上限（このブラウザで開催した大喜利の一覧）
+     */
+    public const HOSTED_MAX = 20;
 
     public function __construct(
         private readonly OogiriModel $oogiris,
@@ -76,7 +82,7 @@ final class HostService
      */
     public function recover(Oogiri $oogiri, string $passphrase): string
     {
-        if (trim($passphrase) === '') {
+        if (Passphrase::normalize($passphrase) === '') {
             throw new ValidationException(['passphrase' => '合言葉を入力してください']);
         }
 
@@ -85,7 +91,7 @@ final class HostService
         } catch (AppException) {
             throw new AppException(ErrorCode::RateLimited, '試行回数の上限に達しました。しばらくしてからお試しください');
         }
-        if ($oogiri->passphrase_hash === null || ! password_verify(trim($passphrase), $oogiri->passphrase_hash)) {
+        if ($oogiri->passphrase_hash === null || ! Passphrase::verify($passphrase, $oogiri->passphrase_hash)) {
             throw new ValidationException(['passphrase' => '合言葉が違います']);
         }
         $token = $this->identity->issueHostToken();
@@ -94,6 +100,46 @@ final class HostService
         service('adminLog')->record('oogiri', $oogiri->id, '合言葉で開催者ページを復旧', AdminLogService::ACTOR_HOST);
 
         return $token['token'];
+    }
+
+    /**
+     * このブラウザで開催した大喜利の一覧（D-02、ADR 0015）。localStorage のトークンが今も正しいものだけ返す
+     *
+     * 公開のプロフィールではない（SPEC 1.4・11章でユーザープロフィールは対象外）。本人のブラウザにだけ出す
+     *
+     * @param list<array{slug?: mixed, token?: mixed}> $items
+     *
+     * @return list<array{slug: string, odai: string, status: string, statusLabel: string, answerCount: int, startsAt: string}> 新しい順
+     */
+    public function hostedList(array $items): array
+    {
+        $tokens = [];
+
+        foreach (array_slice($items, 0, self::HOSTED_MAX) as $item) {
+            if (is_string($item['slug'] ?? null) && is_string($item['token'] ?? null) && $item['token'] !== '') {
+                $tokens[$item['slug']] = $item['token'];
+            }
+        }
+        if ($tokens === []) {
+            return [];
+        }
+        $list = [];
+
+        foreach ($this->oogiris->whereIn('slug', array_keys($tokens))->orderBy('starts_at', 'DESC')->findAll(self::HOSTED_MAX) as $oogiri) {
+            if (! isset($tokens[$oogiri->slug]) || ! hash_equals($oogiri->host_token_hash, $this->identity->hash($tokens[$oogiri->slug]))) {
+                continue;
+            }
+            $list[] = [
+                'slug'        => $oogiri->slug,
+                'odai'        => $oogiri->odai,
+                'status'      => $oogiri->status()->value,
+                'statusLabel' => $oogiri->status()->label(),
+                'answerCount' => $oogiri->answer_count,
+                'startsAt'    => service('display')->datetime($oogiri->starts_at),
+            ];
+        }
+
+        return $list;
     }
 
     /**

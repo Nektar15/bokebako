@@ -23,3 +23,5 @@
 .c-timer--compact .c-timer__label { display: none; }
 .c-timer--compact .c-progress { height: 8px; }
 .c-timer.is-closed .c-timer__value { color: var(--ink-sub); }
+.p-answer__host { display: flex; flex-direction: column; gap: var(--space-2); }
+.p-answer__host-title { font-weight: 900; font-size: 15px; }

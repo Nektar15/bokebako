@@ -33,6 +33,7 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'answer_page_view', 'params' => ['oogiri' => $oogiri->slug, 'answer_id' => $answer->id]]) ?>
 <section class="l-section">
 <?= part('partials/odai_card', ['odai' => $oogiri->odai, 'tone' => 'sand', 'raised' => false]) ?>
 </section>

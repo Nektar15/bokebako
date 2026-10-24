@@ -47,6 +47,7 @@ final class OogiriController extends BaseController
             'endsAt'    => service('display')->datetime($oogiri->ends_at),
             'shareUrl'  => service('share')->url($oogiri),
             'intentUrl' => service('share')->recruitIntent($oogiri),
+            'preview'   => service('share')->recruitPreview($oogiri), // 運用設定（A-10）の投稿文に合わせる
             'hostUrl'   => site_url('host/' . $slug),
             'ogpUrl'    => service('ogp')->url(OgpKind::Recruit, $slug),
             'hostToken' => service('host')->tokenFromRequest($oogiri), // 開催時に発行したトークン（この画面と U-08 からだけ渡す）
@@ -61,7 +62,11 @@ final class OogiriController extends BaseController
         $this->cacheFirstPage();
 
         // og:image は、画像がなければ既定の画像にする（監査 2026-10-21）
-        return view('front/u11_closed', ['oogiri' => $oogiri, 'ogpUrl' => service('ogp')->url(OgpKind::Recruit, $oogiri->slug)]);
+        return view('front/u11_closed', [
+            'oogiri'     => $oogiri,
+            'ogpUrl'     => service('ogp')->url(OgpKind::Recruit, $oogiri->slug),
+            'justClosed' => false,
+        ]);
     }
 
     /**

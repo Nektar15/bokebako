@@ -12,6 +12,10 @@ import { initAutosubmit } from './components/autosubmit.js';
 import { initScreenNav } from './components/screen-nav.js';
 import { initAdminMenu } from './components/admin-menu.js';
 import { initAdSlots } from './components/ad-slot.js';
+import { initReveal } from './components/reveal.js';
+import { initDocSheet } from './components/doc-sheet.js';
+import { initWebShare } from './components/web-share.js';
+import { initHostedList } from './components/hosted-list.js';
 
 const root = document;
 
@@ -25,3 +29,7 @@ initAutosubmit(root);
 initScreenNav(root);
 initAdminMenu(root);
 initAdSlots(root);
+initReveal(root);
+initDocSheet(root);
+initWebShare(root);
+initHostedList(root);

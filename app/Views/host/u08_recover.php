@@ -31,8 +31,11 @@ use App\Entities\Oogiri;
 <?= csrf_field() ?>
 <?php if (isset($errors['_'])): ?><p class="c-field__error" role="alert"><?= esc($errors['_']) ?></p><?php endif; ?>
 <div class="c-field">
+<div class="c-field__head">
 <label class="c-field__label" for="passphrase">合言葉</label>
-<input class="c-input<?= isset($errors['passphrase']) ? ' is-invalid' : '' ?>" id="passphrase" name="passphrase" type="password" autocomplete="off" required>
+<button type="button" class="c-field__reveal" data-js-reveal="passphrase" aria-pressed="false">表示</button>
+</div>
+<input class="c-input<?= isset($errors['passphrase']) ? ' is-invalid' : '' ?>" id="passphrase" name="passphrase" type="password" autocomplete="current-password" required>
 <?php if (isset($errors['passphrase'])): ?><p class="c-field__error" role="alert"><?= esc($errors['passphrase']) ?></p><?php endif; ?>
 <p class="c-field__help">合言葉は運営でも確認できません。忘れた場合、開催者ページは開けなくなります。</p>
 </div>

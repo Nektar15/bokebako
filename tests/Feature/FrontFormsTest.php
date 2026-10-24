@@ -29,32 +29,32 @@ final class FrontFormsTest extends DatabaseTestCase
 
     public function testCreateOogiriWithEmptyOdaiReturnsError(): void
     {
-        $result = $this->post('/oogiri', ['odai' => '']);
+        $result = $this->post('/oogiri', ['odai' => '', 'passphrase' => 'ひみつのことば']);
         $result->assertRedirect();
         $result->assertSessionHas('errors', ['odai' => 'お題を入力してください']);
     }
 
     public function testCreateOogiriTooLong(): void
     {
-        $this->post('/oogiri', ['odai' => str_repeat('あ', 101)])->assertSessionHas('errors', ['odai' => 'お題は100文字以内で入力してください']);
+        $this->post('/oogiri', ['odai' => str_repeat('あ', 101), 'passphrase' => 'ひみつのことば'])->assertSessionHas('errors', ['odai' => 'お題は100文字以内で入力してください']);
     }
 
     public function testCreateOogiriWithRejectWordIsRefused(): void
     {
-        $this->post('/oogiri', ['odai' => '全員殺すお題'])->assertSessionHas('errors', ['odai' => '投稿できない言葉が含まれています']);
+        $this->post('/oogiri', ['odai' => '全員殺すお題', 'passphrase' => 'ひみつのことば'])->assertSessionHas('errors', ['odai' => '投稿できない言葉が含まれています']);
         $this->dontSeeInDatabase('oogiris', ['odai' => '全員殺すお題']);
     }
 
     public function testCreateOogiriWithReviewWordIsAcceptedAndFlagged(): void
     {
-        $this->post('/oogiri', ['odai' => 'LINEで言われたくない一言'])->assertRedirect();
+        $this->post('/oogiri', ['odai' => 'LINEで言われたくない一言', 'passphrase' => 'ひみつのことば'])->assertRedirect();
         $this->seeInDatabase('oogiris', ['odai' => 'LINEで言われたくない一言', 'status' => 'open']);
         $this->seeInDatabase('ai_judgements', ['target_type' => 'oogiri', 'trigger' => 'ng_review']);
     }
 
     public function testCreateFromParentCountsDerived(): void
     {
-        $this->post('/oogiri', ['odai' => '派生のお題', 'from' => 'k7Qm2xPz'])->assertRedirect();
+        $this->post('/oogiri', ['odai' => '派生のお題', 'passphrase' => 'ひみつのことば', 'from' => 'k7Qm2xPz'])->assertRedirect();
         $this->seeInDatabase('oogiris', ['id' => 12480, 'derived_count' => 3]);
         $this->seeInDatabase('oogiris', ['odai' => '派生のお題', 'parent_oogiri_id' => 12480]);
     }
@@ -68,7 +68,11 @@ final class FrontFormsTest extends DatabaseTestCase
 
     public function testAnswerAfterCloseIsRejected(): void
     {
-        $this->post('/o/Zp3cW9aQ/answers', ['body' => 'ボケ'])->assertSessionHas('errors', ['_' => 'この大喜利の募集は終了しています']);
+        // 戻り先の U-11 はキャッシュ配信でエラーを出せないので、理由を添えた U-11 をその場で返す（N-09）
+        $result = $this->post('/o/Zp3cW9aQ/answers', ['body' => 'ボケ']);
+        $result->assertStatus(409);
+        $result->assertSee('送信する前に募集が締め切られたため、回答は登録されませんでした。');
+        $this->dontSeeInDatabase('answers', ['oogiri_id' => 12466, 'body' => 'ボケ']);
     }
 
     public function testAnswerBurstIsRateLimited(): void

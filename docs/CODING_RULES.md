@@ -301,6 +301,7 @@ export function initCharCounter(root = document) {
 |---|---|---|
 | localStorage | `bk:host:{slug}` | 開催者トークン |
 | localStorage | `bk:answered:{slug}` | 回答済みの印 |
+| sessionStorage | `bk:ga:{イベント名}:{対象}` | GA4 の完了イベント（開催完了・回答完了）を再読み込みで二重に送らないための印（ADR 0015） |
 | Cookie（サーバー発行） | `bk_bid` | 匿名ブラウザID |
 
 - **必須**：選択状態などの見た目の切り替えは `is-` クラスの付け外しで行い、JS から `style` を直接書き換えない。

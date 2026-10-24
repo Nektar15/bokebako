@@ -7,7 +7,8 @@ use App\Entities\Oogiri;
  * 結果確定済みは URL の振り分けで U-10 に直接行くため、ここは「主催者が選んでいます」だけを出す（未確定事項6）
  *
  * @var Oogiri $oogiri
- * @var string $ogpUrl og:image（画像がなければ既定の画像）
+ * @var string $ogpUrl     og:image（画像がなければ既定の画像）
+ * @var bool   $justClosed 回答を送ったときにはもう締め切られていた（AnswerController::create() がこの場で返すときだけ。N-09）
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -26,6 +27,11 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_page_view', 'params' => ['oogiri' => $oogiri->slug, 'status' => 'awaiting_selection']]) ?>
+<?php if ($justClosed): ?><?= part('partials/ga_event', ['name' => 'answer_error', 'params' => ['oogiri' => $oogiri->slug, 'fields' => 'closed']]) ?><?php endif; ?>
+<?php if ($justClosed): ?>
+<p class="c-field__error l-section p-closed__notice" role="alert">送信する前に募集が締め切られたため、回答は登録されませんでした。</p>
+<?php endif; ?>
 <section class="l-section p-closed__hero">
 <svg width="132" height="104" viewBox="0 0 132 104" aria-hidden="true">
 <rect x="14" y="36" width="104" height="60" rx="8" fill="#D6401E" stroke="#1D1A16" stroke-width="3"></rect>

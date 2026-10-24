@@ -40,9 +40,24 @@ final class ShareService
         return $this->intent($this->settings->string('tpl_recruit'), ['{odai}' => $oogiri->odai, '{url}' => $this->url($oogiri)]);
     }
 
-    public function answerIntent(Oogiri $oogiri, Answer $answer): string
+    /**
+     * 募集の投稿文のうち、X の画面に文字として出る部分（URL はカードになるので除く）。U-03 のプレビュー用
+     */
+    public function recruitPreview(Oogiri $oogiri): string
     {
-        return $this->intent($this->settings->string('tpl_answer'), ['{odai}' => $oogiri->odai, '{answer}' => $answer->body, '{url}' => $this->answerUrl($oogiri, $answer)]);
+        $text = strtr($this->settings->string('tpl_recruit'), ['{odai}' => $oogiri->odai, '{url}' => '']) . "\n#" . $this->settings->string('hashtag');
+
+        return trim((string) preg_replace('/\n{2,}/', "\n", $text));
+    }
+
+    /**
+     * 回答シェア。自分の回答は tpl_answer（「俺の回答」）、ほかの人の回答は tpl_answer_other（BUG-008）
+     *
+     * 共有キャッシュで配る結果ページ（U-10・U-12）は本人かどうかを付けないので、ほかの人の回答として扱う
+     */
+    public function answerIntent(Oogiri $oogiri, Answer $answer, bool $mine = false): string
+    {
+        return $this->intent($this->settings->string($mine ? 'tpl_answer' : 'tpl_answer_other'), ['{odai}' => $oogiri->odai, '{answer}' => $answer->body, '{url}' => $this->answerUrl($oogiri, $answer)]);
     }
 
     /**

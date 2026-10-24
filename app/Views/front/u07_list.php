@@ -11,6 +11,8 @@ use App\Entities\Oogiri;
  * @var int                                                  $progressPercent
  * @var array{items: list<Answer>, hasMore: bool, page: int} $answers
  * @var callable(Answer): string                             $answerIntentUrl
+ * @var string                                               $sort  並び順（AnswerService::SORTS のキー）
+ * @var array<string, string>                                $sorts 並び順 => 表示名
  */
 ?>
 <?= $this->extend('layouts/front') ?>
@@ -37,8 +39,15 @@ use App\Entities\Oogiri;
 </div>
 
 <section class="l-section">
-<div class="p-list__title"><h1 class="p-list__h1">みんなのボケ</h1><span class="u-sub">新着順</span></div>
-<?= part('partials/answer_list', ['oogiri' => $oogiri, 'answers' => $answers, 'answerIntentUrl' => $answerIntentUrl, 'variant' => 'card']) ?>
+<div class="p-list__title">
+<h1 class="p-list__h1">みんなのボケ</h1>
+<nav class="c-segment" aria-label="並び順">
+<?php foreach ($sorts as $key => $label): ?>
+<a class="c-segment__item<?= $key === $sort ? ' is-current' : '' ?>" href="<?= site_url('o/' . $oogiri->slug . '/answers' . ($key === 'new' ? '' : '?sort=' . $key)) ?>"<?= $key === $sort ? ' aria-current="true"' : '' ?> data-js-ga="sort_change" data-js-ga-param-sort="<?= esc($key, 'attr') ?>" data-js-ga-param-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= esc($label) ?></a>
+<?php endforeach; ?>
+</nav>
+</div>
+<?= part('partials/answer_list', ['oogiri' => $oogiri, 'answers' => $answers, 'answerIntentUrl' => $answerIntentUrl, 'variant' => 'card', 'moreUrl' => site_url('o/' . $oogiri->slug . '/answers') . '?' . http_build_query(array_filter(['sort' => $sort === 'new' ? null : $sort, 'page' => $answers['page'] + 1]))]) ?>
 <p class="u-sub u-center p-list__note">ぼけばこに「いいね」や投票はありません。<br>ベストは、お題を出した人が選びます。</p>
 </section>
 

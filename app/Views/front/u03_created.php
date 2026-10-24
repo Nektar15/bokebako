@@ -9,6 +9,7 @@ use App\Entities\Oogiri;
  * @var string $endsAt     募集終了日時の表示（例：「9月17日 22:15」）
  * @var string $shareUrl   募集URL
  * @var string $intentUrl  X の Web Intent URL
+ * @var string $preview    X に文字として出る投稿文（URL を除く。運用設定の投稿文から作る）
  * @var string $hostUrl    開催者ページのURL
  * @var string $ogpUrl     募集用 OGP 画像のURL（プレビューに使う）
  * @var string $hostToken  開催者トークン（JS が localStorage に保存する）
@@ -27,6 +28,7 @@ use App\Entities\Oogiri;
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'event_create_complete', 'params' => ['oogiri' => $oogiri->slug], 'once' => $oogiri->slug]) ?>
 <section class="l-section p-created__hero">
 <span class="c-stamp c-stamp--pop">開催<br>中</span>
 <div>
@@ -40,7 +42,7 @@ use App\Entities\Oogiri;
 </section>
 
 <section class="l-section">
-<a class="c-button c-button--x" href="<?= esc($intentUrl, 'attr') ?>" target="_blank" rel="noopener" data-js-track="share_recruit" data-js-track-oogiri="<?= esc($oogiri->slug, 'attr') ?>"><?= $this->include('partials/icon_share') ?>Xで回答を募集する</a>
+<?= part('partials/share_buttons', ['intentUrl' => $intentUrl, 'label' => 'Xで回答を募集する', 'track' => 'share_recruit', 'slug' => $oogiri->slug, 'url' => $shareUrl, 'title' => 'お題：' . $oogiri->odai]) ?>
 <div class="p-created__url">
 <label class="u-visually-hidden" for="share-url">募集URL</label>
 <input class="c-input u-mono p-created__url-input" id="share-url" type="text" readonly value="<?= esc($shareUrl, 'attr') ?>">
@@ -55,7 +57,7 @@ use App\Entities\Oogiri;
 <div class="p-created__post">
 <span class="p-created__avatar" aria-hidden="true"></span>
 <div class="p-created__post-body">
-<p class="p-created__post-text">24時間だけ大喜利やります！<br>お題：<?= esc($oogiri->odai) ?><br>#ぼけばこ</p>
+<p class="p-created__post-text"><?= nl2br_esc($preview) ?></p>
 <div class="p-created__ogp">
 <img class="p-created__ogp-img" src="<?= esc($ogpUrl, 'attr') ?>" alt="募集用OGP画像のプレビュー" width="1200" height="630">
 <span class="p-created__ogp-domain"><?= esc(parse_url(base_url(), PHP_URL_HOST) ?: '') ?></span>

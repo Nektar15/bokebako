@@ -80,6 +80,7 @@ final class SettingService
         'hashtag'           => 'ぼけばこ',
         'tpl_recruit'       => "24時間だけ大喜利やります！\nお題：{odai}\n{url}",
         'tpl_answer'        => "お題：{odai}\n俺の回答：{answer}\n{url}",
+        'tpl_answer_other'  => "お題：{odai}\nこのボケ好き：{answer}\n{url}", // ほかの人の回答をシェアするとき（BUG-008）
         'tpl_result'        => "結果発表！\nお題：{odai}\n{ranks}\n{url}",
         // OGP 画像に載せる文言と順位（A-08 で編集。ADR 0012）
         'ogp_recruit_pill'  => '24時間限定 回答募集中',
@@ -112,6 +113,7 @@ final class SettingService
         'hashtag'           => 'ハッシュタグ',
         'tpl_recruit'       => '募集シェアの投稿文',
         'tpl_answer'        => '回答シェアの投稿文',
+        'tpl_answer_other'  => 'ほかの人の回答シェアの投稿文',
         'tpl_result'        => '結果シェアの投稿文',
     ];
 
@@ -279,7 +281,7 @@ final class SettingService
             $errors['hashtag'] = 'ハッシュタグを # なしで入力してください';
         }
 
-        foreach (['tpl_recruit', 'tpl_answer', 'tpl_result'] as $key) {
+        foreach (['tpl_recruit', 'tpl_answer', 'tpl_answer_other', 'tpl_result'] as $key) {
             if (! str_contains((string) ($input[$key] ?? ''), '{url}')) {
                 $errors[$key] = '投稿文には {url} を含めてください';
             }

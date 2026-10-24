@@ -1,4 +1,7 @@
 <?php
+
+use App\Libraries\Passphrase;
+
 /**
  * U-01 トップ・大喜利開催画面（U-02 開催確認モーダルを含む）
  *
@@ -16,9 +19,12 @@
 <?= $this->section('styles') ?>
 <link rel="stylesheet" href="<?= asset_url('css/components/sheet.css') ?>">
 <link rel="stylesheet" href="<?= asset_url('css/pages/u01-top.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/pages/doc.css') ?>">
+<link rel="stylesheet" href="<?= asset_url('css/pages/u17-guidelines.css') ?>">
 <?= $this->endSection() ?>
 
 <?= $this->section('content') ?>
+<?php if ($errors !== []): ?><?= part('partials/ga_event', ['name' => 'event_create_error', 'params' => ['fields' => implode(',', array_keys($errors))]]) ?><?php endif; ?>
 <section class="l-section p-top__hero">
 <span class="c-tag">登録不要・24時間限定の大喜利</span>
 <h1 class="c-heading c-heading--xl">お題を出したら、<br><em class="p-top__accent">24時間</em>だけ<br>大喜利スタート。</h1>
@@ -39,7 +45,7 @@
 <label class="c-field__label" for="odai">お題</label>
 <span class="c-field__count" id="odai-count" aria-live="polite"></span>
 </div>
-<textarea class="c-textarea<?= isset($errors['odai']) ? ' is-invalid' : '' ?>" id="odai" name="odai" rows="3" maxlength="<?= $odaiMax ?>" required placeholder="例：こんなコンビニ店員は嫌だ" data-js-char-counter="odai-count" data-js-odai-input<?= isset($errors['odai']) ? ' aria-describedby="odai-error"' : '' ?>><?= esc($old['odai']) ?></textarea>
+<textarea class="c-textarea<?= isset($errors['odai']) ? ' is-invalid' : '' ?>" id="odai" name="odai" rows="3" maxlength="<?= $odaiMax ?>" required placeholder="例：こんなコンビニ店員は嫌だ" data-js-char-counter="odai-count" data-js-odai-input data-js-ga-start="event_create_start"<?= isset($errors['odai']) ? ' aria-describedby="odai-error"' : '' ?>><?= esc($old['odai']) ?></textarea>
 <?php if (isset($errors['odai'])): ?><p class="c-field__error" id="odai-error" role="alert"><?= esc($errors['odai']) ?></p><?php endif; ?>
 </div>
 
@@ -61,9 +67,13 @@
 <div class="c-card__divider"></div>
 
 <div class="c-field">
-<label class="c-field__label" for="passphrase">合言葉</label>
-<input class="c-input" id="passphrase" name="passphrase" type="text" autocomplete="off" placeholder="あなただけが分かる言葉" value="<?= esc($old['passphrase'], 'attr') ?>">
-<p class="c-field__help p-top__hint"><?= $this->include('partials/icon_key') ?><span>別の端末から開催者ページを開くときに使います。ふだんは入力不要です。</span></p>
+<div class="c-field__head">
+<label class="c-field__label" for="passphrase">合言葉<span class="c-field__required">必須</span></label>
+<button type="button" class="c-field__reveal" data-js-reveal="passphrase" aria-pressed="false">表示</button>
+</div>
+<input class="c-input<?= isset($errors['passphrase']) ? ' is-invalid' : '' ?>" id="passphrase" name="passphrase" type="password" autocomplete="new-password" required minlength="<?= Passphrase::MIN ?>" maxlength="<?= Passphrase::MAX ?>" placeholder="あなただけが分かる言葉（<?= Passphrase::MIN ?>〜<?= Passphrase::MAX ?>文字）" value="<?= esc($old['passphrase'], 'attr') ?>" aria-describedby="<?= isset($errors['passphrase']) ? 'passphrase-error ' : '' ?>passphrase-help">
+<?php if (isset($errors['passphrase'])): ?><p class="c-field__error" id="passphrase-error" role="alert"><?= esc($errors['passphrase']) ?></p><?php endif; ?>
+<p class="c-field__help p-top__hint" id="passphrase-help"><?= $this->include('partials/icon_key') ?><span>別の端末から開催者ページを開くときに使います。忘れないものにしてください。</span></p>
 </div>
 
 <?= part('partials/captcha', ['siteKey' => $captcha]) ?>
@@ -71,7 +81,10 @@
 
 <?= $this->include('partials/u02_confirm') ?>
 </form>
+<?= $this->include('partials/doc_sheet') ?>
 </section>
+
+<?= part('partials/hosted_list') ?>
 
 <section class="l-section" id="howto">
 <h2 class="p-top__h2">あそびかた</h2>

@@ -17,7 +17,7 @@
 
 ### 入力の制限（工程4）
 
-8. **合言葉は任意、入れるなら4文字以上**（`OogiriService::PASSPHRASE_MIN`。未確定事項2）。【仮】
+8. ~~**合言葉は任意、入れるなら4文字以上**（未確定事項2）。【仮】~~ → 廃止。必須・4〜32文字に変更（ADR 0015-3）
 9. **CAPTCHA は Cloudflare Turnstile**（`app/Libraries/Captcha.php`。未確定事項3）。`.env` の `captcha.siteKey` / `captcha.secretKey` が空なら要求しない（開発・テスト）。運用設定の「制限方法」が CAPTCHA のときだけ、連続投稿を超えた環境に出す。Turnstile のスクリプトは CODING_RULES 8-2（外部スクリプトを読まない）の例外として `partials/captcha` でだけ読む。【仮】
 10. **連続投稿の判定は CodeIgniter の Throttler**（トークンバケット。キーはブラウザIDハッシュ＋IPハッシュの先頭16文字）。制限方法「投稿停止」のときは `restrictions` に `ban_minutes` 分の行を入れ、以後すべての投稿を拒む。合言葉の試行は 5回／10分 で固定。
 11. **NGワードの判定は「投稿拒否 > 要確認」**。要確認は投稿を通したうえで `ai_judgements` に積み、管理者へメール。有効なワードは1時間キャッシュし、A-06 の保存で捨てる。同じワード・一致方式の重複登録は入力エラー。

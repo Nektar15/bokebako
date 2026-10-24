@@ -26,5 +26,6 @@ $toc = [
 <link rel="stylesheet" href="<?= asset_url('css/pages/doc.css') ?>">
 <?= $this->endSection() ?>
 <?= $this->section('content') ?>
+<?= part('partials/ga_event', ['name' => 'guideline_view', 'params' => ['doc' => 'terms', 'via' => 'page']]) ?>
 <?= part('partials/doc_layout', ['title' => '利用規約', 'updatedAt' => '[最終更新日]', 'toc' => $toc, 'articlesView' => 'front/u15_terms_body', 'showDraftNote' => $showDraftNote]) ?>
 <?= $this->endSection() ?>

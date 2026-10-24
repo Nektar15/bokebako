@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Database\Seeds;
 
 use App\Entities\Ad;
+use App\Libraries\Passphrase;
 use App\Services\IdentityService;
 use CodeIgniter\Database\Seeder;
 use CodeIgniter\I18n\Time;
@@ -70,7 +71,7 @@ class DevSeeder extends Seeder
                 'slug'               => $slug,
                 'odai'               => $odai,
                 'host_token_hash'    => $identity->hash('dev-token-' . $slug),
-                'passphrase_hash'    => password_hash(self::PASSPHRASE, PASSWORD_DEFAULT),
+                'passphrase_hash'    => Passphrase::hash(self::PASSPHRASE),
                 'browser_id_hash'    => $identity->hash('dev-browser-host'),
                 'ip_hash'            => $identity->hash('127.0.0.1'),
                 'status'             => $status,

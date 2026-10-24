@@ -1,0 +1,12 @@
+{
+  "name": "bokebako-e2e",
+  "private": true,
+  "description": "E2E テスト（Playwright）。本体の依存とは分ける（ADR 0015）。使い方は README.md",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}
